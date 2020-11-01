@@ -13,6 +13,12 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Equations" => "equations.md",
+        "Problems" => "problems.md",
+        "Solving" => "solvers.md",
+        "Solutions" => "solution.md",
+        "Boltzmann transformation" => "boltzmann.md",
+        "Diffusivity functions" => "D.md",
     ],
 )
 

@@ -2,5 +2,7 @@ using Fronts
 using Test
 
 @testset "Fronts.jl" begin
-    # Write your tests here.
+    include("test_dirichlet.jl")
+    include("test_flowrate.jl")
+    include("test_cauchy.jl")
 end
