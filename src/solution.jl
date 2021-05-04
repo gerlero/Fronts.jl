@@ -53,7 +53,7 @@ See also: [`ϕ`](@ref)
 """
 function d_dϕ(θ::Solution, ϕ::Real)
     if ϕ > θ.ϕi
-        return 0   
+        return zero(θ.d_dϕb)
     elseif ϕ < θ.ϕb
         return typeof(θ.d_dϕb)(NaN)
     end
