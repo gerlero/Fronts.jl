@@ -16,33 +16,19 @@ Evaluate the solution.
 
 Type `\\phi<tab>` to obtain the `ϕ` symbol.
 """
-struct Solution{Todesol,Teq,Titerations} <: TransformedFunction
+struct Solution{Todesol,Teq,Tθ,Td_dϕ,Tϕ} <: TransformedFunction
     _odesol::Todesol
     _eq::Teq
-    iterations::Titerations
-end
+    i::Tθ
+    b::Tθ
+    d_dϕb::Td_dϕ
+    ϕb::Tϕ
+    ϕi::Tϕ
+    iterations::Int
 
-function Base.propertynames(::Solution; private=false)
-    names = (:i, :b, :d_dϕb, :ϕb, :ϕi, :iterations)
-    if private
-        return (:_odesol, :_eq, names...)
+    function Solution(odesol, eq, iterations)
+        new{typeof(odesol),typeof(eq),typeof(odesol.u[1][1]),typeof(odesol.u[1][2]),eltype(odesol.t)}(odesol, eq, odesol.u[end][1], odesol.u[1][1], odesol.u[1][2], odesol.t[1], odesol.t[end], iterations)
     end
-    return names
-end
-
-function Base.getproperty(θ::Solution, prop::Symbol)
-    if prop === :i
-        return θ._odesol.u[end][1]
-    elseif prop === :b
-        return θ._odesol.u[1][1]
-    elseif prop === :d_dϕb
-        return θ._odesol.u[1][2]
-    elseif prop === :ϕb
-        return θ._odesol.t[1]
-    elseif prop === :ϕi
-        return θ._odesol.t[end]
-    end
-    return getfield(θ, prop)
 end
     
 function (θ::Solution)(ϕ::Real)
