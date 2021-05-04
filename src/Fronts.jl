@@ -54,7 +54,7 @@ include("exceptions.jl")
 
 export DiffusionEquation, flux, isindomain
 export TransformedFunction, d_dϕ, ∂_∂r, ∂_∂t
-export DirichletProblem, FlowrateProblem, CauchyProblem
+export DirichletProblem, FlowrateProblem, CauchyProblem, monotonicity
 export solve
 export Solution, rb
 export SolvingError
