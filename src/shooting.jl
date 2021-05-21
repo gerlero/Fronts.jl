@@ -56,12 +56,10 @@ function solve(prob::DirichletProblem; d_dϕb_hint=nothing,
         d_dϕb_hint = d_dϕ(prob, :b_hint)
     end
 
-    search = BracketingSearch(zero(d_dϕb_hint), d_dϕb_hint, residual)
+    d_dϕb_trial = bracket_bisect(zero(d_dϕb_hint), d_dϕb_hint, residual)
 
     for iterations in 1:maxiter
-        odesol, residual = _shoot(prob, d_dϕb=trial_x(search), itol=itol)
-
-        report_y!(search, residual)
+        odesol, residual = _shoot(prob, d_dϕb=d_dϕb_trial(residual), itol=itol)
 
         if abs(residual) ≤ itol
             return Solution(odesol, prob.eq, iterations)
@@ -98,12 +96,11 @@ function solve(prob::FlowrateProblem; b_hint=nothing,
     end
 
     prob.i - oneunit(prob.i)*monotonicity(prob)
-    search = BracketingSearch(prob.i, b_hint)
+    b_trial = bracket_bisect(prob.i, b_hint)
+    residual = nothing
 
     for iterations in 1:maxiter
-        odesol, residual = _shoot(prob, b=trial_x(search), itol=itol, ϕbtol=ϕbtol)
-
-        report_y!(search, residual)
+        odesol, residual = _shoot(prob, b=b_trial(residual), itol=itol, ϕbtol=ϕbtol)
 
         if abs(residual) ≤ itol
             return Solution(odesol, prob.eq, iterations)

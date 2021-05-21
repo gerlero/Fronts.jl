@@ -4,7 +4,7 @@ include("_Diff.jl")
 using ._Diff: value_and_derivative, derivative
 
 include("_Rootfinding.jl")
-using ._Rootfinding: BracketingSearch, trial_x, report_y!
+using ._Rootfinding: bracket_bisect
 
 include("PorousModels/PorousModels.jl")
 
