@@ -23,7 +23,17 @@ function transform(eq::DiffusionEquation{1})
                 return @SVector [dθ_dϕ, oftype(dθ_dϕ, NaN)]
             end
         end
-        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
+        function jac((θ, dθ_dϕ), ::NullParameters, ϕ)
+
+            D_, dD_dθ, d²D_dθ² = value_and_derivatives(D, typeof(θ), θ)
+
+            j21 = -dθ_dϕ*(D_*d²D_dθ²*dθ_dϕ - dD_dθ*(dD_dθ*dθ_dϕ + ϕ/2))/D_^2
+            j22 = -2*dD_dθ*dθ_dϕ/D_ - ϕ/(2D_)
+
+            return @SMatrix [  0   1
+                             j21 j22]
+        end
+        return ODEFunction{false}(f, jac=jac, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
     end
 end
 
@@ -42,7 +52,17 @@ function transform(eq::DiffusionEquation{m}) where m
                 return @SVector [dθ_dϕ, oftype(dθ_dϕ, NaN)]
             end
         end
-        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
+        function jac((θ, dθ_dϕ), ::NullParameters, ϕ)
+
+            D_, dD_dθ, d²D_dθ² = value_and_derivatives(D, typeof(θ), θ)
+
+            j21 = -dθ_dϕ*(D_*d²D_dθ²*dθ_dϕ - dD_dθ*(dD_dθ*dθ_dϕ + ϕ/2))/D_^2
+            j22 = -2*dD_dθ*dθ_dϕ/D_ - ϕ/(2D_) - k/ϕ
+
+            return @SMatrix [  0   1
+                             j21 j22]
+        end
+        return ODEFunction{false}(f, jac=jac, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
     end
 end
 
@@ -61,7 +81,18 @@ function transform(eq::RichardsEquation{1})
                 return @SVector [dh_dϕ, oftype(dh_dϕ, NaN)]
             end
         end
-        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
+        function jac((h, dh_dϕ), ::NullParameters, ϕ)
+
+            K_, dK_dh, d²K_dh² = value_and_derivatives(K, typeof(h), h)
+            C_, dC_dh = value_and_derivative(C, typeof(h), h)
+
+            j21 = -dh_dϕ*(K_*(2*d²K_dh²*dh_dϕ + dC_dh*ϕ) - dK_dh*(C_*ϕ + 2*dK_dh*dh_dϕ))/(2K_^2)
+            j22 = -2*dK_dh*dh_dϕ/K_ - C_*ϕ/(2K_)
+
+            return @SMatrix [  0   1
+                             j21 j22]
+        end
+        return ODEFunction{false}(f, jac=jac, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
     end
 end
 
@@ -80,7 +111,18 @@ function transform(eq::RichardsEquation{m}) where m
                 return @SVector [dh_dϕ, oftype(dh_dϕ, NaN)]
             end
         end
-        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
+        function jac((h, dh_dϕ), ::NullParameters, ϕ)
+
+            K_, dK_dh, d²K_dh² = value_and_derivatives(K, typeof(h), h)
+            C_, dC_dh = value_and_derivative(C, typeof(h), h)
+
+            j21 = -dh_dϕ*(K_*(2*d²K_dh²*dh_dϕ + dC_dh*ϕ) - dK_dh*(C_*ϕ + 2*dK_dh*dh_dϕ))/(2K_^2)
+            j22 = -2*dK_dh*dh_dϕ/K_ - C_*ϕ/(2K_) - k/ϕ
+
+            return @SMatrix [  0   1
+                             j21 j22]
+        end
+        return ODEFunction{false}(f, jac=jac, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
     end
 end
 

@@ -1,7 +1,7 @@
 module Fronts
 
 include("_Diff.jl")
-using ._Diff: value_and_derivative, derivative
+using ._Diff: derivative, value_and_derivative, value_and_derivatives
 
 include("_Rootfinding.jl")
 using ._Rootfinding: bracket_bisect
@@ -21,7 +21,7 @@ import OrdinaryDiffEq
 using LinearAlgebra: Diagonal
 
 using ArgCheck: @argcheck
-using StaticArrays: @SVector
+using StaticArrays: @SVector, @SMatrix
 using PCHIPInterpolation: Interpolator, integrate
 using RecipesBase
 

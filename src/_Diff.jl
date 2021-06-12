@@ -15,6 +15,10 @@ end
     return DiffResults.value(diffresult), DiffResults.derivative(diffresult)
 end
 
-export derivative, value_and_derivative
+@inline function value_and_derivatives(f, Y::Type, x::Real)
+    return f(x), value_and_derivative(x -> derivative(f, x), Y, x)...
+end
+
+export derivative, value_and_derivative, value_and_derivatives
 
 end
