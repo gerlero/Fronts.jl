@@ -53,7 +53,7 @@ include("shooting.jl")
 include("exceptions.jl")
 
 export DiffusionEquation, flux, isindomain
-export TransformedFunction, d_dϕ, ∂_∂r, ∂_∂t
+export TransformedFunction, d_dϕ, ∂_∂r, ∂_∂t, transform
 export DirichletProblem, FlowrateProblem, CauchyProblem, monotonicity
 export solve
 export Solution, rb
