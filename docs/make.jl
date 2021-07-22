@@ -18,6 +18,7 @@ makedocs(;
         "Solving" => "solvers.md",
         "Solutions" => "solution.md",
         "Boltzmann transformation" => "boltzmann.md",
+        "Inverse problems" => "inverse.md",
         "Diffusivity functions" => "D.md",
     ],
 )
