@@ -1,7 +1,7 @@
 module Fronts
 
 include("_Diff.jl")
-using ._Diff: value_and_derivative
+using ._Diff: value_and_derivative, derivative
 
 include("_Rootfinding.jl")
 using ._Rootfinding: BracketingSearch, trial_x, report_y!
@@ -16,6 +16,7 @@ import OrdinaryDiffEq
 
 using ArgCheck: @argcheck
 using StaticArrays: @SVector
+using PCHIPInterpolation: Interpolator, integrate
 using RecipesBase
 
 """
@@ -51,6 +52,7 @@ include("problems.jl")
 include("integration.jl")
 include("shooting.jl")
 include("exceptions.jl")
+include("inverse.jl")
 
 export DiffusionEquation, flux, isindomain
 export TransformedFunction, d_dϕ, ∂_∂r, ∂_∂t, transform
@@ -58,5 +60,6 @@ export DirichletProblem, FlowrateProblem, CauchyProblem, monotonicity
 export solve
 export Solution, rb
 export SolvingError
+export inverse
 
 end

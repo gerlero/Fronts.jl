@@ -10,10 +10,12 @@ import DiffResults
     return DiffResults.value(diffresult), DiffResults.derivative(diffresult)
 end
 
+const derivative = ForwardDiff.derivative
+
 @inline function value_and_derivative(f, x::Real)
-    return f(x), ForwardDiff.derivative(f, x)
+    return f(x), derivative(f, x)
 end
 
-export value_and_derivative
+export derivative, value_and_derivative
 
 end
