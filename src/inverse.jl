@@ -1,17 +1,16 @@
 """
-inverse(ϕ::AbstractVector, θ::AbstractVector) -> Function
+    inverse(ϕ, θ) -> Function
 
 Extract a diffusivity function `D` from a solution to a semi-infinite one-dimensional nonlinear diffusion problem,
 where the solution is given as a set of discrete points.
 
-Interpolates the given solution with a PCHIP monotonic spline and uses the Bruce and Klute method (see References)
-to reconstruct `D`.
+Interpolates the given solution with a PCHIP monotonic spline and uses the Bruce and Klute method to reconstruct `D`.
 
 Due to the method used for interpolation, `D` will be continuous but will have discontinuous derivatives.
 
 # Arguments
-- `ϕ`: values of the Boltzmann variable. See [`ϕ`](@ref).
-- `θ`: values of the solution at each point in `ϕ`.
+- `ϕ::AbstractVector`: values of the Boltzmann variable. See [`ϕ`](@ref).
+- `θ::AbstractVector`: solution values at each point in `ϕ`.
 
 # References
 BRUCE, R. R.; KLUTE, A. The measurement of soil moisture diffusivity.
