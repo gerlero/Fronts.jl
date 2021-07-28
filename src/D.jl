@@ -6,11 +6,11 @@ using FastClosures: @closure
 function _asKs(; Ks=nothing, k=nothing, ν=1e-6, g=9.81)
     if !isnothing(Ks)
         @argcheck isnothing(k) "may only assign one of Ks and k, got both"
-        @argcheck Ks>0
+        @argcheck Ks>zero(Ks)
         return Ks
 
     elseif !isnothing(k)
-        @argcheck k>0; @argcheck ν>0; @argcheck g>0
+        @argcheck k>zero(k); @argcheck ν>zero(ν); @argcheck g>zero(g)
         return g*k/ν
 
     else
@@ -54,7 +54,7 @@ Hydrology Papers, Colorado State University, 1964, vol. 24, p. 37.
 """
 function brookscorey(; n, l=0.5, α=1, Ks=nothing, k=nothing, θr=0, θs=1, ν=1e-6, g=9.81)
 
-    @argcheck α>0
+    @argcheck α>zero(α)
     @argcheck θr<θs
 
     Ks = _asKs(Ks=Ks, k=k, ν=ν, g=g)
@@ -119,7 +119,7 @@ function vangenuchten(; n=nothing, m=nothing, l=0.5, α=1, Ks=nothing, k=nothing
     end
 
     @argcheck 0<m<1
-    @argcheck α>0
+    @argcheck α>zero(α)
     @argcheck θr<θs
 
     Ks = _asKs(Ks=Ks, k=k, ν=ν, g=g)

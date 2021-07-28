@@ -21,7 +21,7 @@ end
 
 function _shoot(prob::FlowrateProblem; b, itol, ϕbtol)
     if isindomain(prob.eq, b)
-        ϕb = prob.ϕb != 0 ? prob.ϕb : ϕbtol
+        ϕb = !iszero(prob.ϕb) ? prob.ϕb : ϕbtol
 
         d_dϕb = d_dϕ(prob, :b, b=b, ϕb=ϕb)
     
@@ -36,7 +36,7 @@ function solve(prob::DirichletProblem; d_dϕb_hint=nothing,
                                        itol=1e-3,
                                        maxiter=100)
 
-    @argcheck itol≥0
+    @argcheck itol≥zero(itol)
     @argcheck maxiter≥0
 
     @argcheck isindomain(prob.eq, prob.b) DomainError(prob.b, "prob.b not valid for the given equation")
@@ -44,7 +44,7 @@ function solve(prob::DirichletProblem; d_dϕb_hint=nothing,
     residual = prob.b - prob.i
 
     if abs(residual) ≤ itol
-        odesol, _ = _shoot(prob, d_dϕb=0, itol=itol)
+        odesol, _ = _shoot(prob, d_dϕb=zero(prob.b/prob.ϕb), itol=itol)
         return Solution(odesol, prob.eq, 0)
     end
 
@@ -56,7 +56,7 @@ function solve(prob::DirichletProblem; d_dϕb_hint=nothing,
         d_dϕb_hint = d_dϕ(prob, :b_hint)
     end
 
-    search = BracketingSearch(0, d_dϕb_hint, residual)
+    search = BracketingSearch(zero(d_dϕb_hint), d_dϕb_hint, residual)
 
     for iterations in 1:maxiter
         odesol, residual = _shoot(prob, d_dϕb=trial_x(search), itol=itol)
@@ -77,17 +77,17 @@ function solve(prob::FlowrateProblem; b_hint=nothing,
                                       ϕbtol=1e-6,
                                       maxiter=100)
 
-    @argcheck itol≥0
-    if prob.ϕb == 0
-        @argcheck ϕbtol>0
+    @argcheck itol≥zero(itol)
+    if iszero(prob.ϕb)
+        @argcheck ϕbtol>zero(ϕbtol)
     else
-        @argcheck ϕbtol≥0
+        @argcheck ϕbtol≥zero(ϕbtol)
     end
     @argcheck maxiter≥0
 
     if monotonicity(prob) == 0
         odesol, residual = _shoot(prob, b=prob.i, itol=itol, ϕbtol=ϕbtol)
-        @assert residual == 0
+        @assert iszero(residual)
         return Solution(odesol, prob, 0)
     end
 

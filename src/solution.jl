@@ -31,7 +31,7 @@ struct Solution{_Todesol,_Teq,_T,_Td_dϕ,_Tϕ} <: TransformedFunction
     end
 end
     
-function (sol::Solution)(ϕ::Real)
+function (sol::Solution)(ϕ)
     if ϕ > sol.ϕi
         return sol.i
     elseif ϕ < sol.ϕb
@@ -51,7 +51,7 @@ Type `\\phi<tab>` to obtain the `ϕ` symbol.
 
 See also: [`ϕ`](@ref)
 """
-function d_dϕ(sol::Solution, ϕ::Real)
+function d_dϕ(sol::Solution, ϕ)
     if ϕ > sol.ϕi
         return zero(sol.d_dϕb)
     elseif ϕ < sol.ϕb
@@ -129,7 +129,7 @@ function Base.show(io::IO, sol::Solution)
     println(io, "Solution $(sol._eq.symbol) obtained after $(sol.iterations) iterations")
     println(io, "$(sol._eq.symbol)b = $(sol.b)")
     println(io, "d$(sol._eq.symbol)/dϕ|b = $(sol.d_dϕb)")
-    if sol.ϕb != 0
+    if !iszero(sol.ϕb)
         println(io, "ϕb = $(sol.ϕb)")
     end
     print(io, "$(sol._eq.symbol)i = $(sol.i)")
