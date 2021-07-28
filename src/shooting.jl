@@ -53,7 +53,7 @@ function solve(prob::DirichletProblem; d_dϕb_hint=nothing,
     if !isnothing(d_dϕb_hint)
         @argcheck sign(d_dϕb_hint) == monotonicity(prob) "sign of d_dϕb_hint must be consistent with initial and boundary conditions"
     else
-        d_dϕb_hint = (prob.i - prob.b)/(2*√prob.eq.D(prob.b))
+        d_dϕb_hint = d_dϕ(prob, :b_hint)
     end
 
     search = BracketingSearch(0, d_dϕb_hint, residual)
