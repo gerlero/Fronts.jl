@@ -16,14 +16,14 @@ Evaluate the solution.
 
 Type `\\phi<tab>` to obtain the `ϕ` symbol.
 """
-struct Solution{Todesol,Teq,T,Td_dϕ,Tϕ} <: TransformedFunction
-    _odesol::Todesol
-    _eq::Teq
-    i::T
-    b::T
-    d_dϕb::Td_dϕ
-    ϕb::Tϕ
-    ϕi::Tϕ
+struct Solution{_Todesol,_Teq,_T,_Td_dϕ,_Tϕ} <: TransformedFunction
+    _odesol::_Todesol
+    _eq::_Teq
+    i::_T
+    b::_T
+    d_dϕb::_Td_dϕ
+    ϕb::_Tϕ
+    ϕi::_Tϕ
     iterations::Int
 
     function Solution(odesol, eq, iterations)
