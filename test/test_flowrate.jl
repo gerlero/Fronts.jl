@@ -1,7 +1,7 @@
 @testset "FlowrateProblem" begin
 
     @testset "constant solution" begin
-    prob = FlowrateProblem(Fronts.DiffusionEquation{2}(identity),
+    prob = FlowrateProblem(DiffusionEquation{2}(identity),
                            i=0.1, Qb=0)
 
     θ = solve(prob)
@@ -19,7 +19,7 @@
     height = 10
     θi = 0.1
 
-    prob = FlowrateProblem(Fronts.DiffusionEquation{2}(identity),
+    prob = FlowrateProblem(DiffusionEquation{2}(identity),
                            i=θi, Qb=Qb, height=height)
 
     θ = solve(prob)
