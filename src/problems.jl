@@ -35,11 +35,11 @@ julia> prob = Fronts.DirichletProblem(D, i=1, b=2)
 
 See also: [`Equation`](@ref)
 """
-struct DirichletProblem{Teq,Tθ,Tϕ}
+struct DirichletProblem{Teq,_T,_Tϕ}
     eq::Teq
-    i::Tθ
-    b::Tθ
-    ϕb::Tϕ
+    i::_T
+    b::_T
+    ϕb::_Tϕ
     function DirichletProblem(eq::Equation{1}; i, b, ϕb=0)
         new{typeof(eq),promote_type(typeof(i),typeof(b)),typeof(ϕb)}(eq, i, b, ϕb)
     end
@@ -115,12 +115,12 @@ julia> prob = Fronts.FlowrateProblem(eq, i=1, Qb=1)
 
 See also: [`Equation`](@ref)
 """
-struct FlowrateProblem{Teq,Tθ,Tϕ,TQ,Th}
+struct FlowrateProblem{Teq,_Tθ,_Tϕ,_TQ,_Th}
     eq::Teq
-    i::Tθ
-    Qb::TQ
-    _αh::Th
-    ϕb::Tϕ
+    i::_Tθ
+    Qb::_TQ
+    _αh::_Th
+    ϕb::_Tϕ
 
     function FlowrateProblem(eq::Equation{2}; i, Qb, angle=2π, height=1, ϕb=0)
         @argcheck 0<angle≤2π; @argcheck height>0
@@ -183,11 +183,11 @@ julia> prob = Fronts.CauchyProblem(D, b=2, d_dϕb=-0.1)
 
 See also: [`Equation`](@ref)
 """
-struct CauchyProblem{Teq,Tθ,Tϕ,Td_dϕ}
+struct CauchyProblem{Teq,_T,_Tϕ,_Td_dϕ}
     eq::Teq
-    b::Tθ
-    d_dϕb::Td_dϕ
-    ϕb::Tϕ
+    b::_T
+    d_dϕb::_Td_dϕ
+    ϕb::_Tϕ
     function CauchyProblem(eq::Equation{1}; b, d_dϕb, ϕb=0)
         new{typeof(eq),typeof(b),typeof(ϕb),typeof(d_dϕb)}(eq, b, d_dϕb, ϕb)
     end

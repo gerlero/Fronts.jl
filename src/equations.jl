@@ -53,8 +53,8 @@ julia> eq = Fronts.DiffusionEquation{3}(D, symbol=:c)
 ∂c/∂t = 1/r²*∂(r²*D(c)*∂c/∂r)/∂r
 ```
 """
-struct DiffusionEquation{m,TD} <: Equation{m}
-    D::TD
+struct DiffusionEquation{m,_TD} <: Equation{m}
+    D::_TD
     symbol::Symbol
 
     function DiffusionEquation{m}(D; symbol::Symbol=:θ) where m
@@ -111,9 +111,9 @@ Horizontal Richards equation, pressure-based formulation.
     - 2 for radial flow in polar or cylindrical coordinates;
     - 3 for radial flow in spherical coordinates.
 """
-struct RichardsEquation{m,TC,TK} <: Equation{m}
-    C::TC
-    K::TK
+struct RichardsEquation{m,_TC,_TK} <: Equation{m}
+    C::_TC
+    K::_TK
     symbol::Symbol
 
     function RichardsEquation{m}(; C, K, symbol::Symbol=:h) where m
