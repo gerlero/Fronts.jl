@@ -16,11 +16,11 @@ Evaluate the solution.
 
 Type `\\phi<tab>` to obtain the `ϕ` symbol.
 """
-struct Solution{Todesol,Teq,Tθ,Td_dϕ,Tϕ} <: TransformedFunction
+struct Solution{Todesol,Teq,T,Td_dϕ,Tϕ} <: TransformedFunction
     _odesol::Todesol
     _eq::Teq
-    i::Tθ
-    b::Tθ
+    i::T
+    b::T
     d_dϕb::Td_dϕ
     ϕb::Tϕ
     ϕi::Tϕ
@@ -31,14 +31,14 @@ struct Solution{Todesol,Teq,Tθ,Td_dϕ,Tϕ} <: TransformedFunction
     end
 end
     
-function (θ::Solution)(ϕ::Real)
-    if ϕ > θ.ϕi
-        return θ.i
-    elseif ϕ < θ.ϕb
-        return typeof(θ.b)(NaN)
+function (sol::Solution)(ϕ::Real)
+    if ϕ > sol.ϕi
+        return sol.i
+    elseif ϕ < sol.ϕb
+        return typeof(sol.b)(NaN)
     end
 
-    return θ._odesol(ϕ, idxs=1)
+    return sol._odesol(ϕ, idxs=1)
 end
 
 """
@@ -51,14 +51,14 @@ Type `\\phi<tab>` to obtain the `ϕ` symbol.
 
 See also: [`ϕ`](@ref)
 """
-function d_dϕ(θ::Solution, ϕ::Real)
-    if ϕ > θ.ϕi
-        return zero(θ.d_dϕb)
-    elseif ϕ < θ.ϕb
-        return typeof(θ.d_dϕb)(NaN)
+function d_dϕ(sol::Solution, ϕ::Real)
+    if ϕ > sol.ϕi
+        return zero(sol.d_dϕb)
+    elseif ϕ < sol.ϕb
+        return typeof(sol.d_dϕb)(NaN)
     end
 
-    return θ._odesol(ϕ, idxs=2)
+    return sol._odesol(ϕ, idxs=2)
 end
 
 """
@@ -75,16 +75,16 @@ Type `\\partial<tab>` to obtain the `∂` symbol.
 Spatial derivative of the solution at the boundary.
 
 """
-function ∂_∂r(θ::Solution, symbol::Symbol, t) 
+function ∂_∂r(sol::Solution, symbol::Symbol, t) 
     @argcheck symbol === :b
-    ∂_∂r(θ, rb(θ,t), t)
+    ∂_∂r(sol, rb(sol,t), t)
 end
 
 
 """
     ∂_∂t(::Solution, r, t)
 
-Time derivative of the solution θ.
+Time derivative of the solution sol.
 
 Type `\\partial<tab>` to obtain the `∂` symbol.
 
@@ -94,9 +94,9 @@ Type `\\partial<tab>` to obtain the `∂` symbol.
 
 Time derivative of the solution at the boundary.
 """
-function ∂_∂t(θ::Solution, symbol::Symbol, t) 
+function ∂_∂t(sol::Solution, symbol::Symbol, t) 
     @argcheck symbol === :b
-    ∂_∂t(θ, rb(θ,t), t)
+    ∂_∂t(sol, rb(sol,t), t)
 end
 
 """
@@ -104,16 +104,16 @@ end
 
 Diffusive flux of the solution.
 """
-flux(θ::Solution, r, t) = flux(θ._eq, θ, r, t)
+flux(sol::Solution, r, t) = flux(sol._eq, sol, r, t)
 
 """
     flux(::Solution, :b, t)
 
 Diffusive flux of the solution at the boundary.
 """
-function flux(θ::Solution, symbol::Symbol, t) 
+function flux(sol::Solution, symbol::Symbol, t) 
     @argcheck symbol === :b
-    flux(θ, rb(θ,t), t)
+    flux(sol, rb(sol,t), t)
 end
 
 """
@@ -121,25 +121,25 @@ end
 
 Location of the boundary in the solution at time `t`, equal to `ϕb*√t`.
 """
-rb(θ::Solution, t) = r(θ.ϕb, t)
+rb(sol::Solution, t) = r(sol.ϕb, t)
 
-Base.broadcastable(θ::Solution) = Ref(θ)
+Base.broadcastable(sol::Solution) = Ref(sol)
 
-function Base.show(io::IO, θ::Solution)
-    println(io, "Solution $(θ._eq.symbol) obtained after $(θ.iterations) iterations")
-    println(io, "$(θ._eq.symbol)b = $(θ.b)")
-    println(io, "d$(θ._eq.symbol)/dϕ|b = $(θ.d_dϕb)")
-    if θ.ϕb != 0
-        println(io, "ϕb = $(θ.ϕb)")
+function Base.show(io::IO, sol::Solution)
+    println(io, "Solution $(sol._eq.symbol) obtained after $(sol.iterations) iterations")
+    println(io, "$(sol._eq.symbol)b = $(sol.b)")
+    println(io, "d$(sol._eq.symbol)/dϕ|b = $(sol.d_dϕb)")
+    if sol.ϕb != 0
+        println(io, "ϕb = $(sol.ϕb)")
     end
-    print(io, "$(θ._eq.symbol)i = $(θ.i)")
+    print(io, "$(sol._eq.symbol)i = $(sol.i)")
 end
 
 # Plot recipe
-@recipe function plot(θ::Solution; label=string(θ._eq.symbol),
-                                   legend=false,
-                                   xguide="ϕ=r/√t",
-                                   yguide=label)
-    vars := 1  # Plot only u[1] = θ
-    θ._odesol  # Delegate the rest to the contained ODESolution
+@recipe function plot(sol::Solution; label=string(sol._eq.symbol),
+                                     legend=false,
+                                     xguide="ϕ=r/√t",
+                                     yguide=label)
+    vars := 1  # Plot only u[1] = sol
+    sol._odesol  # Delegate the rest to the contained ODESolution
 end
