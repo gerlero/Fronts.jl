@@ -1,11 +1,18 @@
 """
+    monotonicity(prob) -> Int
+
+Whether the solution to `prob` must be decreasing (`-1`), constant (`0`) or increasing (`+1`) in `r`.
+"""
+function monotonicity end
+
+"""
     DirichletProblem(eq; i=<initial value>, b=<boundary value>, ϕb=0)
     DirichletProblem(D; i=<initial value>, b=<boundary value>, ϕb=0)
 
 Semi-infinite problem with a Dirichlet boundary condition.
 
 # Arguments
-- `eq::DiffusionEquation`: governing equation.
+- `eq::Equation`: governing equation.
 - `D`: diffusivity function.
 Shortcut for `DirichletProblem(DiffusionEquation(D), ...)`.
 
@@ -25,16 +32,18 @@ julia> prob = Fronts.DirichletProblem(D, i=1, b=2)
 ⎨ θ(r,0) = 1, r>0
 ⎩ θ(0,t) = 2, t>0
 ```
+
+See also: [`Equation`](@ref)
 """
 struct DirichletProblem{Teq,Tθ,Tϕ}
     eq::Teq
     i::Tθ
     b::Tθ
     ϕb::Tϕ
-    function DirichletProblem(eq::DiffusionEquation{1}; i, b, ϕb=0)
+    function DirichletProblem(eq::Equation{1}; i, b, ϕb=0)
         new{typeof(eq),promote_type(typeof(i),typeof(b)),typeof(ϕb)}(eq, i, b, ϕb)
     end
-    function DirichletProblem(eq::DiffusionEquation; i, b, ϕb)
+    function DirichletProblem(eq::Equation; i, b, ϕb)
         @argcheck ϕb>0
         new{typeof(eq),promote_type(typeof(i),typeof(b)),typeof(ϕb)}(eq, i, b, ϕb)
     end
@@ -57,15 +66,21 @@ function Base.show(io::IO, prob::DirichletProblem)
     end
 end
 
-
-"""
-    monotonicity(prob) -> Int
-
-Whether the solution to `prob` must be decreasing (`-1`), constant (`0`) or increasing (`+1`) in `r`.
-"""
-function monotonicity end
-
 monotonicity(prob::DirichletProblem)::Int = sign(prob.i - prob.b)
+
+function d_dϕ(prob::DirichletProblem{<:DiffusionEquation}, symbol::Symbol)
+    @argcheck symbol === :b_hint
+    (prob.i - prob.b)/(2*√prob.eq.D(prob.b))
+end
+
+function d_dϕ(prob::DirichletProblem{<:RichardsEquation}, symbol::Symbol)
+    @argcheck symbol === :b_hint
+    C_ = prob.eq.C(prob.b)
+    if C_≤0
+        return (prob.i - prob.b)
+    end
+    return (prob.i - prob.b)/(2*√(prob.eq.K(prob.b)/C_))
+end
 
 
 """
@@ -74,7 +89,7 @@ monotonicity(prob::DirichletProblem)::Int = sign(prob.i - prob.b)
 Semi-infinite radial (polar/cylindrical) problem with an imposed-flowrate boundary condition.
 
 # Arguments
-- `eq::DiffusionEquation{2}`: governing equation.
+- `eq::Equation{2}`: governing equation.
 
 # Keyword arguments
 - `i`: initial value.
@@ -97,6 +112,8 @@ julia> prob = Fronts.FlowrateProblem(eq, i=1, Qb=1)
 ⎨ θ(r,0) = 1, r>0
 ⎩ Qb(0,t) = 1, t>0
 ```
+
+See also: [`Equation`](@ref)
 """
 struct FlowrateProblem{Teq,Tθ,Tϕ,TQ,Th}
     eq::Teq
@@ -105,7 +122,7 @@ struct FlowrateProblem{Teq,Tθ,Tϕ,TQ,Th}
     _αh::Th
     ϕb::Tϕ
 
-    function FlowrateProblem(eq::DiffusionEquation{2}; i, Qb, angle=2π, height=1, ϕb=0)
+    function FlowrateProblem(eq::Equation{2}; i, Qb, angle=2π, height=1, ϕb=0)
         @argcheck 0<angle≤2π; @argcheck height>0
         @argcheck ϕb≥0
         αh = angle*height
@@ -142,7 +159,7 @@ monotonicity(prob::FlowrateProblem)::Int = -sign(prob.Qb)
 Semi-infinite problem with a Cauchy boundary condition (and unknown initial condition).
 
 # Arguments
-- `eq::DiffusionEquation`: governing equation.
+- `eq::Equation`: governing equation.
 - `D`: diffusivity function.
 Shortcut for `DirichletProblem(DiffusionEquation(D), ...)`.
 
@@ -163,16 +180,18 @@ julia> prob = Fronts.CauchyProblem(D, b=2, d_dϕb=-0.1)
 ⎨ θ(0,t) = 2, t>0
 ⎩ √t*∂θ/∂r(0,t) = -0.1, t>0
 ```
+
+See also: [`Equation`](@ref)
 """
 struct CauchyProblem{Teq,Tθ,Tϕ,Td_dϕ}
     eq::Teq
     b::Tθ
     d_dϕb::Td_dϕ
     ϕb::Tϕ
-    function CauchyProblem(eq::DiffusionEquation{1}; b, d_dϕb, ϕb=0)
+    function CauchyProblem(eq::Equation{1}; b, d_dϕb, ϕb=0)
         new{typeof(eq),typeof(b),typeof(ϕb),typeof(d_dϕb)}(eq, b, d_dϕb, ϕb)
     end
-    function CauchyProblem(eq::DiffusionEquation; b, d_dϕb, ϕb)
+    function CauchyProblem(eq::Equation; b, d_dϕb, ϕb)
         @argcheck ϕb>0
         new{typeof(eq),typeof(b),typeof(ϕb),typeof(d_dϕb)}(eq, b, d_dϕb, ϕb)
     end
