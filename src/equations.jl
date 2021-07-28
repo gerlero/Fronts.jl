@@ -90,7 +90,7 @@ function isindomain(eq::DiffusionEquation, θ)
         isa(e, DomainError) || rethrow()
     end
 
-    return isfinite(D) && D>0 && isfinite(dD_dθ)
+    return isfinite(D) && D>zero(D) && isfinite(dD_dθ)
 end
 
 
@@ -153,5 +153,5 @@ function isindomain(eq::RichardsEquation, h)
         isa(e, DomainError) || rethrow()
     end
 
-    return isfinite(C) && isfinite(K) && K>0 && isfinite(dK_dh)
+    return isfinite(C) && isfinite(K) && K>zero(K) && isfinite(dK_dh)
 end

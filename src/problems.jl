@@ -52,13 +52,13 @@ end
 DirichletProblem(D; i, b, ϕb=0) = DirichletProblem(DiffusionEquation(D), i=i, b=b, ϕb=ϕb)
 
 function Base.show(io::IO, prob::DirichletProblem)
-    if prob.ϕb == 0
+    if iszero(prob.ϕb)
         println(io, "⎧ ", prob.eq, ", r>0,t>0")
     else
         println(io, "⎧ ", prob.eq, ", r>rb(t),t>0")
     end
     println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
-    if prob.ϕb == 0
+    if iszero(prob.ϕb)
         print(io, "⎩ ", prob.eq.symbol, "(0,t) = ", prob.b, ", t>0")
     else
         println(io, "⎩ ", prob.eq.symbol, "(rb(t),t) = ", prob.b, ", t>0")
@@ -76,7 +76,7 @@ end
 function d_dϕ(prob::DirichletProblem{<:RichardsEquation}, symbol::Symbol)
     @argcheck symbol === :b_hint
     C_ = prob.eq.C(prob.b)
-    if C_≤0
+    if C_≤zero(C_)
         return (prob.i - prob.b)
     end
     return (prob.i - prob.b)/(2*√(prob.eq.K(prob.b)/C_))
@@ -123,21 +123,21 @@ struct FlowrateProblem{Teq,_Tθ,_Tϕ,_TQ,_Th}
     ϕb::_Tϕ
 
     function FlowrateProblem(eq::Equation{2}; i, Qb, angle=2π, height=1, ϕb=0)
-        @argcheck 0<angle≤2π; @argcheck height>0
-        @argcheck ϕb≥0
+        @argcheck 0<angle≤2π; @argcheck height>zero(height)
+        @argcheck ϕb≥zero(ϕb)
         αh = angle*height
         new{typeof(eq),typeof(i),typeof(ϕb),typeof(Qb),typeof(αh)}(eq, i, Qb, αh, ϕb)
     end
 end
 
 function Base.show(io::IO, prob::FlowrateProblem)
-    if prob.ϕb == 0
+    if iszero(prob.ϕb)
         println(io, "⎧ ", prob.eq, ", r>0,t>0")
     else
         println(io, "⎧ ", prob.eq, ", r>rb(t),t>0")
     end
     println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
-    if prob.ϕb == 0
+    if iszero(prob.ϕb)
         print(io, "⎩ Qb(0,t) = ", prob.Qb, ", t>0")
     else
         println(io, "⎩ Qb(rb(t),t) = ", prob.Qb, ", t>0")
@@ -192,7 +192,7 @@ struct CauchyProblem{Teq,_T,_Tϕ,_Td_dϕ}
         new{typeof(eq),typeof(b),typeof(ϕb),typeof(d_dϕb)}(eq, b, d_dϕb, ϕb)
     end
     function CauchyProblem(eq::Equation; b, d_dϕb, ϕb)
-        @argcheck ϕb>0
+        @argcheck ϕb>zero(ϕb)
         new{typeof(eq),typeof(b),typeof(ϕb),typeof(d_dϕb)}(eq, b, d_dϕb, ϕb)
     end
 end
@@ -200,7 +200,7 @@ end
 CauchyProblem(D; b, d_dϕb, ϕb=0) = CauchyProblem(DiffusionEquation(D), b=b, d_dϕb=d_dϕb, ϕb=ϕb)
 
 function Base.show(io::IO, prob::CauchyProblem)
-    if prob.ϕb == 0
+    if iszero(prob.ϕb)
         println(io, "⎧ ", prob.eq, ", r>0,t>0")
         println(io, "⎨ ", prob.eq.symbol, "(0,t) = ", prob.b, ", t>0")
         print(io,   "⎩ √t*∂", prob.eq.symbol, "/∂r(0,t) = ", prob.d_dϕb, ", t>0")
