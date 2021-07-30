@@ -13,8 +13,7 @@ Semi-infinite problem with a Dirichlet boundary condition.
 
 # Arguments
 - `eq::Equation`: governing equation.
-- `D`: diffusivity function.
-Shortcut for `DirichletProblem(DiffusionEquation(D), ...)`.
+- `D`: diffusivity function. Shortcut for `DirichletProblem(DiffusionEquation(D), ...)`.
 
 # Keyword arguments
 - `i`: initial value.
@@ -160,8 +159,7 @@ Semi-infinite problem with a Cauchy boundary condition (and unknown initial cond
 
 # Arguments
 - `eq::Equation`: governing equation.
-- `D`: diffusivity function.
-Shortcut for `DirichletProblem(DiffusionEquation(D), ...)`.
+- `D`: diffusivity function. Shortcut for `CauchyProblem(DiffusionEquation(D), ...)`.
 
 # Keyword arguments
 - `b`: imposed boundary value.
