@@ -52,7 +52,7 @@ and ``\theta`` is moisture content.
 BROOKS, R.; COREY, T. Hydraulic properties of porous media.
 Hydrology Papers, Colorado State University, 1964, vol. 24, p. 37.
 """
-function brookscorey(; n, l=0.5, α=1, Ks=nothing, k=nothing, θr=0, θs=1, ν=1e-6, g=9.81)
+function brookscorey(; n, l=1, α=1, Ks=nothing, k=nothing, θr=0, θs=1, ν=1e-6, g=9.81)
 
     @argcheck α>zero(α)
     @argcheck θr<θs
