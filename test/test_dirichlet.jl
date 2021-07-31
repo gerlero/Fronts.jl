@@ -64,9 +64,9 @@
 
     θb = θs - ϵ
 
-    D = Fronts.D.vangenuchten(n=n, α=α, k=k, θr=θr, θs=θs)
+    model = VanGenuchten(n=n, α=α, k=k, θr=θr, θs=θs)
 
-    prob = DirichletProblem(D, i=θi, b=θb)
+    prob = DirichletProblem(model, i=θi, b=θb)
 
     θ = solve(prob, itol=1e-7)
 
