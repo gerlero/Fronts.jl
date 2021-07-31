@@ -2,6 +2,7 @@
 module Example1INFILTR
 
 using Fronts
+using Fronts.PorousModels
 using Plots
 
 ϵ = 1e-6
@@ -12,9 +13,9 @@ n = 1.506
 
 θs = 0.3308
 
-D = Fronts.D.vangenuchten(n=n, α=α, Ks=Ks, θs=θs)
+model = VanGenuchten(n=n, α=α, Ks=Ks, θs=θs)
 
-prob = DirichletProblem(D, i=0.1003, b=0.3308-ϵ)
+prob = DirichletProblem(model, i=0.1003, b=0.3308-ϵ)
 
 θ = solve(prob)
 

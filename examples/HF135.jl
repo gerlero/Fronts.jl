@@ -2,6 +2,7 @@
 module ExampleHF135
 
 using Fronts
+using Fronts.PorousModels
 using Plots
 
 ϵ = 1e-7
@@ -17,9 +18,9 @@ n = 2.3521
 θr = 0.0473
 θs = 0.945
 
-D = Fronts.D.vangenuchten(n=n, α=α, k=k, θr=θr, θs=θs)
+model = VanGenuchten(n=n, α=α, k=k, θr=θr, θs=θs)
 
-prob = DirichletProblem(D, i=θi, b=θs-ϵ)
+prob = DirichletProblem(model, i=θi, b=θs-ϵ)
 
 θ = solve(prob)
 
