@@ -1,11 +1,13 @@
 """
-    ϕ(r, t)
+    Fronts.ϕ(r, t)
 
 Evaluate the Boltzmann variable ϕ at position `r` and time `t`.
 
 Type `\\phi<tab>` to obtain the `ϕ` symbol.
 
 The Boltzmann variable is defined as `ϕ=r/√t` and makes the Boltzmann transformation possible.
+
+To prevent possible name clashes, this function is not exported.
 
 See also: [`transform`](@ref)
 """
@@ -34,18 +36,22 @@ See also: [`ϕ`](@ref)
 ∂ϕ_∂t(r, t) = -ϕ(r,t)/2t
 
 """
-    r(ϕ, t)
+    Fronts.r(ϕ, t)
 
 Convert back from the Boltzmann variable to `r`.
+
+To prevent possible name clashes, this function is not exported.
 
 See also: [`ϕ`](@ref)
 """
 r(ϕ, t) = ϕ*√t
 
 """
-    t(ϕ, r)
+    Fronts.t(ϕ, r)
 
 Convert back from the Boltzmann variable to `t`.
+
+To prevent possible name clashes, this function is not exported.
 
 See also: [`ϕ`](@ref)
 """
