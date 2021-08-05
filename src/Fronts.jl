@@ -6,6 +6,7 @@ using ._Diff: value_and_derivative, derivative
 include("_Rootfinding.jl")
 using ._Rootfinding: BracketingSearch, trial_x, report_y!
 
+include("PorousModels/PorousModels.jl")
 include("D.jl")
 
 using OrdinaryDiffEq.DiffEqBase: NullParameters
