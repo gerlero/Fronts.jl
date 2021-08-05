@@ -19,6 +19,7 @@ makedocs(;
         "Solutions" => "solution.md",
         "Boltzmann transformation" => "boltzmann.md",
         "Inverse problems" => "inverse.md",
+        "Unsaturated flow models" => "PorousModels.md",
         "Diffusivity functions" => "D.md",
     ],
 )

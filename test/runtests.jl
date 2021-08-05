@@ -1,5 +1,7 @@
 using Fronts
+using Fronts.PorousModels
 using Test
+using Fronts._Diff: derivative
 using OrdinaryDiffEq: ODEFunction, ODEProblem
 
 @testset "Fronts.jl" begin
@@ -9,4 +11,5 @@ using OrdinaryDiffEq: ODEFunction, ODEProblem
     include("test_richards.jl")
     include("test_transform.jl")
     include("test_inverse.jl")
+    include("test_PorousModels.jl")
 end
