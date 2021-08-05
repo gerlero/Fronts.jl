@@ -8,6 +8,7 @@ The `PorousModels` submodule defines models of unsaturated flow in porous media 
 
 ```@docs
 UnsaturatedFlowModel
+BrooksAndCorey
 VanGenuchten
 θh
 hθ
