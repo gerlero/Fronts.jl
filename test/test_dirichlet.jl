@@ -7,11 +7,11 @@
 
     ϕ = range(0, 20, length=100)
 
-    @test all(θ.(ϕ) .≈ θ.i)
-    @test all(θ.(ϕ) .≈ θ.b)
-    @test all(d_dϕ.(θ, ϕ) .≈ 0)
+    @test all(@inferred θ.(ϕ) .≈ θ.i)
+    @test all(@inferred θ.(ϕ) .≈ θ.b)
+    @test all(@inferred d_dϕ.(θ, ϕ) .≈ 0)
     @test θ.iterations == 0
-    @test isnan(θ(-1))
+    @test isnan(@inferred θ(-1))
     end
 
 
@@ -73,7 +73,7 @@
     @test all(@. isapprox(θ(r,t), θ_pmf, atol=1e-3))
     @test all(@. isapprox(flux(θ,r,t), U_pmf, atol=1e-6))
     @test θ.iterations > 0
-    @test isnan(θ(-1,t))
+    @test isnan(@inferred θ(-1,t))
     end
 
 
