@@ -7,11 +7,11 @@
 
     ϕ = range(0, 20, length=100)
 
-    @test all(θ.(ϕ) .≈ θ.i)
-    @test all(θ.(ϕ) .≈ θ.b)
-    @test all(d_dϕ.(θ, ϕ) .≈ 0)
+    @test all(@inferred θ.(ϕ) .≈ θ.i)
+    @test all(@inferred θ.(ϕ) .≈ θ.b)
+    @test all(@inferred d_dϕ.(θ, ϕ) .≈ 0)
     @test θ.iterations == 0
-    @test isnan(θ(-1))
+    @test isnan(@inferred θ(-1))
     end
 
 
@@ -34,7 +34,7 @@
     
     @test θ2.iterations == 0
 
-    @test isnan(θ2(-1))
+    @test isnan(@inferred θ2(-1))
 
     end
 end

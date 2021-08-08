@@ -12,21 +12,21 @@
 
         bc = BrooksAndCorey(n=n, α=α, k=k, θr=θr, θs=θs)
 
-        htest = -10
+        htest = -10.0
 
-        @test hθ(bc, θh(bc, htest)) ≈ htest
-        @test Ch(bc, htest) ≈ derivative(h -> θh(bc, h), htest)
-        @test Cθ(bc, θh(bc, htest)) ≈ Ch(bc, htest)
-        @test Kθ(bc, θh(bc, htest)) ≈ Kh(bc, htest)
+        @test @inferred hθ(bc, @inferred θh(bc, htest)) ≈ htest
+        @test @inferred Ch(bc, htest) ≈ derivative(h -> θh(bc, h), htest)
+        @test @inferred Cθ(bc, @inferred θh(bc, htest)) ≈ @inferred Ch(bc, htest)
+        @test @inferred Kθ(bc, @inferred θh(bc, htest)) ≈ @inferred Kh(bc, htest)
 
         θtest = 0.5
 
         @test Dθ(bc, θtest) ≈ 1.8877259646141242e-06
 
-        @test θh(bc, hθ(bc, θtest)) ≈ θtest
-        @test Ch(bc, hθ(bc, θtest)) ≈ Cθ(bc, θtest)
-        @test Kh(bc, hθ(bc, θtest)) ≈ Kθ(bc, θtest)
-        @test Dθ(bc, θtest) ≈ Kθ(bc, θtest)/Cθ(bc, θtest)
+        @test @inferred θh(bc, @inferred hθ(bc, θtest)) ≈ θtest
+        @test @inferred Ch(bc, @inferred hθ(bc, θtest)) ≈ @inferred Cθ(bc, θtest)
+        @test @inferred Kh(bc, @inferred hθ(bc, θtest)) ≈ @inferred Kθ(bc, θtest)
+        @test @inferred Dθ(bc, θtest) ≈ @inferred Kθ(bc, θtest)/@inferred Cθ(bc, θtest)
     end
 
     @testset "VanGenuchten" begin
@@ -41,23 +41,23 @@
 
         vg = VanGenuchten(n=n, α=α, k=k, θr=θr, θs=θs)
 
-        htest = -10
+        htest = -10.0
 
-        @test Ch(vg, htest) ≈ 0.02896477570729651
+        @test @inferred Ch(vg, htest) ≈ 0.02896477570729651
         @test Kh(vg, htest) ≈ 9.430485870291618e-9
 
-        @test hθ(vg, θh(vg, htest)) ≈ htest
-        @test Ch(vg, htest) ≈ derivative(h -> θh(vg, h), htest)
-        @test Cθ(vg, θh(vg, htest)) ≈ Ch(vg, htest)
-        @test Kθ(vg, θh(vg, htest)) ≈ Kh(vg, htest)
+        @test @inferred hθ(vg, @inferred θh(vg, htest)) ≈ htest
+        @test @inferred Ch(vg, htest) ≈ derivative(h -> θh(vg, h), htest)
+        @test @inferred Cθ(vg, @inferred θh(vg, htest)) ≈ @inferred Ch(vg, htest)
+        @test @inferred Kθ(vg, @inferred θh(vg, htest)) ≈ @inferred Kh(vg, htest)
 
         θtest = 0.5
 
         @test Dθ(vg, θtest) ≈ 1.769723354269708e-6
 
-        @test θh(vg, hθ(vg, θtest)) ≈ θtest
-        @test Ch(vg, hθ(vg, θtest)) ≈ Cθ(vg, θtest)
-        @test Kh(vg, hθ(vg, θtest)) ≈ Kθ(vg, θtest)
-        @test Dθ(vg, θtest) ≈ Kθ(vg, θtest)/Cθ(vg, θtest)
+        @test @inferred θh(vg, @inferred hθ(vg, θtest)) ≈ θtest
+        @test @inferred Ch(vg, @inferred hθ(vg, θtest)) ≈ @inferred Cθ(vg, θtest)
+        @test @inferred Kh(vg, @inferred hθ(vg, θtest)) ≈ @inferred Kθ(vg, θtest)
+        @test @inferred Dθ(vg, θtest) ≈ @inferred Kθ(vg, θtest)/@inferred Cθ(vg, θtest)
     end
 end
