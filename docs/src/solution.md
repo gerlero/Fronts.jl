@@ -11,4 +11,5 @@ Solution
 flux
 d_dϕ
 rb
+sorptivity
 ```
