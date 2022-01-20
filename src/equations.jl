@@ -19,6 +19,24 @@ abstract type Equation{m} end
 """
 function isindomain end
 
+"""
+    diffusivity(eq::Equation, val)
+
+Diffusivity of the solution variable of `eq` with value `val`.
+"""
+function diffusivity end
+
+"""
+    flow_diffusivity(eq::Equation, val)
+
+Diffusivity of `eq` at `val`, as used to determine flow-related quantities (e.g. [`flux`](@ref) and [`sorptivity`](@ref)).
+
+# Implementation
+
+Delegates to [`diffusivity`](@ref) by default.
+"""
+flow_diffusivity(eq::Equation, val) = diffusivity(eq, val)
+
 
 """
     DiffusionEquation(D; symbol=:θ) <: Equation{1}
@@ -83,7 +101,6 @@ end
 
 DiffusionEquation(model::PorousModels.UnsaturatedFlowModel) = DiffusionEquation{1}(model)
 
-
 function Base.show(io::IO, eq::DiffusionEquation{1})
     print(io, "∂", eq.symbol, "/∂t = ∂(", eq.D, "(", eq.symbol, ")*∂", eq.symbol, "/∂r)/∂r")
 end
@@ -96,8 +113,6 @@ function Base.show(io::IO, eq::DiffusionEquation{3})
     print(io, "∂", eq.symbol, "/∂t = 1/r²*∂(r²*", eq.D, "(", eq.symbol, ")*∂", eq.symbol, "/∂r)/∂r")
 end
 
-flux(eq::DiffusionEquation, θ, r, t) = -eq.D(θ(r, t))*∂_∂r(θ, r, t)
-
 function isindomain(eq::DiffusionEquation, θ)
     D = NaN
     dD_dθ = NaN
@@ -109,6 +124,8 @@ function isindomain(eq::DiffusionEquation, θ)
 
     return isfinite(D) && D>zero(D) && isfinite(dD_dθ)
 end
+
+diffusivity(eq::DiffusionEquation, θ) = eq.D(θ)
 
 
 """
@@ -176,10 +193,6 @@ function Base.show(io::IO, eq::RichardsEquation{3})
     print(io, eq.C, "*∂", eq.symbol, "/∂t = 1/r²*∂(r²*", eq.K, "(", eq.symbol, ")*∂", eq.symbol, "/∂r)/∂r")
 end
 
-
-flux(eq::RichardsEquation, h, r, t) = -eq.K(h(r, t))*∂_∂r(h, r, t)
-
-
 function isindomain(eq::RichardsEquation, h)
     C = NaN
     K = NaN
@@ -193,3 +206,7 @@ function isindomain(eq::RichardsEquation, h)
 
     return isfinite(C) && isfinite(K) && K>zero(K) && isfinite(dK_dh)
 end
+
+diffusivity(eq::RichardsEquation, h) = eq.K(h)/eq.C(h)
+
+flow_diffusivity(eq::RichardsEquation, h) = eq.K(h)

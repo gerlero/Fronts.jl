@@ -67,18 +67,13 @@ end
 
 monotonicity(prob::DirichletProblem)::Int = sign(prob.i - prob.b)
 
-function d_dϕ(prob::DirichletProblem{<:DiffusionEquation}, symbol::Symbol)
+function d_dϕ(prob::DirichletProblem, symbol::Symbol)
     @argcheck symbol === :b_hint
-    (prob.i - prob.b)/(2*√prob.eq.D(prob.b))
-end
-
-function d_dϕ(prob::DirichletProblem{<:RichardsEquation}, symbol::Symbol)
-    @argcheck symbol === :b_hint
-    C_ = prob.eq.C(prob.b)
-    if C_≤zero(C_)
-        return (prob.i - prob.b)
+    Db = diffusivity(prob.eq, prob.b)
+    if !isfinite(Db) || Db≤zero(Db)
+        return (prob.i - prob.b)/√oneunit(Db)
     end
-    return (prob.i - prob.b)/(2*√(prob.eq.K(prob.b)/C_))
+    return (prob.i - prob.b)/(2*√Db)
 end
 
 
@@ -146,7 +141,7 @@ end
 
 function d_dϕ(prob::FlowrateProblem, symbol::Symbol; b, ϕb=prob.ϕb)
     @argcheck symbol === :b
-    return d_dϕ(prob.eq, b, ϕb, flux_mul_r=prob.Qb/prob._αh)
+    return d_dϕ(prob.eq, b, ϕb, prob.Qb/prob._αh)
 end
 
 monotonicity(prob::FlowrateProblem)::Int = -sign(prob.Qb)

@@ -47,9 +47,6 @@ function transform(eq::DiffusionEquation{m}) where m
 end
 
 
-d_dϕ(eq::DiffusionEquation{2}, θ, ϕ; flux_mul_r) = flux_mul_r/(-eq.D(θ)*ϕ)
-
-
 function transform(eq::RichardsEquation{1})
     let C = eq.C, K = eq.K
         function f((h, dh_dϕ), ::NullParameters, ϕ)
@@ -67,7 +64,6 @@ function transform(eq::RichardsEquation{1})
         return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ])
     end
 end
-
 
 function transform(eq::RichardsEquation{m}) where m
     @assert 2 ≤ m ≤ 3
@@ -89,4 +85,8 @@ function transform(eq::RichardsEquation{m}) where m
 end
 
 
-d_dϕ(eq::RichardsEquation{2}, h, ϕ; flux_mul_r) = flux_mul_r/(-eq.K(h)*ϕ)
+sorptivity(eq::Equation, sol::TransformedFunction, ϕ) = -2flow_diffusivity(eq, sol(ϕ))*d_dϕ(sol, ϕ)
+
+d_dϕ(eq::Equation, val, sorptivity) = -sorptivity/2flow_diffusivity(eq, val)
+
+d_dϕ(eq::Equation{2}, val, ϕ, flux_mul_r) = d_dϕ(eq, val, 2flux_mul_r/ϕ)

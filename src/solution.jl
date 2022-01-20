@@ -102,14 +102,14 @@ end
 """
     flux(::Solution, r, t)
 
-Diffusive flux of the solution.
+Flux.
 """
-flux(sol::Solution, r, t) = flux(sol._eq, sol, r, t)
+flux(sol::Solution, r, t) = sorptivity(sol, ϕ(r,t))/(2*√t)
 
 """
     flux(::Solution, :b, t)
 
-Diffusive flux of the solution at the boundary.
+Boundary flux.
 """
 function flux(sol::Solution, symbol::Symbol, t) 
     @argcheck symbol === :b
@@ -122,6 +122,23 @@ end
 Location of the boundary in the solution at time `t`, equal to `ϕb*√t`.
 """
 rb(sol::Solution, t) = r(sol.ϕb, t)
+
+"""
+    sorptivity(::Solution)
+
+Sorptivity.
+
+---
+
+    sorptivity(::Solution, ϕ)
+
+Sorptivity, computed from the given value of ϕ.
+
+# References
+PHILIP, J. R. The theory of infiltration: 4. Sorptivity and algebraic infiltration equations.
+Soil Science, 1957, vol. 84, no. 3, p. 257-264.
+"""
+sorptivity(sol::Solution, ϕ=sol.ϕb) = sorptivity(sol._eq, sol, ϕ)
 
 Base.broadcastable(sol::Solution) = Ref(sol)
 

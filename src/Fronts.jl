@@ -54,11 +54,12 @@ include("shooting.jl")
 include("exceptions.jl")
 include("inverse.jl")
 
-export Equation, DiffusionEquation, RichardsEquation, flux, isindomain
+export Equation, DiffusionEquation, RichardsEquation, isindomain, diffusivity, flow_diffusivity
 export TransformedFunction, d_dϕ, ∂_∂r, ∂_∂t, transform
+export sorptivity
 export DirichletProblem, FlowrateProblem, CauchyProblem, monotonicity
 export solve
-export Solution, rb
+export Solution, rb, flux, sorptivity
 export SolvingError
 export inverse
 
