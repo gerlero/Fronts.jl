@@ -13,7 +13,7 @@ prob = DirichletProblem(θ -> 0.5*(1 - log(θ)), i=0, b=1)
 
 ϕ = range(0, 20, length=200)
 
-plt = plot(θ, label="Fronts", xguide="ϕ", yguide="θ", legend=true)
+plt = plot(θ, label="Fronts")
 plot!(ϕ, exp.(-ϕ), label="Exact")
 display(plt)
 

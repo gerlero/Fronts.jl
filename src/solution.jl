@@ -136,10 +136,10 @@ function Base.show(io::IO, sol::Solution)
 end
 
 # Plot recipe
-@recipe function plot(sol::Solution; label=string(sol._eq.symbol),
-                                     legend=false,
-                                     xguide="ϕ=r/√t",
-                                     yguide=label)
+@recipe function plot(sol::Solution) \
+    xguide --> "ϕ=r/√t"
+    yguide --> string(sol._eq.symbol)
+
     vars := 1  # Plot only u[1] = sol
     sol._odesol  # Delegate the rest to the contained ODESolution
 end
