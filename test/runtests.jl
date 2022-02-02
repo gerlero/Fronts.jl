@@ -6,6 +6,8 @@ using OrdinaryDiffEq: ODEFunction, ODEProblem
 using OrdinaryDiffEq.DiffEqBase: NullParameters
 using StaticArrays: @SVector, SVector
 
+using Plots: plot
+
 @testset "Fronts.jl" begin
     include("test_dirichlet.jl")
     include("test_flowrate.jl")
@@ -14,4 +16,5 @@ using StaticArrays: @SVector, SVector
     include("test_transform.jl")
     include("test_inverse.jl")
     include("test_PorousModels.jl")
+    include("test_plot.jl")
 end
