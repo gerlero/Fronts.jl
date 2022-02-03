@@ -72,6 +72,7 @@
 
     @test all(@. isapprox(θ(r,t), θ_pmf, atol=1e-3))
     @test all(@. isapprox(flux(θ,r,t), U_pmf, atol=1e-6))
+    @test all(@. flux(θ,r,t) ≈ -Dθ(model, θ(r,t))*∂_∂r(θ,r,t))
     @test θ.iterations > 0
     @test isnan(@inferred θ(-1,t))
     end
