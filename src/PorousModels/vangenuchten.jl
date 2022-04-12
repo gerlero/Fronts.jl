@@ -33,7 +33,7 @@ struct VanGenuchten{_Tml,_Tα,_TKs,_Tθ} <: UnsaturatedFlowModel
     function VanGenuchten(; n=nothing, m=nothing, l=0.5, α=1, Ks=nothing, k=nothing,
                             θr=0, θs=1, ρ=1e3, μ=1e-3, g=9.81)
         if !isnothing(n)
-            @argcheck isnothing(m) "must assign only one of Ks and k, got both"
+            @argcheck isnothing(m) "must assign only one of n and m, got both"
             @argcheck n>1
             m = 1-1/n
 
