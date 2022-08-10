@@ -157,6 +157,6 @@ end
     xguide --> "ϕ=r/√t"
     yguide --> string(sol._eq.symbol)
 
-    vars := 1  # Plot only u[1] = sol
+    idxs := 1  # Plot only u[1]
     sol._odesol  # Delegate the rest to the contained ODESolution
 end
