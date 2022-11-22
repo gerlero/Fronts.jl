@@ -47,7 +47,7 @@ function solve(prob::CauchyProblem)
 
     odesol = _integrate(prob)
 
-    if odesol.retcode !== :Terminated
+    if odesol.retcode != :Terminated
         throw(SolvingError("could not find a solution to the problem"))
     end
     
