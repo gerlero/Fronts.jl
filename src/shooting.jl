@@ -6,7 +6,7 @@ function _shoot(prob::CauchyProblem; i, itol)
     
     residual = direction*typemax(i)
 
-    if odesol.retcode === :Terminated &&
+    if odesol.retcode == :Terminated &&
                     direction*odesol.u[end][1] <= direction*limit
         residual = odesol.u[end][1] - i
     end
