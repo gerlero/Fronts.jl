@@ -1,14 +1,17 @@
 using Fronts
 using Documenter
 
+DocMeta.setdocmeta!(Fronts, :DocTestSetup, :(using Fronts); recursive=true)
+
 makedocs(;
     modules=[Fronts],
     authors="Gabriel S. Gerlero",
-    repo="https://github.com/gerlero/Fronts.jl/blob/{commit}{path}#L{line}",
+    repo="https://github.com/gerlero/Fronts.jl/blob/{commit}{path}#{line}",
     sitename="Fronts.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
         canonical="https://gerlero.github.io/Fronts.jl",
+        edit_link="main",
         assets=String[],
     ),
     pages=[
@@ -25,4 +28,5 @@ makedocs(;
 
 deploydocs(;
     repo="github.com/gerlero/Fronts.jl",
+    devbranch="main",
 )
