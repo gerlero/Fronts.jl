@@ -1,9 +1,9 @@
 <img alt="Fronts.jl" src="docs/src/assets/logo.png" height="100">
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gerlero.github.io/Fronts.jl/stable)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gerlero.github.io/Fronts.jl/dev)
-[![Build Status](https://github.com/gerlero/Fronts.jl/workflows/CI/badge.svg)](https://github.com/gerlero/Fronts.jl/actions)
-[![Coverage](https://codecov.io/gh/gerlero/Fronts.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/gerlero/Fronts.jl)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gerlero.github.io/Fronts.jl/stable/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gerlero.github.io/Fronts.jl/dev/)
+[![Build Status](https://github.com/gerlero/Fronts.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/gerlero/Fronts.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/gerlero/Fronts.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/gerlero/Fronts.jl)
 
 **_Fronts_, at the speed of Julia ⚡️**
 
