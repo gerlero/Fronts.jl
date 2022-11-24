@@ -23,7 +23,7 @@ function transform(eq::DiffusionEquation{1})
                 return @SVector [dθ_dϕ, typeof(dθ_dϕ)(NaN)]
             end
         end
-        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ])
+        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
     end
 end
 
@@ -42,7 +42,7 @@ function transform(eq::DiffusionEquation{m}) where m
                 return @SVector [dθ_dϕ, typeof(dθ_dϕ)(NaN)]
             end
         end
-        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ])
+        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
     end
 end
 
@@ -61,7 +61,7 @@ function transform(eq::RichardsEquation{1})
                 return @SVector [dh_dϕ, typeof(dh_dϕ)(NaN)]
             end
         end
-        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ])
+        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
     end
 end
 
@@ -80,7 +80,7 @@ function transform(eq::RichardsEquation{m}) where m
                 return @SVector [dh_dϕ, typeof(dh_dϕ)(NaN)]
             end
         end
-        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ])
+        return ODEFunction{false}(f, syms=[eq.symbol, :d_dϕ], indepsym=:ϕ)
     end
 end
 
