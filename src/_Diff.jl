@@ -1,22 +1,18 @@
 module _Diff
 
-import ForwardDiff
-using DiffResults: DiffResult
-import DiffResults
-
 using ForwardDiff: derivative
+using ForwardDiff: Dual, Tag, value, extract_derivative
 
 @inline function value_and_derivative(f, x::Real)
-    return f(x), derivative(f, x)
+    T = typeof(Tag(f, typeof(x)))
+    ydual = f(Dual{T}(x, oneunit(x)))
+    return value(T, ydual), extract_derivative(T, ydual)
 end
 
-@inline function value_and_derivative(f, Y::Type, x::Real)
-    diffresult = ForwardDiff.derivative!(DiffResult(zero(Y), zero(Y)), f, x)
-    return DiffResults.value(diffresult), DiffResults.derivative(diffresult)
-end
-
-@inline function value_and_derivatives(f, Y::Type, x::Real)
-    return f(x), value_and_derivative(x -> derivative(f, x), Y, x)...
+@inline function value_and_derivatives(f, x::Real)
+    T = typeof(Tag(f, typeof(x)))
+    ydual, ddual = value_and_derivative(f, Dual{T}(x, oneunit(x)))
+    return value(T, ydual), value(T, ddual), extract_derivative(T, ddual)
 end
 
 export derivative, value_and_derivative, value_and_derivatives

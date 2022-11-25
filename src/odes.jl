@@ -13,7 +13,7 @@ function transform(eq::DiffusionEquation{1})
     let D = eq.D
         function f((θ, dθ_dϕ), ::NullParameters, ϕ)
             try
-                D_, dD_dθ = value_and_derivative(D, typeof(θ), θ)
+                D_, dD_dθ = value_and_derivative(D, θ)
 
                 d²θ_dϕ² = -((ϕ/2 + dD_dθ*dθ_dϕ)/D_)*dθ_dϕ
 
@@ -25,7 +25,7 @@ function transform(eq::DiffusionEquation{1})
         end
         function jac((θ, dθ_dϕ), ::NullParameters, ϕ)
 
-            D_, dD_dθ, d²D_dθ² = value_and_derivatives(D, typeof(θ), θ)
+            D_, dD_dθ, d²D_dθ² = value_and_derivatives(D, θ)
 
             j21 = -dθ_dϕ*(D_*d²D_dθ²*dθ_dϕ - dD_dθ*(dD_dθ*dθ_dϕ + ϕ/2))/D_^2
             j22 = -2*dD_dθ*dθ_dϕ/D_ - ϕ/(2D_)
@@ -42,7 +42,7 @@ function transform(eq::DiffusionEquation{m}) where m
     let D = eq.D, k = m-1
         function f((θ, dθ_dϕ), ::NullParameters, ϕ)
             try
-                D_, dD_dθ = value_and_derivative(D, typeof(θ), θ)
+                D_, dD_dθ = value_and_derivative(D, θ)
 
                 d²θ_dϕ² = -((ϕ/2 + dD_dθ*dθ_dϕ)/D_ + k/ϕ)*dθ_dϕ
 
@@ -54,7 +54,7 @@ function transform(eq::DiffusionEquation{m}) where m
         end
         function jac((θ, dθ_dϕ), ::NullParameters, ϕ)
 
-            D_, dD_dθ, d²D_dθ² = value_and_derivatives(D, typeof(θ), θ)
+            D_, dD_dθ, d²D_dθ² = value_and_derivatives(D, θ)
 
             j21 = -dθ_dϕ*(D_*d²D_dθ²*dθ_dϕ - dD_dθ*(dD_dθ*dθ_dϕ + ϕ/2))/D_^2
             j22 = -2*dD_dθ*dθ_dϕ/D_ - ϕ/(2D_) - k/ϕ
@@ -71,7 +71,7 @@ function transform(eq::RichardsEquation{1})
     let C = eq.C, K = eq.K
         function f((h, dh_dϕ), ::NullParameters, ϕ)
             try
-                K_, dK_dh = value_and_derivative(K, typeof(h), h)
+                K_, dK_dh = value_and_derivative(K, h)
 
                 d²h_dϕ² = -((C(h)*ϕ/2 + dK_dh*dh_dϕ)/K_)*dh_dϕ
 
@@ -83,8 +83,8 @@ function transform(eq::RichardsEquation{1})
         end
         function jac((h, dh_dϕ), ::NullParameters, ϕ)
 
-            K_, dK_dh, d²K_dh² = value_and_derivatives(K, typeof(h), h)
-            C_, dC_dh = value_and_derivative(C, typeof(h), h)
+            K_, dK_dh, d²K_dh² = value_and_derivatives(K, h)
+            C_, dC_dh = value_and_derivative(C, h)
 
             j21 = -dh_dϕ*(K_*(2*d²K_dh²*dh_dϕ + dC_dh*ϕ) - dK_dh*(C_*ϕ + 2*dK_dh*dh_dϕ))/(2K_^2)
             j22 = -2*dK_dh*dh_dϕ/K_ - C_*ϕ/(2K_)
@@ -101,7 +101,7 @@ function transform(eq::RichardsEquation{m}) where m
     let C = eq.C, K = eq.K, k=m-1
         function f((h, dh_dϕ), ::NullParameters, ϕ)
             try
-                K_, dK_dh = value_and_derivative(K, typeof(h), h)
+                K_, dK_dh = value_and_derivative(K, h)
 
                 d²h_dϕ² = -((C(h)*ϕ/2 + dK_dh*dh_dϕ)/K_ + k/ϕ)*dh_dϕ
 
@@ -113,8 +113,8 @@ function transform(eq::RichardsEquation{m}) where m
         end
         function jac((h, dh_dϕ), ::NullParameters, ϕ)
 
-            K_, dK_dh, d²K_dh² = value_and_derivatives(K, typeof(h), h)
-            C_, dC_dh = value_and_derivative(C, typeof(h), h)
+            K_, dK_dh, d²K_dh² = value_and_derivatives(K, h)
+            C_, dC_dh = value_and_derivative(C, h)
 
             j21 = -dh_dϕ*(K_*(2*d²K_dh²*dh_dϕ + dC_dh*ϕ) - dK_dh*(C_*ϕ + 2*dK_dh*dh_dϕ))/(2K_^2)
             j22 = -2*dK_dh*dh_dϕ/K_ - C_*ϕ/(2K_) - k/ϕ
