@@ -48,7 +48,7 @@ that the problem is "unsolvable" before the attempt to solve it, it will signal 
 
 See also: [`Solution`](@ref), [`SolvingError`](@ref)
 """
-function solve end
+const solve = OrdinaryDiffEq.solve
 
 include("equations.jl")
 include("boltzmann.jl")

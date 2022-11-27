@@ -32,11 +32,10 @@ function _integrate(odeprob::ODEProblem; limit=nothing)
             terminate!,
             save_positions=(false,false)
         )
-        return OrdinaryDiffEq.solve(odeprob, RadauIIA5(),
-                                    callback=past_limit, verbose=false, maxiters=ode_maxiters)
+        return solve(odeprob, RadauIIA5(), callback=past_limit, verbose=false, maxiters=ode_maxiters)
     end
 
-    return OrdinaryDiffEq.solve(odeprob, RadauIIA5(), verbose=false, maxiters=ode_maxiters)
+    return solve(odeprob, RadauIIA5(), verbose=false, maxiters=ode_maxiters)
 end
 
 function _integrate(prob::CauchyProblem; limit=nothing)
