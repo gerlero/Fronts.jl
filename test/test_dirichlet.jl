@@ -77,6 +77,25 @@
     @test isnan(@inferred θ(-1,t))
     end
 
+    @testset "validity LET" begin
+    # Wetting of a Whatman No. 1 paper strip
+    # Reference: Gerlero et al. (2022)
+    # https://doi.org/10.1007/s11242-021-01724-w
+    θs = 0.7
+    θi = 0.025
+    ϵ = 1e-7
+
+    xs = LETxs(Lw=1.651, Ew=230.5, Tw=0.9115, Ls=0.517, Es=493.6, Ts=0.3806, Ks=8.900e-3, θr=0.01176, θs=θs)
+    d = LETd(L=0.004569, E=12930, T=1.505, Dwt=4.660e-4, θr=0.019852, θs=θs)
+
+    θxs = solve(DirichletProblem(xs, i=θi, b=θs-ϵ))
+    θd = solve(DirichletProblem(d, i=θi, b=θs-ϵ))
+
+    ϕ = range(0, max(θxs.ϕi, θd.ϕi), length=100)
+
+    @test all(@. isapprox(θd(ϕ), θxs(ϕ), atol=5e-2))
+    end
+
 
     @testset "bad argument" begin
     prob = DirichletProblem(identity, i=0, b=1)
