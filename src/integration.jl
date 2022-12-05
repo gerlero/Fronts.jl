@@ -2,7 +2,7 @@
     transform(prob::CauchyProblem) -> DifferentialEquations.ODEProblem
 
 Transform `prob` into an ODE problem in terms of ϕ. The ODE problem is set up to terminate automatically
-(`.retcode === :Terminated`) when the steady state is reached.
+(`.retcode == :Terminated`) when the steady state is reached.
 
 See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/)
 """
