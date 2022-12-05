@@ -1,9 +1,3 @@
-_settled = ContinuousCallback(
-    (u, t, integrator) -> u[2],
-    (integrator) -> terminate!(integrator),
-    initialize=(c,u,t,integrator) -> u[2] != 0 || terminate!(integrator)
-)
-
 """
     transform(prob::CauchyProblem) -> DifferentialEquations.ODEProblem
 
@@ -15,7 +9,13 @@ See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/)
 function transform(prob::CauchyProblem)
     u0 = @SVector [prob.b, prob.d_dϕb]
     ϕb = float(prob.ϕb)
-    ODEProblem(transform(prob.eq), u0, (ϕb, typemax(ϕb)), callback=_settled)
+    settled = DiscreteCallback(
+        let direction=monotonicity(prob)
+            (u, t, integrator) -> direction*u[2] ≤ 0
+        end,
+        terminate!
+    )
+    ODEProblem(transform(prob.eq), u0, (ϕb, typemax(ϕb)), callback=settled)
 end
 
 monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
