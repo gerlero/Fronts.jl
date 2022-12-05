@@ -28,7 +28,7 @@ function _integrate(odeprob::ODEProblem; limit=nothing)
             let direction=monotonicity(odeprob)
                 (u, t, integrator) -> direction*u[1] > direction*limit
             end,
-            (integrator) -> terminate!(integrator)
+            terminate!
         )
         return OrdinaryDiffEq.solve(odeprob, RadauIIA5(),
                                     callback=past_limit, verbose=false, maxiters=ode_maxiters)
