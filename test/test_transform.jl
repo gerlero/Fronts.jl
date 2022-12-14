@@ -9,15 +9,15 @@
 
         odefun = @inferred transform(eq)
 
-        @test isa(odefun, ODEFunction)
+        @test odefun isa ODEFunction
         
         v = @inferred odefun((@SVector [1.0, 0.0]), NullParameters(), 0.0)
-        @test isa(v, SVector)
+        @test v isa SVector
         @test v == [0.0, 0.0]
         
         prob = CauchyProblem(eq, b=1, d_dϕb=0)
         
-        @test isa(transform(prob), ODEProblem)
+        @test transform(prob) isa ODEProblem
     end
 
 end

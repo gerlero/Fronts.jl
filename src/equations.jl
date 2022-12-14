@@ -119,7 +119,7 @@ function isindomain(eq::DiffusionEquation, θ)
     try
         D, dD_dθ = value_and_derivative(eq.D, θ)
     catch e
-        isa(e, DomainError) || rethrow()
+        e isa DomainError || rethrow()
     end
 
     return isfinite(D) && D>zero(D) && isfinite(dD_dθ)
@@ -201,7 +201,7 @@ function isindomain(eq::RichardsEquation, h)
         C = eq.C(h)
         K, dK_dh = value_and_derivative(eq.K, h)
     catch e
-        isa(e, DomainError) || rethrow()
+        e isa DomainError || rethrow()
     end
 
     return isfinite(C) && isfinite(K) && K>zero(K) && isfinite(dK_dh)
