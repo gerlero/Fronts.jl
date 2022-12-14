@@ -19,7 +19,7 @@ function transform(eq::DiffusionEquation{1})
 
                 return @SVector [dθ_dϕ, d²θ_dϕ²]
             catch e
-                isa(e, DomainError) || rethrow()
+                e isa DomainError || rethrow()
                 return @SVector [dθ_dϕ, oftype(dθ_dϕ, NaN)]
             end
         end
@@ -38,7 +38,7 @@ function transform(eq::DiffusionEquation{m}) where m
 
                 return @SVector [dθ_dϕ, d²θ_dϕ²]
             catch e
-                isa(e, DomainError) || rethrow()
+                e isa DomainError || rethrow()
                 return @SVector [dθ_dϕ, oftype(dθ_dϕ, NaN)]
             end
         end
@@ -57,7 +57,7 @@ function transform(eq::RichardsEquation{1})
 
                 return @SVector [dh_dϕ, d²h_dϕ²]
             catch e
-                isa(e, DomainError) || rethrow()
+                e isa DomainError || rethrow()
                 return @SVector [dh_dϕ, oftype(dh_dϕ, NaN)]
             end
         end
@@ -76,7 +76,7 @@ function transform(eq::RichardsEquation{m}) where m
 
                 return @SVector [dh_dϕ, d²h_dϕ²]
             catch e
-                isa(e, DomainError) || rethrow()
+                e isa DomainError || rethrow()
                 return @SVector [dh_dϕ, oftype(dh_dϕ, NaN)]
             end
         end
