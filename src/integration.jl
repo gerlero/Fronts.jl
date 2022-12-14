@@ -11,9 +11,10 @@ function transform(prob::CauchyProblem)
     ϕb = float(prob.ϕb)
     settled = DiscreteCallback(
         let direction=monotonicity(prob)
-            (u, t, integrator) -> direction*u[2] ≤ 0
+            (u, t, integrator) -> direction*u[2] ≤ zero(u[2])
         end,
-        terminate!
+        terminate!,
+        save_positions=(false,false)
     )
     ODEProblem(transform(prob.eq), u0, (ϕb, typemax(ϕb)), callback=settled)
 end
@@ -28,7 +29,8 @@ function _integrate(odeprob::ODEProblem; limit=nothing)
             let direction=monotonicity(odeprob)
                 (u, t, integrator) -> direction*u[1] > direction*limit
             end,
-            terminate!
+            terminate!,
+            save_positions=(false,false)
         )
         return OrdinaryDiffEq.solve(odeprob, RadauIIA5(),
                                     callback=past_limit, verbose=false, maxiters=ode_maxiters)
