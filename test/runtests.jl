@@ -14,6 +14,7 @@ using Plots: plot
     include("test_cauchy.jl")
     include("test_richards.jl")
     include("test_transform.jl")
+    include("test_isindomain.jl")
     include("test_inverse.jl")
     include("test_PorousModels.jl")
     include("test_plot.jl")
