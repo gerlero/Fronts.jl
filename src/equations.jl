@@ -114,15 +114,13 @@ function Base.show(io::IO, eq::DiffusionEquation{3})
 end
 
 function isindomain(eq::DiffusionEquation, θ)
-    D = NaN
-    dD_dθ = NaN
     try
         D, dD_dθ = value_and_derivative(eq.D, θ)
+        return isfinite(D) && D>zero(D) && isfinite(dD_dθ)
     catch e
         e isa DomainError || rethrow()
+        return false
     end
-
-    return isfinite(D) && D>zero(D) && isfinite(dD_dθ)
 end
 
 diffusivity(eq::DiffusionEquation, θ) = eq.D(θ)
@@ -194,17 +192,14 @@ function Base.show(io::IO, eq::RichardsEquation{3})
 end
 
 function isindomain(eq::RichardsEquation, h)
-    C = NaN
-    K = NaN
-    dK_dh = NaN
     try
         C = eq.C(h)
         K, dK_dh = value_and_derivative(eq.K, h)
+        return isfinite(C) && isfinite(K) && K>zero(K) && isfinite(dK_dh)
     catch e
         e isa DomainError || rethrow()
+        return false
     end
-
-    return isfinite(C) && isfinite(K) && K>zero(K) && isfinite(dK_dh)
 end
 
 diffusivity(eq::RichardsEquation, h) = eq.K(h)/eq.C(h)
