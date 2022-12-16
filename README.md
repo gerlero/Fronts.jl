@@ -39,4 +39,4 @@ julia> flux(c, 0.25, 2) # Obtain the flux
 0.19888290889257723
 ```
 
-[<img alt="CIMEC (UNL–CONICET)" src="docs/src/assets/CIMEC.png" height=70>](https://www.cimec.org.ar) &nbsp; [<img alt="INTEC (UNL–CONICET)" src="docs/src/assets/INTEC.png" height=65>](https://intec.conicet.gov.ar) &nbsp; [<img alt="GSaM" src="docs/src/assets/GSaMLogo.png" height=65>](http://www.microfluidica.com.ar)
+[<img alt="CIMEC (UNL–CONICET)" src="docs/src/assets/CIMEC_CONICET-UNL.png" height=70>](https://cimec.conicet.gov.ar) &nbsp; [<img alt="INTEC (UNL–CONICET)" src="docs/src/assets/INTEC_CONICET-UNL.png" height=70>](https://intec.conicet.gov.ar) &nbsp; [<img alt="GSaM" src="https://microfluidica.ar/img/GSaMLogo.png" height=60>](https://microfluidica.ar)
