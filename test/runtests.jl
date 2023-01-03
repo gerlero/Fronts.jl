@@ -1,5 +1,6 @@
 using Fronts
 using Fronts.PorousModels
+using Fronts.ParamEstim
 using Test
 using Fronts._Diff: derivative
 using OrdinaryDiffEq: ODEFunction, ODEProblem
@@ -16,6 +17,7 @@ using Plots: plot
     include("test_transform.jl")
     include("test_isindomain.jl")
     include("test_inverse.jl")
+    include("test_ParamEstim.jl")
     include("test_PorousModels.jl")
     include("test_plot.jl")
 end
