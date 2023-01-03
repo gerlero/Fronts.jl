@@ -1,4 +1,16 @@
 """
+    abstract type Problem{Eq<:Equation} end
+
+Abstract supertype for problems that can be solved with this package.
+
+# Type parameters
+- `Eq`: type of the governing equation
+
+See also: [`Equation`](@ref)
+"""
+abstract type Problem{Eq<:Equation} end
+
+"""
     monotonicity(prob) -> Int
 
 Whether the solution to `prob` must be decreasing (`-1`), constant (`0`) or increasing (`+1`) in `r`.
@@ -6,8 +18,8 @@ Whether the solution to `prob` must be decreasing (`-1`), constant (`0`) or incr
 function monotonicity end
 
 """
-    DirichletProblem(eq; i=<initial value>, b=<boundary value>, ϕb=0)
-    DirichletProblem(D; i=<initial value>, b=<boundary value>, ϕb=0)
+    DirichletProblem(eq; i=<initial value>, b=<boundary value>, ϕb=0) <: Problem{typeof(eq)}
+    DirichletProblem(D; i=<initial value>, b=<boundary value>, ϕb=0) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Dirichlet boundary condition.
 
@@ -34,7 +46,7 @@ julia> prob = Fronts.DirichletProblem(D, i=1, b=2)
 
 See also: [`Equation`](@ref)
 """
-struct DirichletProblem{Teq,_T,_Tϕ}
+struct DirichletProblem{Teq,_T,_Tϕ} <: Problem{Teq}
     eq::Teq
     i::_T
     b::_T
@@ -78,7 +90,7 @@ end
 
 
 """
-    FlowrateProblem(eq; i=<initial value>, Qb=<boundary flowrate>, angle=2π, height=1, ϕb=0)
+    FlowrateProblem(eq; i=<initial value>, Qb=<boundary flowrate>, angle=2π, height=1, ϕb=0) <: Problem{typeof(eq)}
 
 Semi-infinite radial (polar/cylindrical) problem with an imposed-flowrate boundary condition.
 
@@ -109,7 +121,7 @@ julia> prob = Fronts.FlowrateProblem(eq, i=1, Qb=1)
 
 See also: [`Equation`](@ref)
 """
-struct FlowrateProblem{Teq,_Tθ,_Tϕ,_TQ,_Th}
+struct FlowrateProblem{Teq,_Tθ,_Tϕ,_TQ,_Th} <: Problem{Teq}
     eq::Teq
     i::_Tθ
     Qb::_TQ
@@ -147,8 +159,8 @@ end
 monotonicity(prob::FlowrateProblem)::Int = -sign(prob.Qb)
 
 """
-    CauchyProblem(eq; b=<boundary value>, d_dϕb=<boundary ϕ-derivative>, ϕb=0)
-    CauchyProblem(D; b=<boundary value>, d_dϕb=<boundary ϕ-derivative>, ϕb=0)
+    CauchyProblem(eq; b=<boundary value>, d_dϕb=<boundary ϕ-derivative>, ϕb=0) <: Problem{typeof(eq)}
+    CauchyProblem(D; b=<boundary value>, d_dϕb=<boundary ϕ-derivative>, ϕb=0) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Cauchy boundary condition (and unknown initial condition).
 
@@ -176,7 +188,7 @@ julia> prob = Fronts.CauchyProblem(D, b=2, d_dϕb=-0.1)
 
 See also: [`Equation`](@ref)
 """
-struct CauchyProblem{Teq,_T,_Tϕ,_Td_dϕ}
+struct CauchyProblem{Teq,_T,_Tϕ,_Td_dϕ} <: Problem{Teq}
     eq::Teq
     b::_T
     d_dϕb::_Td_dϕ
