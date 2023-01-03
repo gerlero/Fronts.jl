@@ -63,4 +63,6 @@ export Solution, rb, flux, sorptivity
 export SolvingError
 export inverse
 
+include("ParamEstim.jl")
+
 end

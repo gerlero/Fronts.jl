@@ -4,7 +4,7 @@ using Documenter
 DocMeta.setdocmeta!(Fronts, :DocTestSetup, :(using Fronts); recursive=true)
 
 makedocs(;
-    modules=[Fronts],
+    modules=[Fronts, Fronts.ParamEstim, Fronts.PorousModels],
     authors="Gabriel S. Gerlero",
     repo="https://github.com/gerlero/Fronts.jl/blob/{commit}{path}#{line}",
     sitename="Fronts.jl",
@@ -22,6 +22,7 @@ makedocs(;
         "Solutions" => "solution.md",
         "Boltzmann transformation" => "boltzmann.md",
         "Inverse problems" => "inverse.md",
+        "Parameter estimation" => "ParamEstim.md",
         "Unsaturated flow models" => "PorousModels.md",
     ],
 )
