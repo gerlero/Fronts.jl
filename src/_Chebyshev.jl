@@ -38,7 +38,7 @@ function chebdif(N, M)
     DX = [DX[1:n1,:]; -reverse(reverse(DX[1:n2,:], dims = 2), dims=1)];   # Flipping trick. 
     DX[eye.==true] = ones(N,1);                      # Put 1's on the main diagonal of DX.
 
-    C = Matrix(Toeplitz((-1).^vec(k),(-1).^vec(k)));            # C is the matrix with 
+    C = Matrix{Float64}(Toeplitz((-1).^vec(k),(-1).^vec(k)));            # C is the matrix with 
     C[1,:] = C[1,:].*2; C[N,:] = C[N,:].*2;     # entries c[k]/c[j]
     C[:,1] = C[:,1]/2; C[:,N] = C[:,N]/2
 
