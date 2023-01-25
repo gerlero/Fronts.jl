@@ -45,7 +45,7 @@ function solve(prob::DirichletProblem; d_dϕb_hint=nothing,
 
     if abs(residual) ≤ itol
         odesol, _ = _shoot(prob, d_dϕb=zero(prob.b/prob.ϕb), itol=itol)
-        return Solution(odesol, prob.eq, 0)
+        return Solution(prob.eq, odesol, iterations=0)
     end
 
     @argcheck isindomain(prob.eq, prob.i - monotonicity(prob)*itol) DomainError(prob.i, "prob.i not valid for the given equation and itol")
@@ -62,7 +62,7 @@ function solve(prob::DirichletProblem; d_dϕb_hint=nothing,
         odesol, residual = _shoot(prob, d_dϕb=d_dϕb_trial(residual), itol=itol)
 
         if abs(residual) ≤ itol
-            return Solution(odesol, prob.eq, iterations)
+            return Solution(prob.eq, odesol, iterations=iterations)
         end
     end
 
@@ -86,7 +86,7 @@ function solve(prob::FlowrateProblem; b_hint=nothing,
     if monotonicity(prob) == 0
         odesol, residual = _shoot(prob, b=prob.i, itol=itol, ϕbtol=ϕbtol)
         @assert iszero(residual)
-        return Solution(odesol, prob, 0)
+        return Solution(prob.eq, odesol, iterations=0)
     end
 
     if !isnothing(b_hint)
@@ -103,7 +103,7 @@ function solve(prob::FlowrateProblem; b_hint=nothing,
         odesol, residual = _shoot(prob, b=b_trial(residual), itol=itol, ϕbtol=ϕbtol)
 
         if abs(residual) ≤ itol
-            return Solution(odesol, prob.eq, iterations)
+            return Solution(prob.eq, odesol, iterations=iterations)
         end
     end
 
