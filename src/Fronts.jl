@@ -17,7 +17,7 @@ using OrdinaryDiffEq: DiscreteCallback, terminate!
 using OrdinaryDiffEq: RadauIIA5
 import OrdinaryDiffEq
 
-using LinearAlgebra: Diagonal, I
+using LinearAlgebra: Diagonal
 
 using ArgCheck: @argcheck
 using StaticArrays: @SVector
@@ -56,6 +56,7 @@ include("solution.jl")
 include("problems.jl")
 include("integration.jl")
 include("shooting.jl")
+include("pseudospectral.jl")
 include("exceptions.jl")
 include("inverse.jl")
 
@@ -63,6 +64,7 @@ export Equation, DiffusionEquation, RichardsEquation, isindomain, diffusivity, f
 export TransformedFunction, d_dϕ, ∂_∂r, ∂_∂t, transform
 export sorptivity
 export Problem, DirichletProblem, FlowrateProblem, CauchyProblem, monotonicity
+export MathiasAndSander
 export solve
 export Solution, rb, flux, sorptivity
 export SolvingError

@@ -6,5 +6,7 @@ CurrentModule = Fronts
 
 ```@docs
 solve
+solve(::DirichletProblem{<:DiffusionEquation{1}}, ::MathiasAndSander)
 SolvingError
+MathiasAndSander
 ```
