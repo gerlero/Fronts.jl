@@ -53,7 +53,18 @@ function solve(prob::CauchyProblem)
         throw(SolvingError("could not find a solution to the problem"))
     end
     
-    return Solution(odesol, prob.eq, 0)
+    return Solution(prob.eq, odesol, iterations=0)
 end
 
 
+function Solution(_eq, _odesol::ODESolution; iterations)
+    Solution(_eq,
+             ϕ -> _odesol(ϕ, idxs=1),
+             ϕ -> _odesol(ϕ, idxs=2),
+             i=_odesol.u[end][1],
+             b=_odesol.u[1][1],
+             d_dϕb=_odesol.u[1][2],
+             ϕb=_odesol.t[1],
+             ϕi=_odesol.t[end],
+             iterations=iterations)
+end

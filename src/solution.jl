@@ -16,9 +16,10 @@ Evaluate the solution.
 
 Type `\\phi<tab>` to obtain the `ϕ` symbol.
 """
-struct Solution{_Todesol,_Teq,_T,_Td_dϕ,_Tϕ} <: TransformedFunction
-    _odesol::_Todesol
+struct Solution{_Teq,_T,_Td_dϕ,_Tϕ,_Traw,_Tdraw_dϕ} <: TransformedFunction
     _eq::_Teq
+    _raw::_Traw
+    _draw_dϕ::_Tdraw_dϕ
     i::_T
     b::_T
     d_dϕb::_Td_dϕ
@@ -26,19 +27,20 @@ struct Solution{_Todesol,_Teq,_T,_Td_dϕ,_Tϕ} <: TransformedFunction
     ϕi::_Tϕ
     iterations::Int
 
-    function Solution(odesol, eq, iterations)
-        new{typeof(odesol),typeof(eq),typeof(odesol.u[1][1]),typeof(odesol.u[1][2]),eltype(odesol.t)}(odesol, eq, odesol.u[end][1], odesol.u[1][1], odesol.u[1][2], odesol.t[1], odesol.t[end], iterations)
+    function Solution(_eq, _raw, _draw_dϕ=ϕ -> derivative(_raw, ϕ);
+                      ϕi, ϕb, i=_raw(ϕi), b=_raw(ϕb), d_dϕb=_draw_dϕ(ϕb), iterations)
+        new{typeof(_eq),promote_type(typeof(i),typeof(b)),typeof(d_dϕb),promote_type(typeof(ϕb), typeof(ϕi)),typeof(_raw),typeof(_draw_dϕ)}(_eq, _raw, _draw_dϕ, i, b, d_dϕb, ϕb, ϕi, iterations)
     end
 end
-    
+
 function (sol::Solution)(ϕ)
     if ϕ > sol.ϕi
         return sol.i
     elseif ϕ < sol.ϕb
-        return typeof(sol.b)(NaN)
+        return oftype(sol.b, NaN)
     end
 
-    return sol._odesol(ϕ, idxs=1)
+    return sol._raw(ϕ)
 end
 
 """
@@ -55,10 +57,10 @@ function d_dϕ(sol::Solution, ϕ)
     if ϕ > sol.ϕi
         return zero(sol.d_dϕb)
     elseif ϕ < sol.ϕb
-        return typeof(sol.d_dϕb)(NaN)
+        return oftype(sol.d_dϕb, NaN)
     end
 
-    return sol._odesol(ϕ, idxs=2)
+    return sol._draw_dϕ(ϕ)
 end
 
 """
@@ -154,9 +156,10 @@ end
 
 # Plot recipe
 @recipe function plot(sol::Solution) \
+    label --> string(sol._eq.symbol)
     xguide --> "ϕ=r/√t"
     yguide --> string(sol._eq.symbol)
 
-    idxs := 1  # Plot only u[1]
-    sol._odesol  # Delegate the rest to the contained ODESolution
+    ϕ = range(sol.ϕb, stop=sol.ϕi*1.1, length=1000)
+    return ϕ, sol.(ϕ)
 end
