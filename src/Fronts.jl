@@ -6,6 +6,9 @@ using ._Diff: value_and_derivative, derivative
 include("_Rootfinding.jl")
 using ._Rootfinding: bracket_bisect
 
+include("_Chebyshev.jl")
+using ._Chebyshev: chebdif
+
 include("PorousModels/PorousModels.jl")
 
 using OrdinaryDiffEq.DiffEqBase: NullParameters
@@ -13,6 +16,8 @@ using OrdinaryDiffEq: ODEFunction, ODEProblem, ODESolution
 using OrdinaryDiffEq: DiscreteCallback, terminate!
 using OrdinaryDiffEq: RadauIIA5
 import OrdinaryDiffEq
+
+using LinearAlgebra: Diagonal, I
 
 using ArgCheck: @argcheck
 using StaticArrays: @SVector
