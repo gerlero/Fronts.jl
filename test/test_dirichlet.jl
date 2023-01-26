@@ -7,9 +7,10 @@
 
     ϕ = range(0, 20, length=100)
 
-    @test all(@inferred θ.(ϕ) .≈ θ.i)
-    @test all(@inferred θ.(ϕ) .≈ θ.b)
-    @test all(@inferred d_dϕ.(θ, ϕ) .≈ 0)
+    @test all(@inferred θ.(ϕ) .== θ.i)
+    @test all(@inferred θ.(ϕ) .== θ.b)
+    @test all(@inferred d_dϕ.(θ, ϕ) .== 0)
+    @test (@inferred sorptivity(θ)) == 0
     @test θ.iterations == 0
     @test isnan(@inferred θ(-1))
     end
@@ -26,6 +27,7 @@
 
     @test all(@. isapprox(θ(ϕ), exp(-ϕ), atol=1e-3))
     @test all(@. isapprox(d_dϕ(θ,ϕ), -exp(-ϕ), atol=1e-3))
+    @test (@inferred sorptivity(θ)) ≈ 1 atol=1e-3
     @test θ.iterations > 0
     end
 
