@@ -37,4 +37,33 @@
     @test all(@. flux(h,r,t) ≈ -Kh(model, h(r,t))*∂_∂r(h,r,t))
     end
 
+    @testset "FlowrateProblem" begin
+    # Wetting of an HF135 membrane, Van Genuchten model
+    # Data from Buser (PhD thesis, 2016)
+    # http://hdl.handle.net/1773/38064
+    θr = 0.0473
+    θs = 0.945
+    k = 5.50e-13  # m**2
+    α = 0.2555  # 1/m
+    n = 2.3521
+    θi = 0.102755  # Computed from P0
+
+    model = VanGenuchten(n=n, α=α, k=k, θr=θr, θs=θs)
+
+    hb = 0
+    hi = -30.591486389337
+
+    Qb = 1e-5
+
+    prob = FlowrateProblem(RichardsEquation{2}(model), i=hi, Qb=Qb)
+
+    h = solve(prob)
+
+    t = [10 2.73 314]
+
+    @test all(@inferred flux.(h, :b, t) ≈ Qb./(2π.*rb.(h, t)))
+    @test h.i ≈ hi atol=1e-3
+    @test h.iterations > 0
+    @test all(isnan.(h.(0,t)))
+    end
 end
