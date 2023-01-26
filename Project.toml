@@ -26,6 +26,7 @@ PCHIPInterpolation = "0.1"
 RecipesBase = "1"
 ResumableFunctions = "0.6"
 StaticArrays = "0.12, 1"
+ToeplitzMatrices = "0.7"
 julia = "1.6"
 
 [extras]
