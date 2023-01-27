@@ -42,15 +42,19 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSa
 
     @argcheck iszero(prob.ϕb)
 
-    z,D = chebdif(alg.N, 2)
-    dz_d = 2/(prob.b - prob.i)
-    E = dz_d*D[:,:,1]
-    E² = dz_d^2*D[:,:,2]
+    z, diff = chebdif(alg.N, 2)
+    d_dz = diff[:,:,1]
+    d²_dz² = diff[:,:,2]
 
-    ∫ = π/(alg.N - 1)/dz_d*sqrt.(1 .- z.^2)'
+    θ = (prob.b + prob.i)/2 .+ (prob.b - prob.i)/2*z
+    dz_dθ = 2/(prob.b - prob.i)
 
-    values = (prob.b + prob.i)/2 .+ (prob.b - prob.i)/2*z
-    D = prob.eq.D.(values)
+    D = prob.eq.D.(θ)
+
+    d_dθ = dz_dθ*d_dz
+    d²_dθ² = dz_dθ^2*d²_dz²
+
+    ∫ = π/(alg.N - 1)/dz_dθ*sqrt.(1 .- z.^2)'
 
     F = ones(alg.N)
 
@@ -59,25 +63,25 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSa
     last = [i==alg.N for i in 1:alg.N]
 
     for iterations in 1:maxiter
-        S² = ∫*(2*(values .- prob.i).*D./F)
-        d²F_d² = -2*D./S²./F
+        S² = ∫*(2*(θ .- prob.i).*D./F)
+        d²F_dθ² = -2*D./S²./F
 
-        R = [E²[internal,:]*F - d²F_d²[internal]
+        R = [d²_dθ²[internal,:]*F - d²F_dθ²[internal]
              F[end] - 0
              F[begin] - 1]
 
-        ∂R_∂F = [E²[internal,:] + Diagonal(d²F_d²./F)[internal,:]
+        ∂R_∂F = [d²_dθ²[internal,:] + Diagonal(d²F_dθ²./F)[internal,:]
                  last'
                  first']
 
         F_prev = F
 
-        F=max.(eps(eltype(F)), F - ∂R_∂F\R)
+        F = max.(eps(eltype(F)), F - ∂R_∂F\R)
         
         if all(abs.(F .- F_prev) .≤ alg.Ftol)
-            ϕ = √S².*E*F
-            itp = Interpolator(ϕ, values)
-            return Solution(prob.eq, itp, b=values[begin], i=values[end], ϕb=ϕ[begin], ϕi=ϕ[end], iterations=iterations)
+            ϕ = √S².*d_dθ*F
+            itp = Interpolator(ϕ, θ)
+            return Solution(prob.eq, itp, b=θ[begin], i=θ[end], ϕb=ϕ[begin], ϕi=ϕ[end], iterations=iterations)
         end
     end
 
