@@ -75,7 +75,7 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSa
         F=max.(eps(eltype(F)), F - ∂R_∂F\R)
         
         if all(abs.(F .- F_prev) .≤ alg.Ftol)
-            ϕ = sqrt.(S²).*E*F
+            ϕ = √S².*E*F
             itp = Interpolator(ϕ, values)
             return Solution(prob.eq, itp, b=values[begin], i=values[end], ϕb=ϕ[begin], ϕi=ϕ[end], iterations=iterations)
         end
