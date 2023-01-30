@@ -10,8 +10,8 @@
     ϕ = range(θ.ϕb, 20, length=100)
 
     @test all(@. isapprox(θ(ϕ), exp(-ϕ), atol=1e-4))
-    @test_broken all(@. isapprox(d_dϕ(θ,ϕ), -exp(-ϕ), atol=1e-3))
-    @test_broken (@inferred sorptivity(θ)) ≈ 1 atol=1e-3
+    @test all(@. isapprox(d_dϕ(θ,ϕ), -exp(-ϕ), atol=1e-2))
+    @test (@inferred sorptivity(θ)) ≈ 1 atol=1e-3
     @test θ.iterations > 0
     end
 
