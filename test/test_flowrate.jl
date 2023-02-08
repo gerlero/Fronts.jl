@@ -8,9 +8,11 @@
 
     ϕ = range(1e-6, 20, length=100)
 
-    @test all(@inferred θ.(ϕ) .≈ θ.i)
-    @test all(@inferred θ.(ϕ) .≈ θ.b)
-    @test all(@inferred d_dϕ.(θ, ϕ) .≈ 0)
+    @test all(θ.(ϕ) .≈ θ.i)
+    @test all(θ.(ϕ) .≈ θ.b)
+    @inferred θ(ϕ[begin])
+    @test all(d_dϕ.(θ, ϕ) .≈ 0)
+    @inferred d_dϕ(θ, ϕ[begin])
     @test θ.iterations == 0
     end
 
@@ -26,7 +28,8 @@
 
     t = [1e-6, 1, 1.5, 5, 7.314]
 
-    @test all(@inferred flux.(θ, :b, t) ≈ Qb./(2π.*rb.(θ, t).*height))
+    @test all(flux.(θ, :b, t) ≈ Qb./(2π.*rb.(θ, t).*height))
+    @inferred flux(θ, :b, t[begin])
     @test isapprox(θ.i, θi, atol=1e-3)
     @test θ.iterations > 0
     @test all(isnan.(θ.(0,t))) 

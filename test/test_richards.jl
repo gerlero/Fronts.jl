@@ -61,7 +61,8 @@
 
     t = [10 2.73 314]
 
-    @test all(@inferred flux.(h, :b, t) ≈ Qb./(2π.*rb.(h, t)))
+    @test all(flux.(h, :b, t) ≈ Qb./(2π.*rb.(h, t)))
+    @inferred flux(h, :b, t[begin])
     @test h.i ≈ hi atol=1e-3
     @test h.iterations > 0
     @test all(isnan.(h.(0,t)))
