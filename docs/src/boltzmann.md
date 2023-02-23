@@ -13,5 +13,4 @@ Lower-level API to work with the Boltzmann transformation.
 r
 t
 transform
-TransformedFunction
 ```

@@ -62,7 +62,7 @@ include("exceptions.jl")
 include("inverse.jl")
 
 export Equation, DiffusionEquation, RichardsEquation, isindomain, diffusivity, flow_diffusivity
-export TransformedFunction, d_dϕ, ∂_∂r, ∂_∂t, transform
+export d_dϕ, ∂_∂r, ∂_∂t, transform
 export sorptivity
 export Problem, DirichletProblem, FlowrateProblem, CauchyProblem, monotonicity
 export MathiasAndSander

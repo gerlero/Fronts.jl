@@ -16,7 +16,7 @@ Evaluate the solution.
 
 Type `\\phi<tab>` to obtain the `ϕ` symbol.
 """
-struct Solution{_Teq,_T,_Td_dϕ,_Tϕ,_Traw,_Tdraw_dϕ} <: TransformedFunction
+struct Solution{_Teq,_T,_Td_dϕ,_Tϕ,_Traw,_Tdraw_dϕ} <: _TransformedFunction
     _eq::_Teq
     _raw::_Traw
     _draw_dϕ::_Tdraw_dϕ
