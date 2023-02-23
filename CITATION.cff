@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+preferred-citation:
+  type: article
+  authors:
+  - given-names: Gabriel S.
+    family-names: Gerlero
+  - given-names: Claudio L. A.
+    family-names: Berli
+  - given-names: Pablo A.
+    family-names: Kler
+  title: Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow
+  journal: Capillarity
+  year: 2023
+  volume: 6
+  issue: 2
+  start: 31
+  end: 40
+  doi: 10.46690/capi.2023.02.02
