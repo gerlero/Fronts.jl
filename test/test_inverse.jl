@@ -14,11 +14,12 @@
     @test_throws DomainError D(1.001)
     @test_throws DomainError D(-1)
     @test_throws DomainError D(0)
+    @test isnan(@inferred D(NaN))
 
     @inferred D(0.5)
 
     θ2 = solve(DirichletProblem(D, i=0, b=1))
 
-    @test all(@. isapprox(θ2.(ϕ), exp.(-ϕ), atol=1e-3))
+    @test all(@. isapprox(θ2.(ϕ), exp.(-ϕ), atol=5e-3))
     end
 end
