@@ -66,31 +66,13 @@ See also: [`ϕ`](@ref)
 """
 transform(r, t) = ϕ(r,t)
 
-"""
-    TransformedFunction
 
-Abstract type for functions of the Boltzmann variable ϕ.
-    
-Every subtype of `TransformedFunction` gets access to the following methods:
+abstract type _TransformedFunction end
 
-    (::TransformedFunction)(r, t)
-    d_dϕ(::TransformedFunction, r, t)
-    ∂_∂r(::TransformedFunction, r, t)
-    ∂_∂t(::TransformedFunction, r, t)
+(f::_TransformedFunction)(r, t) = f(ϕ(r,t))
 
-# Implementation
+d_dϕ(f::_TransformedFunction, r, t) = d_dϕ(f, ϕ(r,t))
 
-In order to access the previous methods, a type `T <: TransformedFunction` must define these methods:
+∂_∂r(f::_TransformedFunction, r, t) = d_dϕ(f, r, t)*∂ϕ_∂r(r, t)
 
-    (::T)(ϕ)
-    d_dϕ(::T, ϕ)
-"""
-abstract type TransformedFunction end
-
-(f::TransformedFunction)(r, t) = f(ϕ(r,t))
-
-d_dϕ(f::TransformedFunction, r, t) = d_dϕ(f, ϕ(r,t))
-
-∂_∂r(f::TransformedFunction, r, t) = d_dϕ(f, r, t)*∂ϕ_∂r(r, t)
-
-∂_∂t(f::TransformedFunction, r, t) = d_dϕ(f, r, t)*∂ϕ_∂t(r, t)
+∂_∂t(f::_TransformedFunction, r, t) = d_dϕ(f, r, t)*∂ϕ_∂t(r, t)
