@@ -33,6 +33,11 @@ any of these exceptions will be caught and will result in an infinite cost.
 - `ϕi_hint=ϕ[end]`: if `fit_D0` is `true`, a hint as to the point in ϕ where the initial condition begins.
 The hint will be used as an aid in finding the optimal value for `D0`.
 
+# References
+GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and
+inverse solving of horizontal capillary flow.
+Capillarity, 2023, vol. 6, no. 2, p. 31-40.
+
 ---
 
     (::RSSCostFunction)(p::AbstractVector)
