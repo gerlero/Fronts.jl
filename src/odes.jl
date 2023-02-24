@@ -28,7 +28,7 @@ function transform(eq::DiffusionEquation{1})
 end
 
 function transform(eq::DiffusionEquation{m}) where m
-    @assert 2 ≤ m ≤ 3
+    @assert m in 2:3
     let D = eq.D, k = m-1
         function f((θ, dθ_dϕ), ::NullParameters, ϕ)
             try
@@ -66,7 +66,7 @@ function transform(eq::RichardsEquation{1})
 end
 
 function transform(eq::RichardsEquation{m}) where m
-    @assert 2 ≤ m ≤ 3
+    @assert m in 2:3
     let C = eq.C, K = eq.K, k=m-1
         function f((h, dh_dϕ), ::NullParameters, ϕ)
             try
