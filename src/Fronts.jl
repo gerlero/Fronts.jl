@@ -46,6 +46,10 @@ maximum number of iterations, if applicable). However, in situations where `solv
 that the problem is "unsolvable" before the attempt to solve it, it will signal this by throwing a
 `DomainError` instead. Other invalid argument values will raise `ArgumentError`s.
 
+# References
+GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
+Capillarity, 2023, vol. 6, no. 2, p. 31-40.
+
 See also: [`Solution`](@ref), [`SolvingError`](@ref)
 """
 const solve = OrdinaryDiffEq.solve
