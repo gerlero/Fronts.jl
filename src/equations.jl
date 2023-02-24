@@ -84,8 +84,8 @@ struct DiffusionEquation{m,_TD} <: Equation{m}
     symbol::Symbol
 
     function DiffusionEquation{m}(D; symbol::Symbol=:θ) where m
-        @argcheck typeof(m) == Int TypeError(:m, Int, m)
-        @argcheck m::Int in (1,2,3)
+        @argcheck m isa Int TypeError(:m, Int, m)
+        @argcheck m in 1:3
         new{m,typeof(D)}(D, symbol)
     end
 end
@@ -159,8 +159,8 @@ struct RichardsEquation{m,_TC,_TK} <: Equation{m}
     symbol::Symbol
 
     function RichardsEquation{m}(; C, K, symbol::Symbol=:h) where m
-        @argcheck typeof(m) == Int TypeError(:m, Int, m)
-        @argcheck m::Int in (1,2,3)
+        @argcheck m isa Int TypeError(:m, Int, m)
+        @argcheck m in 1:3
         new{m,typeof(C),typeof(K)}(C, K, symbol)
     end
 end
