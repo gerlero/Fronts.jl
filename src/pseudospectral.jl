@@ -18,7 +18,7 @@ struct MathiasAndSander{_TN, _TFtol}
     Ftol::_TFtol
 
     function MathiasAndSander(; N::Integer=100, Ftol=1e-6)
-        @argcheck N > 0
+        @argcheck N ≥ 2
         @argcheck Ftol ≥ 0
         new{typeof(N),typeof(Ftol)}(N, Ftol)
     end
