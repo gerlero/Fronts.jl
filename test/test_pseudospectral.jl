@@ -59,4 +59,12 @@
     @test θ.iterations > 0
     end
 
+    @testset "bad arguments" begin
+    @test_throws ArgumentError MathiasAndSander(N=0)
+    @test_throws ArgumentError MathiasAndSander(N=1)
+    @test_throws TypeError MathiasAndSander(N=2.5)
+    @test_throws ArgumentError MathiasAndSander(N=-1)
+    
+    @test_throws ArgumentError MathiasAndSander(Ftol=-1)
+    end
 end
