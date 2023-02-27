@@ -155,7 +155,7 @@ function Base.show(io::IO, sol::Solution)
 end
 
 # Plot recipe
-@recipe function plot(sol::Solution) \
+@recipe function _(sol::Solution) \
     label --> string(sol._eq.symbol)
     xguide --> "ϕ=r/√t"
     yguide --> string(sol._eq.symbol)
