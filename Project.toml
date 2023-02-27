@@ -1,6 +1,6 @@
 name = "Fronts"
 uuid = "45b28afb-7f9c-4d83-a9c8-739861dbc76b"
-authors = ["Gabriel S. Gerlero"]
+authors = ["Gabriel S. Gerlero <ggerlero@cimec.unl.edu.ar>"]
 version = "1.0.0"
 
 [deps]
