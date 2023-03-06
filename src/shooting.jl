@@ -1,34 +1,42 @@
-function _shoot(prob::CauchyProblem; i, itol)
+function _shoot!(integrator, prob::CauchyProblem; i, itol)
     direction = monotonicity(prob)
     limit = i + direction*itol
 
-    odesol = _integrate(prob, limit=limit)
-    
-    residual = direction*typemax(i)
-
-    if odesol.retcode == Terminated &&
-                    direction*odesol.u[end][1] <= direction*limit
-        residual = odesol.u[end][1] - i
+    if isnothing(integrator)
+        integrator = _init(prob, limit=limit)
+    else
+        integrator = _reinit!(integrator, prob)
     end
 
-    return odesol, residual
+    solve!(integrator)
+
+    residual = direction*typemax(i)
+
+    if integrator.sol.retcode == Terminated &&
+                    direction*integrator.sol.u[end][1] <= direction*limit
+        residual = integrator.sol.u[end][1] - i
+    end
+
+    return integrator, residual
 end
 
-function _shoot(prob::DirichletProblem; d_dϕb, itol)
-    _shoot(CauchyProblem(prob.eq, b=prob.b, d_dϕb=d_dϕb, ϕb=prob.ϕb),
-           i=prob.i, itol=itol)
+function _shoot!(integrator, prob::DirichletProblem; d_dϕb, itol)
+    return _shoot!(integrator,
+                   CauchyProblem(prob.eq, b=prob.b, d_dϕb=d_dϕb, ϕb=prob.ϕb),
+                   i=prob.i, itol=itol)
 end
 
-function _shoot(prob::FlowrateProblem; b, itol, ϕbtol)
+function _shoot!(integrator, prob::FlowrateProblem; b, itol, ϕbtol)
     if isindomain(prob.eq, b)
         ϕb = !iszero(prob.ϕb) ? prob.ϕb : ϕbtol
 
         d_dϕb = d_dϕ(prob, :b, b=b, ϕb=ϕb)
     
-        return _shoot(CauchyProblem(prob.eq, b=b, d_dϕb=d_dϕb, ϕb=ϕb),
-                      i=prob.i, itol=itol)
+        return _shoot!(integrator,
+                       CauchyProblem(prob.eq, b=b, d_dϕb=d_dϕb, ϕb=ϕb),
+                       i=prob.i, itol=itol)
     end
-    return nothing, -monotonicity(prob)*typemax(prob.i)
+    return integrator, -monotonicity(prob)*typemax(prob.i)
 end
 
 
@@ -44,8 +52,8 @@ function solve(prob::DirichletProblem; d_dϕb_hint=nothing,
     residual = prob.b - prob.i
 
     if abs(residual) ≤ itol
-        odesol, _ = _shoot(prob, d_dϕb=zero(prob.b/prob.ϕb), itol=itol)
-        return Solution(prob.eq, odesol, iterations=0)
+        integrator, _ = _shoot!(nothing, prob, d_dϕb=zero(prob.b/prob.ϕb), itol=itol)
+        return Solution(prob.eq, integrator.sol, iterations=0)
     end
 
     @argcheck isindomain(prob.eq, prob.i - monotonicity(prob)*itol) DomainError(prob.i, "prob.i not valid for the given equation and itol")
@@ -57,12 +65,13 @@ function solve(prob::DirichletProblem; d_dϕb_hint=nothing,
     end
 
     d_dϕb_trial = bracket_bisect(zero(d_dϕb_hint), d_dϕb_hint, residual)
+    integrator = nothing
 
     for iterations in 1:maxiter
-        odesol, residual = _shoot(prob, d_dϕb=d_dϕb_trial(residual), itol=itol)
+        integrator, residual = _shoot!(integrator, prob, d_dϕb=d_dϕb_trial(residual), itol=itol)
 
         if abs(residual) ≤ itol
-            return Solution(prob.eq, odesol, iterations=iterations)
+            return Solution(prob.eq, integrator.sol, iterations=iterations)
         end
     end
 
@@ -84,9 +93,9 @@ function solve(prob::FlowrateProblem; b_hint=nothing,
     @argcheck maxiter≥0
 
     if monotonicity(prob) == 0
-        odesol, residual = _shoot(prob, b=prob.i, itol=itol, ϕbtol=ϕbtol)
+        integrator, residual = _shoot!(nothing, prob, b=prob.i, itol=itol, ϕbtol=ϕbtol)
         @assert iszero(residual)
-        return Solution(prob.eq, odesol, iterations=0)
+        return Solution(prob.eq, integrator.sol, iterations=0)
     end
 
     if !isnothing(b_hint)
@@ -97,13 +106,14 @@ function solve(prob::FlowrateProblem; b_hint=nothing,
 
     prob.i - oneunit(prob.i)*monotonicity(prob)
     b_trial = bracket_bisect(prob.i, b_hint)
+    integrator = nothing
     residual = nothing
 
     for iterations in 1:maxiter
-        odesol, residual = _shoot(prob, b=b_trial(residual), itol=itol, ϕbtol=ϕbtol)
+        integrator, residual = _shoot!(integrator, prob, b=b_trial(residual), itol=itol, ϕbtol=ϕbtol)
 
         if abs(residual) ≤ itol
-            return Solution(prob.eq, odesol, iterations=iterations)
+            return Solution(prob.eq, integrator.sol, iterations=iterations)
         end
     end
 

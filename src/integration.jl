@@ -21,7 +21,8 @@ end
 
 monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
 
-function _integrate(odeprob::ODEProblem; limit=nothing)
+function _init(prob::CauchyProblem; limit=nothing)
+    odeprob = transform(prob)
     ode_maxiters = 1000
 
     if !isnothing(limit)
@@ -32,21 +33,22 @@ function _integrate(odeprob::ODEProblem; limit=nothing)
             terminate!,
             save_positions=(false,false)
         )
-        return solve(odeprob, RadauIIA5(), callback=past_limit, verbose=false, maxiters=ode_maxiters)
+        return init(odeprob, RadauIIA5(), callback=past_limit, verbose=false, maxiters=ode_maxiters)
     end
 
-    return solve(odeprob, RadauIIA5(), verbose=false, maxiters=ode_maxiters)
+    return init(odeprob, RadauIIA5(), verbose=false, maxiters=ode_maxiters)
 end
 
-function _integrate(prob::CauchyProblem; limit=nothing)
-    _integrate(transform(prob), limit=limit)
+function _reinit!(integrator, prob::CauchyProblem)
+    reinit!(integrator, @SVector [prob.b, prob.d_dϕb])
+    return integrator
 end
 
 function solve(prob::CauchyProblem)
 
     @argcheck isindomain(prob.eq, prob.b) DomainError(prob.b, "prob.b not valid for the given equation")
 
-    odesol = _integrate(prob)
+    odesol = solve!(_init(prob))
 
     if odesol.retcode != Terminated
         throw(SolvingError("could not find a solution to the problem"))
@@ -57,13 +59,13 @@ end
 
 
 function Solution(_eq, _odesol::ODESolution; iterations)
-    Solution(_eq,
-             ϕ -> _odesol(ϕ, idxs=1),
-             ϕ -> _odesol(ϕ, idxs=2),
-             i=_odesol.u[end][1],
-             b=_odesol.u[1][1],
-             d_dϕb=_odesol.u[1][2],
-             ϕb=_odesol.t[1],
-             ϕi=_odesol.t[end],
-             iterations=iterations)
+    return Solution(_eq,
+                    ϕ -> _odesol(ϕ, idxs=1),
+                    ϕ -> _odesol(ϕ, idxs=2),
+                    i=_odesol.u[end][1],
+                    b=_odesol.u[1][1],
+                    d_dϕb=_odesol.u[1][2],
+                    ϕb=_odesol.t[1],
+                    ϕi=_odesol.t[end],
+                    iterations=iterations)
 end
