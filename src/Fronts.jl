@@ -13,6 +13,7 @@ include("PorousModels/PorousModels.jl")
 
 using OrdinaryDiffEq.DiffEqBase: NullParameters
 using OrdinaryDiffEq: ODEFunction, ODEProblem, ODESolution
+using OrdinaryDiffEq: init, solve!, reinit!
 using OrdinaryDiffEq: DiscreteCallback, terminate!
 using OrdinaryDiffEq.ReturnCode: Terminated
 using OrdinaryDiffEq: RadauIIA5
