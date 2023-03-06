@@ -16,5 +16,10 @@
         D_, dD_dθ = value_and_derivative(D, typeof(θ), θ)
         @test D_ == D(θ)
         @test dD_dθ == derivative(D, θ) == ForwardDiff.derivative(D, θ)
+
+        D_, dD_dθ, d²D_dθ² = value_and_derivatives(D, typeof(θ), θ)
+        @test D_ == D(θ)
+        @test dD_dθ == derivative(D, θ) == ForwardDiff.derivative(D, θ)
+        @test d²D_dθ² == derivative(θ -> derivative(D, θ), θ) == ForwardDiff.derivative(θ -> ForwardDiff.derivative(D, θ), θ)
     end
 end
