@@ -1,6 +1,6 @@
 module _Rootfinding
 
-using ResumableFunctions
+using Semicoroutines
 using ArgCheck: @argcheck
 
 @resumable function bracket_bisect(xa, xb, ya=missing, yb=missing; growth_factor=2)
