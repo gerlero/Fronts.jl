@@ -2,7 +2,8 @@
     "name": "Julia",
     "image": "mcr.microsoft.com/devcontainers/base",
     "features": {
-        "ghcr.io/julialang/devcontainer-features/julia": {}
+        "ghcr.io/julialang/devcontainer-features/julia": {},
+        "ghcr.io/devcontainers/features/docker-in-docker": {}
     },
     "customizations": {
         "vscode": {

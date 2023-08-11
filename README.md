@@ -1,10 +1,11 @@
-<img alt="Fronts.jl" src="docs/src/assets/logo.png" height="100">
+[<img alt="Fronts.jl" src="docs/src/assets/logo.png" height="100">](https://github.com/gerlero/Fronts.jl)
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://gerlero.github.io/Fronts.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://gerlero.github.io/Fronts.jl/dev/)
 [![Build Status](https://github.com/gerlero/Fronts.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/gerlero/Fronts.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/gerlero/Fronts.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/gerlero/Fronts.jl)
 [![PkgEval](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/F/Fronts.svg)](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/F/Fronts.html)
+[![Docker image](https://img.shields.io/badge/docker%20image-microfluidica%2Ffronts.jl-0085a0)](https://hub.docker.com/r/microfluidica/fronts.jl)
 
 **_Fronts_, at the speed of Julia ⚡️**
 
