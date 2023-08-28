@@ -50,8 +50,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           platforms: |
-            linux/amd64
-            ${{ inputs.arm64 && 'linux/arm64' || '' }}
+            ${{ inputs.arm64 && 'linux/amd64,linux/arm64' || '' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: | # Julia's Pkg expects a Git repository
