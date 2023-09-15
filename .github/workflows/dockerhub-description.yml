@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Modify README.md for Docker Hub
       run: |
         sed -i "s|\"docs/src/assets/|\"https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/docs/src/assets/|g" README.md
