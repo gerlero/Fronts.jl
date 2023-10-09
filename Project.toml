@@ -18,7 +18,7 @@ ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 [compat]
 ArgCheck = "2"
 ForwardDiff = "0.10"
-LsqFit = "0.13, 0.14"
+LsqFit = "0.13, 0.14, 0.15"
 OrdinaryDiffEq = "6.31"
 PCHIPInterpolation = "0.1.7"
 RecipesBase = "1"
