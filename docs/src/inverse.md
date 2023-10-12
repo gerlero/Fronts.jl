@@ -6,4 +6,5 @@ CurrentModule = Fronts
 
 ```@docs
 inverse
+sorptivity(::AbstractVector, ::AbstractVector)
 ```
