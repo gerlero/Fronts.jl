@@ -24,6 +24,7 @@ using LinearAlgebra: Diagonal
 using ArgCheck: @argcheck
 using StaticArrays: @SVector, @SMatrix
 using PCHIPInterpolation: Interpolator, integrate
+import NumericalIntegration
 using RecipesBase
 
 """

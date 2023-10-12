@@ -11,5 +11,6 @@ Solution
 flux
 d_dϕ
 rb
-sorptivity
+sorptivity(::Solution)
+sorptivity(::Solution, _)
 ```

@@ -42,3 +42,39 @@ function inverse(ϕ::AbstractVector, θ::AbstractVector)
         end
     end
 end
+
+"""
+    sorptivity(ϕ, θ)
+
+Calculate the sorptivity of a solution to a semi-infinite one-dimensional nonlinear diffusion problem,
+where the solution is given as a set of discrete points.
+
+Uses numerical integration.
+
+# Arguments
+- `ϕ::AbstractVector`: values of the Boltzmann variable. See [`ϕ`](@ref).
+- `θ::AbstractVector`: solution values at each point in `ϕ`.
+
+# Keyword arguments
+- `i=nothing`: initial value. If `nothing`, the initial value is taken from `θ[end]`.
+- `b=nothing`: boundary value. If `nothing`, the boundary value is taken from `θ[begin]`.
+- `ϕb=0`: value of `ϕ` at the boundary.
+
+# References
+PHILIP, J. R. The theory of infiltration: 4. Sorptivity and algebraic infiltration equations.
+Soil Science, 1957, vol. 83, no. 5, p. 345-357.
+"""
+function sorptivity(ϕ::AbstractVector, θ::AbstractVector; i=nothing, b=nothing, ϕb=0)
+    @argcheck length(ϕ) ≥ 2
+    @argcheck length(ϕ) == length(θ) DimensionMismatch
+    @argcheck zero(ϕb) ≤ ϕb ≤ ϕ[begin]
+
+    if isnothing(i)
+        i = θ[end]
+    end
+
+    ϕ = [ϕb; ϕ]
+    θ = [!isnothing(b) ? b : θ[begin]; θ]
+
+    return NumericalIntegration.integrate(ϕ, θ .- i)
+end
