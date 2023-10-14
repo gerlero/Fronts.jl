@@ -1,7 +1,7 @@
 module ParamEstim
 
 import ..Fronts
-using ..Fronts: Problem, Solution, solve, SolvingError
+using ..Fronts: Problem, Solution, solve, SolvingError, sorptivity
 
 using LsqFit: curve_fit
 
@@ -30,8 +30,9 @@ infinite cost (see also the `catch_errors` keyword argument).
 - `catch_errors=(Fronts.SolvingError,)`: collection of exception types that `func` is allowed to throw;
 any of these exceptions will be caught and will result in an infinite cost.
 - `D0tol=1e-3`: if `fit_D0` is `true`, a tolerance for `D0`.
-- `ϕi_hint=ϕ[end]`: if `fit_D0` is `true`, a hint as to the point in ϕ where the initial condition begins.
-The hint will be used as an aid in finding the optimal value for `D0`.
+- `ϕi_hint=nothing`: if `fit_D0` is `true`, an optional hint as to the point in ϕ where the initial
+condition begins. The hint will be used as an aid in finding the optimal value for `D0`. Otherwise, the
+fitting process will start by attempting to match sorptivities.
 
 # References
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and
@@ -60,12 +61,12 @@ struct RSSCostFunction{fit_D0, _Tfunc, _Tϕ, _Tdata, _Tweights, _Tcatch_errors, 
     _D0tol::_TD0tol
     _ϕi_hint::_Tϕi_hint
 
-    function RSSCostFunction{true}(func, ϕ, data, weights=nothing; ϕi_hint=ϕ[end], D0tol=1e-3, catch_errors=(SolvingError,))
+    function RSSCostFunction{true}(func, ϕ, data, weights=nothing; ϕi_hint=nothing, D0tol=1e-3, catch_errors=(SolvingError,))
         new{true,typeof(func),typeof(ϕ),typeof(data),typeof(weights),typeof(catch_errors),typeof(ϕi_hint),typeof(D0tol)}(func, ϕ, data, weights, catch_errors, D0tol, ϕi_hint)
     end
 
     function RSSCostFunction{false}(func, ϕ, data, weights=nothing; catch_errors=(SolvingError,))
-        new{false,typeof(func),typeof(ϕ),typeof(data),typeof(weights),typeof(catch_errors),Nothing,Nothing}(func, ϕ, data, weights, catch_errors, nothing, nothing)
+        new{false,typeof(func),typeof(ϕ),typeof(data),typeof(weights),typeof(catch_errors),Nothing,Nothing}(func, ϕ, data, weights, catch_errors, nothing)
     end
 end
 
@@ -158,11 +159,17 @@ end
 function candidate(cf::RSSCostFunction{true}, sol::Solution)
     scaled!(ret, ϕ, (D0,)) = (ret .= sol.(ϕ./√D0))
 
+    if !isnothing(cf._ϕi_hint)
+        D0_hint = (cf._ϕi_hint/sol.ϕi)^2
+    else
+        D0_hint = (sorptivity(cf._ϕ, cf._data, i=sol.i, b=sol.b)/sorptivity(sol))^2
+    end
+
     scaling = curve_fit(scaled!,
                         cf._ϕ,
                         cf._data,
                         (!isnothing(cf._weights) ? (cf._weights,) : ())...,
-                        [(cf._ϕi_hint/sol.ϕi)^2],
+                        [D0_hint],
                         inplace=true,
                         lower=[0.0],
                         autodiff=:forwarddiff,
