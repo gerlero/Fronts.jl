@@ -20,7 +20,7 @@
         θ = solve(DirichletProblem(θ -> 2*θ, i=0, b=1))
         ϕ = range(0, 20, length=100)
     
-        cf = RSSCostFunction{true}(ϕ, θ.(ϕ)) do (k,)
+        cf = RSSCostFunction{true}(ϕ, θ.(ϕ), D0tol=1e-4) do (k,)
             DirichletProblem(θ -> k*θ, i=0, b=1)
         end
         
