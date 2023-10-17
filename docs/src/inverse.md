@@ -5,6 +5,7 @@ CurrentModule = Fronts
 # Inverse problems
 
 ```@docs
+InverseProblem
 inverse
-sorptivity(::AbstractVector, ::AbstractVector)
+sorptivity(::InverseProblem)
 ```

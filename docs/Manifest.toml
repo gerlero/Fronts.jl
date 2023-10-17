@@ -114,10 +114,14 @@ uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
 version = "0.5.1"
 
 [[deps.ChainRulesCore]]
-deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "e30f2f4e20f7f186dc36529910beaedc60cfa644"
+deps = ["Compat", "LinearAlgebra"]
+git-tree-sha1 = "e0af648f0692ec1691b5d094b8724ba1346281cf"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.16.0"
+version = "1.18.0"
+weakdeps = ["SparseArrays"]
+
+    [deps.ChainRulesCore.extensions]
+    ChainRulesCoreSparseArraysExt = "SparseArrays"
 
 [[deps.CloseOpenIntervals]]
 deps = ["Static", "StaticArrayInterface"]
@@ -303,9 +307,9 @@ version = "1.0.4"
 
 [[deps.EnzymeCore]]
 deps = ["Adapt"]
-git-tree-sha1 = "42fbaf6858c7eabb58cdfdcdd1b160cfbae2416b"
+git-tree-sha1 = "d8701002a745c450c03b890f10d53636d1a8a7ea"
 uuid = "f151be2c-9106-41f4-ab19-57ee4f262869"
-version = "0.6.1"
+version = "0.6.2"
 
 [[deps.ExponentialUtilities]]
 deps = ["Adapt", "ArrayInterface", "GPUArraysCore", "GenericSchur", "LinearAlgebra", "PrecompileTools", "Printf", "SparseArrays", "libblastrampoline_jll"]
@@ -388,7 +392,7 @@ weakdeps = ["StaticArrays"]
     ForwardDiffStaticArraysExt = "StaticArrays"
 
 [[deps.Fronts]]
-deps = ["ArgCheck", "ForwardDiff", "LinearAlgebra", "LsqFit", "NumericalIntegration", "OrdinaryDiffEq", "PCHIPInterpolation", "RecipesBase", "ResumableFunctions", "StaticArrays", "ToeplitzMatrices"]
+deps = ["ArgCheck", "ForwardDiff", "LinearAlgebra", "LsqFit", "NumericalIntegration", "OrdinaryDiffEq", "PCHIPInterpolation", "RecipesBase", "RecursiveArrayTools", "ResumableFunctions", "StaticArrays", "ToeplitzMatrices"]
 path = ".."
 uuid = "45b28afb-7f9c-4d83-a9c8-739861dbc76b"
 version = "1.1.7"
@@ -564,9 +568,9 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LinearSolve]]
 deps = ["ArrayInterface", "ConcreteStructs", "DocStringExtensions", "EnumX", "EnzymeCore", "FastLapackInterface", "GPUArraysCore", "InteractiveUtils", "KLU", "Krylov", "Libdl", "LinearAlgebra", "MKL_jll", "PrecompileTools", "Preferences", "RecursiveFactorization", "Reexport", "Requires", "SciMLBase", "SciMLOperators", "Setfield", "SparseArrays", "Sparspak", "SuiteSparse", "UnPack"]
-git-tree-sha1 = "435ab14ca589757a0feae6e3e347bc37addda42d"
+git-tree-sha1 = "9f27ba34f5821a0495efb09ea3a465c31326495a"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "2.9.2"
+version = "2.10.0"
 
     [deps.LinearSolve.extensions]
     LinearSolveBlockDiagonalsExt = "BlockDiagonals"
@@ -754,9 +758,9 @@ weakdeps = ["RecipesBase"]
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "fcf8fd477bd7f33cb8dbb1243653fb0d415c256c"
+git-tree-sha1 = "66b2fcd977db5329aa35cac121e5b94dd6472198"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.25"
+version = "0.11.28"
 
 [[deps.PackageExtensionCompat]]
 git-tree-sha1 = "fb28e33b8a95c4cee25ce296c817d89cc2e53518"
@@ -996,9 +1000,9 @@ uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 
 [[deps.SimpleNonlinearSolve]]
 deps = ["ArrayInterface", "DiffEqBase", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "PackageExtensionCompat", "PrecompileTools", "Reexport", "SciMLBase", "StaticArraysCore"]
-git-tree-sha1 = "4d53b83af904049c493daaf2a225bcae994a3c59"
+git-tree-sha1 = "e308d089f5d0e733a017b61784c5813e672f760d"
 uuid = "727e6d20-b764-4bd8-a329-72de5adea6c7"
-version = "0.1.20"
+version = "0.1.22"
 
     [deps.SimpleNonlinearSolve.extensions]
     SimpleNonlinearSolveNNlibExt = "NNlib"
