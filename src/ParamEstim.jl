@@ -1,11 +1,13 @@
 module ParamEstim
 
 import ..Fronts
-using ..Fronts: Problem, Solution, solve, SolvingError, sorptivity
+using ..Fronts: InverseProblem, Problem, Solution, solve, SolvingError, sorptivity
 
 using LsqFit: curve_fit
 
 """
+    RSSCostFunction{fit_D0}(func, prob::InverseProblem; catch_errors, D0tol, ϕi_hint])
+
     RSSCostFunction{fit_D0}(func, ϕ, data[, weights; catch_errors, D0tol, ϕi_hint])
 
 Residual sum of squares cost function for parameter estimation.
@@ -22,8 +24,9 @@ retrieved by calling the `candidate` function.
 `Fronts.Problem`. If func returns a `Problem`, it is solved with `trysolve`. `func` is also allowed to
 return `nothing` to signal that no solution could be found for the parameter values, which will imply an 
 infinite cost (see also the `catch_errors` keyword argument).
+- `prob::InverseProblem`: inverse problem. See [`InverseProblem`](@ref).
 - `ϕ`: vector of values of the Boltzmann variable. See [`Fronts.ϕ`](@ref).
-- `data`: data to fit. Must be a vector of the same length as `ϕ`.
+- `θ`: data to fit. Must be a vector of the same length as `ϕ`.
 - `weights`: optional weights for the data. If given, must be a vector of the same length as `data`.
 
 # Keyword arguments
@@ -52,22 +55,26 @@ If you need to know more than just the cost, call the `candidate` function inste
 
 See also: [`candidate`](@ref), [`Fronts.Solution`](@ref), [`Fronts.Problem`](@ref), [`trysolve`](@ref)
 """
-struct RSSCostFunction{fit_D0, _Tfunc, _Tϕ, _Tdata, _Tweights, _Tcatch_errors, _Tϕi_hint, _TD0tol}
+struct RSSCostFunction{fit_D0, _Tfunc, _Tprob, _Tcatch_errors, _TD0tol,  _Tϕi_hint, _Tsorptivity}
     _func::_Tfunc
-    _ϕ::_Tϕ
-    _data::_Tdata
-    _weights::_Tweights
+    _prob::_Tprob
     _catch_errors::_Tcatch_errors
     _D0tol::_TD0tol
     _ϕi_hint::_Tϕi_hint
+    _sorptivity::_Tsorptivity
 
-    function RSSCostFunction{true}(func, ϕ, data, weights=nothing; ϕi_hint=nothing, D0tol=1e-3, catch_errors=(SolvingError,))
-        new{true,typeof(func),typeof(ϕ),typeof(data),typeof(weights),typeof(catch_errors),typeof(ϕi_hint),typeof(D0tol)}(func, ϕ, data, weights, catch_errors, D0tol, ϕi_hint)
+    function RSSCostFunction{true}(func, prob::InverseProblem; catch_errors=(SolvingError,), D0tol=1e-3, ϕi_hint=nothing)
+        S = isnothing(ϕi_hint) ? sorptivity(prob) : nothing
+        new{true,typeof(func),typeof(prob),typeof(catch_errors),typeof(D0tol),typeof(ϕi_hint),typeof(S)}(func, prob, catch_errors, D0tol, ϕi_hint, S)
     end
 
-    function RSSCostFunction{false}(func, ϕ, data, weights=nothing; catch_errors=(SolvingError,))
-        new{false,typeof(func),typeof(ϕ),typeof(data),typeof(weights),typeof(catch_errors),Nothing,Nothing}(func, ϕ, data, weights, catch_errors, nothing)
+    function RSSCostFunction{false}(func, prob::InverseProblem; catch_errors=(SolvingError,))
+        new{false,typeof(func),typeof(prob),typeof(catch_errors),Nothing,Nothing,Nothing}(func, prob, catch_errors, nothing)
     end
+end
+
+function RSSCostFunction{fit_D0}(func, ϕ, θ, weights=nothing; kwargs...) where {fit_D0}
+    return RSSCostFunction{fit_D0}(func, InverseProblem(ϕ, θ, weights); kwargs...)
 end
 
 (cf::RSSCostFunction)(arg) = candidate(cf, arg).cost
@@ -149,10 +156,10 @@ candidate(::RSSCostFunction{true}, ::Nothing) = _Candidate(nothing, NaN, Inf)
 candidate(::RSSCostFunction{false}, ::Nothing) = _Candidate(nothing, 1, Inf)
 
 function candidate(cf::RSSCostFunction{false}, sol::Solution)
-    if !isnothing(cf._weights)
-        return _Candidate(sol, 1, sum(cf._weights.*(sol.(cf._ϕ) .- cf._data).^2))
+    if !isnothing(cf._prob._weights)
+        return _Candidate(sol, 1, sum(cf._prob._weights.*(sol.(cf._prob._ϕ) .- cf._prob._θ).^2))
     else
-        return _Candidate(sol, 1, sum((sol.(cf._ϕ) .- cf._data).^2))
+        return _Candidate(sol, 1, sum((sol.(cf._prob._ϕ) .- cf._prob._θ).^2))
     end
 end
 
@@ -162,13 +169,13 @@ function candidate(cf::RSSCostFunction{true}, sol::Solution)
     if !isnothing(cf._ϕi_hint)
         D0_hint = (cf._ϕi_hint/sol.ϕi)^2
     else
-        D0_hint = (sorptivity(cf._ϕ, cf._data, i=sol.i, b=sol.b)/sorptivity(sol))^2
+        D0_hint = (cf._sorptivity/sorptivity(sol))^2
     end
 
     scaling = curve_fit(scaled!,
-                        cf._ϕ,
-                        cf._data,
-                        (!isnothing(cf._weights) ? (cf._weights,) : ())...,
+                        cf._prob._ϕ,
+                        cf._prob._θ,
+                        (!isnothing(cf._prob._weights) ? (cf._prob._weights,) : ())...,
                         [D0_hint],
                         inplace=true,
                         lower=[0.0],

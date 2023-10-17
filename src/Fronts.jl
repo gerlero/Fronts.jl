@@ -23,6 +23,7 @@ using LinearAlgebra: Diagonal
 
 using ArgCheck: @argcheck
 using StaticArrays: @SVector, @SMatrix
+using RecursiveArrayTools: ArrayPartition
 using PCHIPInterpolation: Interpolator, integrate
 import NumericalIntegration
 using RecipesBase
