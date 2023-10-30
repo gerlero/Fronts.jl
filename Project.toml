@@ -20,6 +20,7 @@ ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 [compat]
 ArgCheck = "2"
 ForwardDiff = "0.10"
+LinearAlgebra = "1"
 LsqFit = "0.13, 0.14, 0.15"
 OrdinaryDiffEq = "6.31"
 NumericalIntegration = "0.3.3"
