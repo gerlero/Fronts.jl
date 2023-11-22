@@ -7,7 +7,7 @@ Welcome to the documentation of the [`Fronts` package for Julia](https://github.
 ## Contents
 
 ```@contents
-Pages = ["equations.md", "problems.md", "solvers.md", "solution.md", "boltzmann.md", "inverse.md", "ParamEstim.md", "PorousModels.md"]
+Pages = ["equations.md", "problems.md", "solvers.md", "solution.md", "boltzmann.md", "inverse.md", "finite.md", "ParamEstim.md", "PorousModels.md"]
 ```
 
 !!! note

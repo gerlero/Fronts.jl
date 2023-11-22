@@ -5,6 +5,7 @@ using Fronts.ParamEstim
 using Test
 
 import ForwardDiff
+using NumericalIntegration
 using OrdinaryDiffEq: ODEFunction, ODEProblem
 using OrdinaryDiffEq.DiffEqBase: NullParameters
 using StaticArrays: @SVector, SVector
@@ -22,6 +23,7 @@ using Plots: plot
     include("test_richards.jl")
     include("test_pseudospectral.jl")
     include("test_inverse.jl")
+    include("test_finite.jl")
     include("test_ParamEstim.jl")
     include("test_plot.jl")
 end
