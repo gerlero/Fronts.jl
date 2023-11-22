@@ -19,7 +19,7 @@ using OrdinaryDiffEq.ReturnCode: Terminated
 using OrdinaryDiffEq: RadauIIA5
 import OrdinaryDiffEq
 
-using LinearAlgebra: Diagonal
+using LinearAlgebra: Diagonal, Tridiagonal
 
 using ArgCheck: @argcheck
 using StaticArrays: @SVector, @SMatrix
@@ -67,6 +67,7 @@ include("shooting.jl")
 include("pseudospectral.jl")
 include("exceptions.jl")
 include("inverse.jl")
+include("finite.jl")
 
 export Equation, DiffusionEquation, RichardsEquation, isindomain, diffusivity, flow_diffusivity
 export d_dϕ, ∂_∂r, ∂_∂t, transform
@@ -77,6 +78,7 @@ export solve
 export Solution, rb, flux, sorptivity
 export SolvingError
 export inverse
+export FiniteProblem, FiniteDirichletProblem, FiniteFluxProblem, FiniteSolution
 
 include("ParamEstim.jl")
 
