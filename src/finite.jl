@@ -22,6 +22,12 @@ struct FiniteDirichletProblem{Teq, _Trstop, _Ti, _Tb} <: FiniteProblem{Teq}
     end
 end
 
+function Base.show(io::IO, prob::FiniteDirichletProblem)
+    println(io, "⎧ ", prob.eq, ", 0≤r≤", prob.rstop, ",t>0")
+    println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
+    print(io, "⎩ ", prob.eq.symbol, "(0,t) = ", prob.b, ", t>0")
+end
+
 """
     FiniteDirichletProblem(D, rstop; i, b) <: FiniteProblem
 
@@ -52,6 +58,12 @@ end
 Shortcut for `FiniteFluxProblem(DiffusionEquation(D), rstop, i=i, qb=qb)`.
 """
 FiniteFluxProblem(D, rstop; i, qb) = FiniteFluxProblem(DiffusionEquation(D), rstop, i=i, qb=qb)
+
+function Base.show(io::IO, prob::FiniteFluxProblem)
+    println(io, "⎧ ", prob.eq, ", 0≤r≤", prob.rstop, ",t>0")
+    println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
+    print(io, "⎩ q(0,t) = ", prob.qb, ", t>0")
+end
 
 
 """
@@ -209,4 +221,8 @@ function (sol::FiniteSolution)(r, t)
         sol._θ[i+1][j]*(sol.r[j+1] - r)*(t - sol.t[i]) +
         sol._θ[i+1][j+1]*(r - sol.r[j])*(t - sol.t[i])
     )
+end
+
+function Base.show(io::IO, sol::FiniteSolution)
+    print(io, "FiniteSolution with $(length(sol.t)) timesteps")
 end
