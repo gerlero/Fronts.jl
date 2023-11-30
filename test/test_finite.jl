@@ -32,4 +32,25 @@
             @test NumericalIntegration.integrate(r, θ.(r, t) - θ.(r, 0)) ≈ prob.qb*t atol=1e-3
         end
     end
+
+    @testset "FiniteReservoirProblem" begin
+        # Wetting of a Whatman No. 1 paper strip, LETd model
+        # Reference: Gerlero et al. (2022)
+        # https://doi.org/10.1007/s11242-021-01724-w
+        θs = 0.7
+        θi = 0.025
+        ϵ = 1e-7
+
+        pm = LETd(L=0.004569, E=12930, T=1.505, Dwt=4.660e-4, θr=0.019852, θs=θs)
+
+        r = range(0, 0.05, length=500)
+
+        prob = FiniteReservoirProblem(pm, r[end], i=θi, b=θs-ϵ, capacity=1e-2)
+
+        θ = solve(prob, 200, N=length(r))
+
+        for t in [100, 150, 200]
+            @test NumericalIntegration.integrate(r, θ.(r, t) .- θi) ≈ prob.capacity atol=1e-4
+        end
+    end
 end
