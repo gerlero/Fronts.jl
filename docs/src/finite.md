@@ -8,6 +8,7 @@ CurrentModule = Fronts
 FiniteProblem
 FiniteDirichletProblem
 FiniteFluxProblem
+FiniteReservoirProblem
 solve(prob::FiniteProblem{<:DiffusionEquation{1}}, tstop)
 FiniteSolution
 ```
