@@ -78,7 +78,7 @@ export solve
 export Solution, rb, flux, sorptivity
 export SolvingError
 export inverse
-export FiniteProblem, FiniteDirichletProblem, FiniteFluxProblem, FiniteReservoirProblem, FiniteSolution
+export FiniteDifference, FiniteProblem, FiniteDirichletProblem, FiniteFluxProblem, FiniteReservoirProblem, FiniteSolution
 
 include("ParamEstim.jl")
 

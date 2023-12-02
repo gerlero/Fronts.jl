@@ -1,4 +1,111 @@
 """
+    FiniteDifference([; N, tol])
+
+Finite difference–based algorithm.
+
+# Keyword arguments
+- `N=100`: number of points in the spatial grid.
+- `tol=1e-3`: nonlinear solver tolerance.
+
+See also: [`solve`](@ref)
+"""
+struct FiniteDifference{_TN,_Ttol,_TΔt}
+    N::_TN
+    tol::_Ttol
+    Δt::_TΔt
+
+    function FiniteDifference(; N::Integer=500, tol=1e-3, Δt=1)
+        @argcheck N ≥ 2
+        @argcheck tol > zero(tol)
+        new{typeof(N),typeof(tol),typeof(Δt)}(N, tol)
+    end
+end
+
+"""
+    solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::FiniteDifference) -> Solution
+
+Solve a Dirichlet problem using a finite-difference scheme.
+
+See also: [`FiniteDifference`](@ref), [`Solution`](@ref)
+"""
+function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::FiniteDifference)
+    @argcheck iszero(prob.ϕb)
+
+    r = range(0, 1, length=alg.N)
+    Δr = step(r)
+    Δr² = Δr^2
+
+    Δt = 1
+
+    θ = similar(r)
+    t = 0
+
+    θ .= prob.i
+
+    θ_old = copy(θ)
+    θ_prev_sweep = similar(θ)
+    Ad = Vector{Float64}(undef, length(r))
+    Al = similar(Ad, length(Ad)-1)
+    Au = similar(Ad, length(Ad)-1)
+    B = similar(Ad)
+
+    D = similar(Ad, length(r))
+    Df = similar(D, length(D)-1)
+
+    timesteps = 0
+
+    while true
+        change = Inf
+        sweeps = 0
+        while change > alg.tol
+            if sweeps >= 7
+                Δt /= 3
+                θ .= θ_old
+                sweeps = 0
+            end
+
+            D .= prob.eq.D.(θ)
+            Df .= 2D[begin:end-1].*D[begin+1:end]./(D[begin:end-1] + D[begin+1:end])
+
+            Ad[begin] = 1 + Df[begin]/Δr²*Δt
+            Ad[begin+1:end-1] .= 1 .+ (Df[begin:end-1] .+ Df[begin+1:end])./Δr².*Δt
+            Ad[end] = 1 + Df[end]/Δr²*Δt
+
+            Al .= -Df./Δr².*Δt
+            Au .= -Df./Δr².*Δt
+
+            A = Tridiagonal(Al, Ad, Au)
+            B .= θ
+
+            # Apply boundary conditions
+            A[begin,begin] = 1
+            A[begin,begin+1] = 0
+            B[begin] = prob.b
+
+            θ_prev_sweep .= θ
+            θ .= A\B
+            sweeps += 1
+            change = maximum(abs.(θ .- θ_prev_sweep))
+        end
+
+        if abs(θ[end] - prob.i) > alg.tol
+            θ .= θ_old
+            break
+        end
+
+        t += Δt
+        timesteps += 1
+        θ_old .= θ
+
+        if sweeps < 3
+            Δt *= 1.3
+        end
+    end
+
+    return Solution(prob.eq, Interpolator(transform.(r, t), θ), ϕb=prob.ϕb, ϕi=transform.(r[end], t), iterations=timesteps)
+end
+
+"""
     FiniteProblem{Eq<:Equation}
 
 Abstract type for problems defined in finite domains.
