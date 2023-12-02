@@ -1,3 +1,26 @@
+@testset "FiniteDifference" begin
+    # Wetting of a Whatman No. 1 paper strip, LETd model
+    # Reference: Gerlero et al. (2022)
+    # https://doi.org/10.1007/s11242-021-01724-w
+    θs = 0.7
+    θi = 0.025
+    ϵ = 1e-7
+    
+    model = LETd(L=0.004569, E=12930, T=1.505, Dwt=4.660e-4, θr=0.019852, θs=θs)
+    
+    prob = DirichletProblem(model, i=θi, b=θs-ϵ)
+    
+    θ = solve(prob)
+    θfd = solve(prob, FiniteDifference())
+
+    r = range(0, 0.05, length=500)
+    for t in [10, 20, 30]
+        @test θ.(r, t) ≈ θfd.(r, t) atol=1e-1
+        @test flux.(θ, r, t) ≈ flux.(θfd, r, t) atol=1e-4
+    end
+end
+
+
 @testset "FiniteProblem" begin
     @testset "FiniteDirichletProblem" begin
         # Reference: Philip (1960) Table 1, No. 13
