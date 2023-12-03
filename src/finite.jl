@@ -9,15 +9,14 @@ Finite difference–based algorithm.
 
 See also: [`solve`](@ref)
 """
-struct FiniteDifference{_TN,_Ttol,_TΔt}
+struct FiniteDifference{_TN,_Ttol}
     N::_TN
     tol::_Ttol
-    Δt::_TΔt
 
-    function FiniteDifference(; N::Integer=500, tol=1e-3, Δt=1)
+    function FiniteDifference(; N::Integer=500, tol=1e-3)
         @argcheck N ≥ 2
         @argcheck tol > zero(tol)
-        new{typeof(N),typeof(tol),typeof(Δt)}(N, tol)
+        new{typeof(N),typeof(tol)}(N, tol)
     end
 end
 
