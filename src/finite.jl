@@ -4,7 +4,7 @@
 Finite difference–based algorithm.
 
 # Keyword arguments
-- `N=100`: number of points in the spatial grid.
+- `N=500`: number of points in the spatial grid.
 - `tol=1e-3`: nonlinear solver tolerance.
 
 See also: [`solve`](@ref)
