@@ -336,7 +336,7 @@ function (sol::FiniteSolution)(r, t)
 
     i = searchsortedlast(sol.t, t)
 
-    if i == 0
+    if i == firstindex(sol.t) - 1 || (!isnothing(sol._isol) && i == firstindex(sol.t) && t == sol.t[begin])
         if !isnothing(sol._isol) && r[begin] ≤ r ≤ r[end]
             return sol._isol(r, t)
         else
@@ -353,7 +353,7 @@ function (sol::FiniteSolution)(r, t)
 
     j = searchsortedlast(sol.r, r)
 
-    if j == 0
+    if j == firstindex(sol.r) - 1
         return eltype(sol._θ[begin])(NaN)
     end
 
