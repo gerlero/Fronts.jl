@@ -16,7 +16,7 @@ Evaluate the solution.
 
 Type `\\phi<tab>` to obtain the `ϕ` symbol.
 """
-struct Solution{_Teq,_T,_Td_dϕ,_Tϕ,_Traw,_Tdraw_dϕ} <: _TransformedFunction
+struct Solution{_Teq,_T,_Td_dϕ,_Tϕ,_Traw,_Tdraw_dϕ}
     _eq::_Teq
     _raw::_Traw
     _draw_dϕ::_Tdraw_dϕ
@@ -42,6 +42,9 @@ function (sol::Solution)(ϕ)
 
     return sol._raw(ϕ)
 end
+
+(sol::Solution)(r, t) = sol(ϕ(r,t))
+
 
 """
     d_dϕ(::Solution, r, t)

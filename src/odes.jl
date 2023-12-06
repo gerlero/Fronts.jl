@@ -127,7 +127,7 @@ function transform(eq::RichardsEquation{m}) where m
 end
 
 
-sorptivity(eq::Equation, sol::_TransformedFunction, ϕ) = -2flow_diffusivity(eq, sol(ϕ))*d_dϕ(sol, ϕ)
+sorptivity(eq::Equation, sol, ϕ) = -2flow_diffusivity(eq, sol(ϕ))*d_dϕ(sol, ϕ)
 
 d_dϕ(eq::Equation, val, sorptivity) = -sorptivity/2flow_diffusivity(eq, val)
 

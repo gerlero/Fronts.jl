@@ -67,12 +67,8 @@ See also: [`ϕ`](@ref)
 transform(r, t) = ϕ(r,t)
 
 
-abstract type _TransformedFunction end
+d_dϕ(f, r, t) = d_dϕ(f, ϕ(r,t))
 
-(f::_TransformedFunction)(r, t) = f(ϕ(r,t))
+∂_∂r(f, r, t) = d_dϕ(f, r, t)*∂ϕ_∂r(r, t)
 
-d_dϕ(f::_TransformedFunction, r, t) = d_dϕ(f, ϕ(r,t))
-
-∂_∂r(f::_TransformedFunction, r, t) = d_dϕ(f, r, t)*∂ϕ_∂r(r, t)
-
-∂_∂t(f::_TransformedFunction, r, t) = d_dϕ(f, r, t)*∂ϕ_∂t(r, t)
+∂_∂t(f, r, t) = d_dϕ(f, r, t)*∂ϕ_∂t(r, t)
