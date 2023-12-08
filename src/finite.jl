@@ -112,80 +112,83 @@ Abstract type for problems defined in finite domains.
 abstract type FiniteProblem{Eq<:Equation} end
 
 """
-    FiniteDirichletProblem(eq, rstop; i, b) <: FiniteProblem
+    FiniteDirichletProblem(eq, rstop, tstop; i, b) <: FiniteProblem
 
 Models `eq` in the domain `0 ≤ r ≤ rstop` with initial condition `i` and boundary condition `b`.
 """
-struct FiniteDirichletProblem{Teq, _Trstop, _Ti, _Tb} <: FiniteProblem{Teq}
+struct FiniteDirichletProblem{Teq, _Trstop, _Ttstop, _Ti, _Tb} <: FiniteProblem{Teq}
     eq::Teq
-    rstop::_Trstop
+    _rstop::_Trstop
+    _tstop::_Ttstop
     i::_Ti
     b::_Tb
 
-    function FiniteDirichletProblem(eq::DiffusionEquation{1}, rstop; i, b)
-        @argcheck rstop > 0
-        new{typeof(eq),typeof(rstop),typeof(i),typeof(b)}(eq, rstop, i, b)
+    function FiniteDirichletProblem(eq::DiffusionEquation{1}, rstop, tstop; i, b)
+        @argcheck rstop > 0; @argcheck tstop ≥ 0
+        new{typeof(eq),typeof(rstop),typeof(tstop),typeof(i),typeof(b)}(eq, rstop, tstop, i, b)
     end
 end
 
 function Base.show(io::IO, prob::FiniteDirichletProblem)
-    println(io, "⎧ ", prob.eq, ", 0≤r≤", prob.rstop, ",t>0")
+    println(io, "⎧ ", prob.eq, ", 0<r≤", prob._rstop, ",0<t≤", prob._tstop)
     println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
     print(io, "⎩ ", prob.eq.symbol, "(0,t) = ", prob.b, ", t>0")
 end
 
 """
-    FiniteDirichletProblem(D, rstop; i, b) <: FiniteProblem
+    FiniteDirichletProblem(D, rstop, tstop; i, b) <: FiniteProblem
 
 Shortcut for `FiniteDirichletProblem(DiffusionEquation(D), rstop, i=i, b=b)`.
 """
-FiniteDirichletProblem(D, rstop; i, b) = FiniteDirichletProblem(DiffusionEquation(D), rstop, i=i, b=b)
+FiniteDirichletProblem(D, rstop, tstop; i, b) = FiniteDirichletProblem(DiffusionEquation(D), rstop, tstop, i=i, b=b)
 
 """
-    FiniteFluxProblem(eq, rstop; i, qb) <: FiniteProblem
+    FiniteFluxProblem(eq, rstop, tstop; i, qb) <: FiniteProblem
 
 Models `eq` in the domain `0 ≤ r ≤ rstop` with initial condition `i` and flux boundary condition `qb`.
 """
-struct FiniteFluxProblem{Teq, _Trstop, _Ti, _Tqb} <: FiniteProblem{Teq}
+struct FiniteFluxProblem{Teq, _Trstop, _Ttstop, _Ti, _Tqb} <: FiniteProblem{Teq}
     eq::Teq
-    rstop::_Trstop
+    _rstop::_Trstop
+    _tstop::_Ttstop
     i::_Ti
     qb::_Tqb
 
-    function FiniteFluxProblem(eq::DiffusionEquation{1}, rstop; i, qb)
-        @argcheck rstop > 0
-        new{typeof(eq),typeof(rstop),typeof(i),typeof(qb)}(eq, rstop, i, qb)
+    function FiniteFluxProblem(eq::DiffusionEquation{1}, rstop, tstop; i, qb)
+        @argcheck rstop > 0; @argcheck tstop ≥ 0
+        new{typeof(eq),typeof(rstop),typeof(tstop),typeof(i),typeof(qb)}(eq, rstop, tstop, i, qb)
     end
 end
 
 """
-    FiniteFluxProblem(D, rstop; i, qb) <: FiniteProblem
+    FiniteFluxProblem(D, rstop, tstop; i, qb) <: FiniteProblem
 
 Shortcut for `FiniteFluxProblem(DiffusionEquation(D), rstop, i=i, qb=qb)`.
 """
-FiniteFluxProblem(D, rstop; i, qb) = FiniteFluxProblem(DiffusionEquation(D), rstop, i=i, qb=qb)
+FiniteFluxProblem(D, rstop, tstop; i, qb) = FiniteFluxProblem(DiffusionEquation(D), rstop, tstop, i=i, qb=qb)
 
 function Base.show(io::IO, prob::FiniteFluxProblem)
-    println(io, "⎧ ", prob.eq, ", 0≤r≤", prob.rstop, ",t>0")
+    println(io, "⎧ ", prob.eq, ", 0<r≤", prob._rstop, ",0<t≤", prob._tstop)
     println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
     print(io, "⎩ q(0,t) = ", prob.qb, ", t>0")
 end
 
 """
-    FiniteReservoirProblem(eq, rstop; i, b, capacity) <: FiniteProblem
+    FiniteReservoirProblem(eq, rstop, tstop; i, b, capacity) <: FiniteProblem
 
 Models `eq` in the domain `0 ≤ r ≤ rstop` with initial condition `i` and a reservoir boundary condition with capacity `capacity`.
 """
-struct FiniteReservoirProblem{Teq, _Trstop, _Ti, _Tb, _Tcapacity} <: FiniteProblem{Teq}
+struct FiniteReservoirProblem{Teq, _Trstop, _Ttstop, _Ti, _Tb, _Tcapacity} <: FiniteProblem{Teq}
     eq::Teq
-    rstop::_Trstop
+    _rstop::_Trstop
+    _tstop::_Ttstop
     i::_Ti
     b::_Tb
     capacity::_Tcapacity
 
-    function FiniteReservoirProblem(eq::DiffusionEquation{1}, rstop; i, b, capacity)
-        @argcheck rstop > 0
-        new{typeof(eq),typeof(rstop),typeof(i),typeof(b),typeof(capacity)}(eq, rstop, i, b, capacity)
+    function FiniteReservoirProblem(eq::DiffusionEquation{1}, rstop, tstop; i, b, capacity)
+        @argcheck rstop > 0; @argcheck tstop ≥ 0
+        new{typeof(eq),typeof(rstop),typeof(tstop),typeof(i),typeof(b),typeof(capacity)}(eq, rstop, tstop, i, b, capacity)
     end
 end
 
@@ -195,7 +198,7 @@ end
 Shortcut for `FiniteReservoirProblem(DiffusionEquation(D), rstop, i=i, b=b, capacity=capacity)`.
 """
 
-FiniteReservoirProblem(D, rstop; i, b, capacity) = FiniteReservoirProblem(DiffusionEquation(D), rstop, i=i, b=b, capacity=capacity)
+FiniteReservoirProblem(D, rstop, tstop; i, b, capacity) = FiniteReservoirProblem(DiffusionEquation(D), rstop, tstop, i=i, b=b, capacity=capacity)
 
 
 """
@@ -210,8 +213,8 @@ Uses a finite difference scheme with backward Euler time discretization and a se
 - `tol=1e-3`: absolute tolerance for the solution.
 - `Δt=1`: initial time step.
 """
-function solve(prob::FiniteProblem{<:DiffusionEquation{1}}, tstop; N=500, tol=1e-3, Δt=1)
-    r = range(0, prob.rstop, length=N)
+function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; N=500, tol=1e-3, Δt=1)
+    r = range(0, prob._rstop, length=N)
     Δr = step(r)
     Δr² = Δr^2
 
@@ -225,7 +228,7 @@ function solve(prob::FiniteProblem{<:DiffusionEquation{1}}, tstop; N=500, tol=1e
     # Solve with Fronts as much as possible
     if prob.i isa Number && (prob isa FiniteDirichletProblem || prob isa FiniteReservoirProblem)
         isol = solve(DirichletProblem(prob.eq, i=prob.i, b=prob.b), itol=tol)
-        t = min(tstop, (prob.rstop/isol.ϕi)^2)
+        t = min(prob._tstop, (prob._rstop/isol.ϕi)^2)
         if prob isa FiniteReservoirProblem
             t = min(t, (prob.capacity/sorptivity(isol))^2)
             used = sorptivity(isol)*√t
@@ -247,9 +250,9 @@ function solve(prob::FiniteProblem{<:DiffusionEquation{1}}, tstop; N=500, tol=1e
     D = similar(Ad, length(r))
     Df = similar(D, length(D)-1)
 
-    while t < tstop
-        if t + Δt > tstop
-            Δt = tstop - t
+    while t < prob._tstop
+        if t + Δt > prob._tstop
+            Δt = prob._tstop - t
         end
 
         change = Inf

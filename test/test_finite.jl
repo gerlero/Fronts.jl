@@ -25,18 +25,18 @@ end
     @testset "FiniteDirichletProblem" begin
         # Reference: Philip (1960) Table 1, No. 13
         # https://doi.org/10.1071/PH600001
-        prob = FiniteDirichletProblem(θ -> 0.5*(1 - log(θ)), 100, i=0, b=1)
+        prob = FiniteDirichletProblem(θ -> 0.5*(1 - log(θ)), 100, 1e6, i=0, b=1)
 
-        θ = solve(prob, 1e6)
+        θ = solve(prob)
 
         r = range(0, 100, length=314)
 
         @test θ.(r, 1) ≈ exp.(-r) atol=5e-2
         @test all(θ.(r, 1e6) .≈ 1)
 
-        prob2 = FiniteDirichletProblem(θ -> 0.5*(1 - log(θ)), 100, i=1e-3*ones(500), b=1)
+        prob2 = FiniteDirichletProblem(θ -> 0.5*(1 - log(θ)), 100, 1e6, i=1e-3*ones(500), b=1)
 
-        θ2 = solve(prob2, 1e6)
+        θ2 = solve(prob2)
 
         @test θ2.(r, 314) ≈ θ.(r, 314) atol=5e-2
         @test θ2.(r, 31400) ≈ θ.(r, 31400) atol=5e-2
@@ -45,9 +45,9 @@ end
     @testset "FiniteFluxProblem" begin
         # Reference: Philip (1960) Table 1, No. 13
         # https://doi.org/10.1071/PH600001
-        prob = FiniteFluxProblem(θ -> 0.5*(1 - log(θ)), 20, i=1e-3, qb=1e-3)
+        prob = FiniteFluxProblem(θ -> 0.5*(1 - log(θ)), 20, 100, i=1e-3, qb=1e-3)
 
-        θ = solve(prob, 100)
+        θ = solve(prob)
 
         r = range(0, 20, length=1000)
 
@@ -68,9 +68,9 @@ end
 
         r = range(0, 0.05, length=500)
 
-        prob = FiniteReservoirProblem(pm, r[end], i=θi, b=θs-ϵ, capacity=1e-2)
+        prob = FiniteReservoirProblem(pm, r[end], 200, i=θi, b=θs-ϵ, capacity=1e-2)
 
-        θ = solve(prob, 200, N=length(r))
+        θ = solve(prob, N=length(r))
 
         for t in [100, 150, 200]
             @test NumericalIntegration.integrate(r, θ.(r, t) .- θi) ≈ prob.capacity atol=1e-4
