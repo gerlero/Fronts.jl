@@ -2,9 +2,9 @@
 
     @testset "fit_D0 false" begin
         θ = solve(DirichletProblem(θ -> 2*θ, i=0, b=1))
-        ϕ = range(0, 20, length=100)
+        o = range(0, 20, length=100)
     
-        cf = RSSCostFunction{false}(ϕ, θ.(ϕ), catch_errors=(DomainError,)) do (k,)
+        cf = RSSCostFunction{false}(o, θ.(o), catch_errors=(DomainError,)) do (k,)
             DirichletProblem(θ -> k*θ, i=0, b=1)
         end
         
@@ -18,9 +18,9 @@
     
     @testset "fit_D0 true" begin
         θ = solve(DirichletProblem(θ -> 2*θ, i=0, b=1))
-        ϕ = range(0, 20, length=100)
+        o = range(0, 20, length=100)
     
-        cf = RSSCostFunction{true}(ϕ, θ.(ϕ), D0tol=1e-4) do (k,)
+        cf = RSSCostFunction{true}(o, θ.(o), D0tol=1e-4) do (k,)
             DirichletProblem(θ -> k*θ, i=0, b=1)
         end
         

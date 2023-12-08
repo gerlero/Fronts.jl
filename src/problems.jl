@@ -18,8 +18,8 @@ Whether the solution to `prob` must be decreasing (`-1`), constant (`0`) or incr
 function monotonicity end
 
 """
-    DirichletProblem(eq; i=<initial value>, b=<boundary value>, ϕb=0) <: Problem{typeof(eq)}
-    DirichletProblem(D; i=<initial value>, b=<boundary value>, ϕb=0) <: Problem{DiffusionEquation{1}}
+    DirichletProblem(eq; i=<initial value>, b=<boundary value>, ob=0) <: Problem{typeof(eq)}
+    DirichletProblem(D; i=<initial value>, b=<boundary value>, ob=0) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Dirichlet boundary condition.
 
@@ -30,8 +30,7 @@ Semi-infinite problem with a Dirichlet boundary condition.
 # Keyword arguments
 - `i`: initial value.
 - `b`: imposed boundary value.
-- `ϕb=0` (`\\phi<tab>b`): boundary constant for an optional moving boundary.
-At time `t`, the boundary is located at `ϕb*√t`. Must be positive if `eq` is radial.
+- `ob=0`: boundary constant for an optional moving boundary. At time `t`, the boundary is located at `ob*√t`. Must be positive if `eq` is radial.
 
 # Examples
 ```jldoctest; setup = :(using Fronts)
@@ -46,40 +45,40 @@ julia> prob = Fronts.DirichletProblem(D, i=1, b=2)
 
 See also: [`Equation`](@ref)
 """
-struct DirichletProblem{Teq,_T,_Tϕ} <: Problem{Teq}
+struct DirichletProblem{Teq,_T,_To} <: Problem{Teq}
     eq::Teq
     i::_T
     b::_T
-    ϕb::_Tϕ
-    function DirichletProblem(eq::Equation{1}; i, b, ϕb=0)
-        new{typeof(eq),promote_type(typeof(i),typeof(b)),typeof(ϕb)}(eq, i, b, ϕb)
+    ob::_To
+    function DirichletProblem(eq::Equation{1}; i, b, ob=0)
+        new{typeof(eq),promote_type(typeof(i),typeof(b)),typeof(ob)}(eq, i, b, ob)
     end
-    function DirichletProblem(eq::Equation; i, b, ϕb)
-        @argcheck ϕb>0
-        new{typeof(eq),promote_type(typeof(i),typeof(b)),typeof(ϕb)}(eq, i, b, ϕb)
+    function DirichletProblem(eq::Equation; i, b, ob)
+        @argcheck ob>0
+        new{typeof(eq),promote_type(typeof(i),typeof(b)),typeof(ob)}(eq, i, b, ob)
     end
 end
 
-DirichletProblem(D; i, b, ϕb=0) = DirichletProblem(DiffusionEquation(D), i=i, b=b, ϕb=ϕb)
+DirichletProblem(D; i, b, ob=0) = DirichletProblem(DiffusionEquation(D), i=i, b=b, ob=ob)
 
 function Base.show(io::IO, prob::DirichletProblem)
-    if iszero(prob.ϕb)
+    if iszero(prob.ob)
         println(io, "⎧ ", prob.eq, ", r>0,t>0")
     else
         println(io, "⎧ ", prob.eq, ", r>rb(t),t>0")
     end
     println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
-    if iszero(prob.ϕb)
+    if iszero(prob.ob)
         print(io, "⎩ ", prob.eq.symbol, "(0,t) = ", prob.b, ", t>0")
     else
         println(io, "⎩ ", prob.eq.symbol, "(rb(t),t) = ", prob.b, ", t>0")
-        print(io, "with rb(t) = ", prob.ϕb, "*√t")
+        print(io, "with rb(t) = ", prob.ob, "*√t")
     end
 end
 
 monotonicity(prob::DirichletProblem)::Int = sign(prob.i - prob.b)
 
-function d_dϕ(prob::DirichletProblem, symbol::Symbol)
+function d_do(prob::DirichletProblem, symbol::Symbol)
     @argcheck symbol === :b_hint
     Db = diffusivity(prob.eq, prob.b)
     if !isfinite(Db) || Db≤zero(Db)
@@ -90,7 +89,7 @@ end
 
 
 """
-    FlowrateProblem(eq; i=<initial value>, Qb=<boundary flowrate>, angle=2π, height=1, ϕb=0) <: Problem{typeof(eq)}
+    FlowrateProblem(eq; i=<initial value>, Qb=<boundary flowrate>, angle=2π, height=1, ob=0) <: Problem{typeof(eq)}
 
 Semi-infinite radial (polar/cylindrical) problem with an imposed-flowrate boundary condition.
 
@@ -102,8 +101,7 @@ Semi-infinite radial (polar/cylindrical) problem with an imposed-flowrate bounda
 - `Qb`: imposed boundary flowrate.
 - `angle=2π`: total angle covered by the domain.
 - `height=1`: domain height.
-- `ϕb=0` (`\\phi<tab>b`): boundary constant for an optional moving boundary.
-At time `t`, the boundary is located at `ϕb*√t`.
+- `ob=0`: boundary constant for an optional moving boundary. At time `t`, the boundary is located at `ob*√t`.
 
 # Examples
 ```jldoctest; setup = :(using Fronts)
@@ -121,46 +119,46 @@ julia> prob = Fronts.FlowrateProblem(eq, i=1, Qb=1)
 
 See also: [`Equation`](@ref)
 """
-struct FlowrateProblem{Teq,_Tθ,_Tϕ,_TQ,_Th} <: Problem{Teq}
+struct FlowrateProblem{Teq,_Tθ,_To,_TQ,_Th} <: Problem{Teq}
     eq::Teq
     i::_Tθ
     Qb::_TQ
     _αh::_Th
-    ϕb::_Tϕ
+    ob::_To
 
-    function FlowrateProblem(eq::Equation{2}; i, Qb, angle=2π, height=1, ϕb=0)
+    function FlowrateProblem(eq::Equation{2}; i, Qb, angle=2π, height=1, ob=0)
         @argcheck 0<angle≤2π; @argcheck height>zero(height)
-        @argcheck ϕb≥zero(ϕb)
+        @argcheck ob≥zero(ob)
         αh = angle*height
-        new{typeof(eq),typeof(i),typeof(ϕb),typeof(Qb),typeof(αh)}(eq, i, Qb, αh, ϕb)
+        new{typeof(eq),typeof(i),typeof(ob),typeof(Qb),typeof(αh)}(eq, i, Qb, αh, ob)
     end
 end
 
 function Base.show(io::IO, prob::FlowrateProblem)
-    if iszero(prob.ϕb)
+    if iszero(prob.ob)
         println(io, "⎧ ", prob.eq, ", r>0,t>0")
     else
         println(io, "⎧ ", prob.eq, ", r>rb(t),t>0")
     end
     println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
-    if iszero(prob.ϕb)
+    if iszero(prob.ob)
         print(io, "⎩ Qb(0,t) = ", prob.Qb, ", t>0")
     else
         println(io, "⎩ Qb(rb(t),t) = ", prob.Qb, ", t>0")
-        print(io, "with rb(t) = ", prob.ϕb, "*√t")
+        print(io, "with rb(t) = ", prob.ob, "*√t")
     end
 end
 
-function d_dϕ(prob::FlowrateProblem, symbol::Symbol; b, ϕb=prob.ϕb)
+function d_do(prob::FlowrateProblem, symbol::Symbol; b, ob=prob.ob)
     @argcheck symbol === :b
-    return d_dϕ(prob.eq, b, ϕb, prob.Qb/prob._αh)
+    return d_do(prob.eq, b, ob, prob.Qb/prob._αh)
 end
 
 monotonicity(prob::FlowrateProblem)::Int = -sign(prob.Qb)
 
 """
-    CauchyProblem(eq; b=<boundary value>, d_dϕb=<boundary ϕ-derivative>, ϕb=0) <: Problem{typeof(eq)}
-    CauchyProblem(D; b=<boundary value>, d_dϕb=<boundary ϕ-derivative>, ϕb=0) <: Problem{DiffusionEquation{1}}
+    CauchyProblem(eq; b=<boundary value>, d_dob=<boundary o-derivative>, ob=0) <: Problem{typeof(eq)}
+    CauchyProblem(D; b=<boundary value>, d_dob=<boundary o-derivative>, ob=0) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Cauchy boundary condition (and unknown initial condition).
 
@@ -170,17 +168,16 @@ Semi-infinite problem with a Cauchy boundary condition (and unknown initial cond
 
 # Keyword arguments
 - `b`: imposed boundary value.
-- `d_dϕb`: imposed value of the ϕ-derivative of the solution at the boundary, where ϕ is the Boltzmann variable.
-This value is equivalent to `√t*∂_∂r(<solution>, :b, t)` at any time `t>0`.
-- `ϕb=0` (`\\phi<tab>b`): boundary constant for an optional moving boundary.
-At time `t`, the boundary is located at `ϕb*√t`. Must be positive if `eq` is radial.
+- `d_dob`: imposed value of the `o`-derivative of the solution at the boundary, where `o` is the Boltzmann variable.
+This value is equivalent to `√t*d_dr(<solution>, :b, t)` at any time `t>0`.
+- `ob=0`: boundary constant for an optional moving boundary. At time `t`, the boundary is located at `ob*√t`. Must be positive if `eq` is radial.
 
 # Examples
 ```jldoctest; setup = :(using Fronts)
 julia> D(θ) = θ^4
 D (generic function with 1 method)
 
-julia> prob = Fronts.CauchyProblem(D, b=2, d_dϕb=-0.1)
+julia> prob = Fronts.CauchyProblem(D, b=2, d_dob=-0.1)
 ⎧ ∂θ/∂t = ∂(D(θ)*∂θ/∂r)/∂r, r>0,t>0
 ⎨ θ(0,t) = 2, t>0
 ⎩ √t*∂θ/∂r(0,t) = -0.1, t>0
@@ -188,33 +185,33 @@ julia> prob = Fronts.CauchyProblem(D, b=2, d_dϕb=-0.1)
 
 See also: [`Equation`](@ref)
 """
-struct CauchyProblem{Teq,_T,_Tϕ,_Td_dϕ} <: Problem{Teq}
+struct CauchyProblem{Teq,_T,_To,_Td_do} <: Problem{Teq}
     eq::Teq
     b::_T
-    d_dϕb::_Td_dϕ
-    ϕb::_Tϕ
-    function CauchyProblem(eq::Equation{1}; b, d_dϕb, ϕb=0)
-        new{typeof(eq),typeof(b),typeof(ϕb),typeof(d_dϕb)}(eq, b, d_dϕb, ϕb)
+    d_dob::_Td_do
+    ob::_To
+    function CauchyProblem(eq::Equation{1}; b, d_dob, ob=0)
+        new{typeof(eq),typeof(b),typeof(ob),typeof(d_dob)}(eq, b, d_dob, ob)
     end
-    function CauchyProblem(eq::Equation; b, d_dϕb, ϕb)
-        @argcheck ϕb>zero(ϕb)
-        new{typeof(eq),typeof(b),typeof(ϕb),typeof(d_dϕb)}(eq, b, d_dϕb, ϕb)
+    function CauchyProblem(eq::Equation; b, d_dob, ob)
+        @argcheck ob>zero(ob)
+        new{typeof(eq),typeof(b),typeof(ob),typeof(d_dob)}(eq, b, d_dob, ob)
     end
 end
 
-CauchyProblem(D; b, d_dϕb, ϕb=0) = CauchyProblem(DiffusionEquation(D), b=b, d_dϕb=d_dϕb, ϕb=ϕb)
+CauchyProblem(D; b, d_dob, ob=0) = CauchyProblem(DiffusionEquation(D), b=b, d_dob=d_dob, ob=ob)
 
 function Base.show(io::IO, prob::CauchyProblem)
-    if iszero(prob.ϕb)
+    if iszero(prob.ob)
         println(io, "⎧ ", prob.eq, ", r>0,t>0")
         println(io, "⎨ ", prob.eq.symbol, "(0,t) = ", prob.b, ", t>0")
-        print(io,   "⎩ √t*∂", prob.eq.symbol, "/∂r(0,t) = ", prob.d_dϕb, ", t>0")
+        print(io,   "⎩ √t*∂", prob.eq.symbol, "/∂r(0,t) = ", prob.d_dob, ", t>0")
     else
         println(io, "⎧ ", prob.eq, ",r>rb(t),t>0")
         println(io, "⎨ ", prob.eq.symbol, "(rb(t),t) = ", prob.b, ", t>0")
-        println(io, "⎩ √t*∂", prob.eq.symbol, "/∂r(rb(t),t) = ", prob.d_dϕb, ", t>0")
-        print(io, "with rb(t) = ", prob.ϕb, "*√t")
+        println(io, "⎩ √t*∂", prob.eq.symbol, "/∂r(rb(t),t) = ", prob.d_dob, ", t>0")
+        print(io, "with rb(t) = ", prob.ob, "*√t")
     end
 end
 
-monotonicity(prob::CauchyProblem)::Int = sign(prob.d_dϕb)
+monotonicity(prob::CauchyProblem)::Int = sign(prob.d_dob)

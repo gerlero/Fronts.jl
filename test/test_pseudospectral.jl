@@ -7,10 +7,10 @@
 
     θ = solve(prob, MathiasAndSander())
 
-    ϕ = range(θ.ϕb, 20, length=100)
+    o = range(θ.ob, 20, length=100)
 
-    @test all(@. isapprox(θ(ϕ), exp(-ϕ), atol=1e-4))
-    @test all(@. isapprox(d_dϕ(θ,ϕ), -exp(-ϕ), atol=1e-2))
+    @test all(@. isapprox(θ(o), exp(-o), atol=1e-4))
+    @test all(@. isapprox(d_do(θ,o), -exp(-o), atol=1e-2))
     @test (@inferred sorptivity(θ)) ≈ 1 atol=1e-3
     @test θ.iterations > 0
     end

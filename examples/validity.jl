@@ -22,12 +22,12 @@ d = LETd(L=0.004569, E=12930, T=1.505, Dwt=4.660e-4, θr=0.019852, θs=θs)
 θxs = solve(DirichletProblem(xs, i=θi, b=θs-ϵ))
 θd = solve(DirichletProblem(d, i=θi, b=θs-ϵ))
 
-ϕ = range(0, 0.0025, length=500)
+o = range(0, 0.0025, length=500)
 
-plt = plot(ϕ, θbc.(ϕ), label="Brooks and Corey", color="firebrick", xlabel="ϕ [m/√s]", ylabel="θ", legend=:bottomleft)
-plt = plot!(ϕ, θvg.(ϕ), label="Van Genuchten", color="forest green")
-plt = plot!(ϕ, θxs.(ϕ), label="LETxs", color="dark orange")
-plt = plot!(ϕ, θd.(ϕ), label="LETd", color="dodger blue")
+plt = plot(o, θbc.(o), label="Brooks and Corey", color="firebrick", xlabel="ϕ [m/√s]", ylabel="θ", legend=:bottomleft)
+plt = plot!(o, θvg.(o), label="Van Genuchten", color="forest green")
+plt = plot!(o, θxs.(o), label="LETxs", color="dark orange")
+plt = plot!(o, θd.(o), label="LETd", color="dodger blue")
 display(plt)
 
 end

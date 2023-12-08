@@ -28,7 +28,7 @@ Solve a Dirichlet problem using a finite-difference scheme.
 See also: [`FiniteDifference`](@ref), [`Solution`](@ref)
 """
 function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::FiniteDifference)
-    @argcheck iszero(prob.ϕb)
+    @argcheck iszero(prob.ob)
 
     r = range(0, 1, length=alg.N)
     Δr = step(r)
@@ -101,7 +101,7 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::FiniteDiffer
         end
     end
 
-    return Solution(prob.eq, Interpolator(transform.(r, t), θ), ϕb=prob.ϕb, ϕi=transform.(r[end], t), iterations=timesteps)
+    return Solution(prob.eq, Interpolator(transform.(r, t), θ), ob=prob.ob, oi=transform.(r[end], t), iterations=timesteps)
 end
 
 """
@@ -202,7 +202,7 @@ FiniteReservoirProblem(D, rstop, tstop; i, b, capacity) = FiniteReservoirProblem
 
 
 """
-    solve(prob::FiniteProblem{<:DiffusionEquation{1}}, tstop[; N, tol, Δt]) -> FiniteSolution
+    solve(prob::FiniteProblem{<:DiffusionEquation{1}}, tstop[; N, tol, dt]) -> FiniteSolution
 
 Solve the finite problem `prob` up to time `tstop`.
 
@@ -211,9 +211,9 @@ Uses a finite difference scheme with backward Euler time discretization and a se
 # Keyword arguments
 - `N=500`: number of points in the spatial grid.
 - `tol=1e-3`: absolute tolerance for the solution.
-- `Δt=1`: initial time step.
+- `dt=1`: initial time step.
 """
-function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; N=500, tol=1e-3, Δt=1)
+function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; N=500, tol=1e-3, dt=1)
     r = range(0, prob._rstop, length=N)
     Δr = step(r)
     Δr² = Δr^2
@@ -228,7 +228,7 @@ function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; N=500, tol=1e-3, Δt
     # Solve with Fronts as much as possible
     if prob.i isa Number && (prob isa FiniteDirichletProblem || prob isa FiniteReservoirProblem)
         isol = solve(DirichletProblem(prob.eq, i=prob.i, b=prob.b), itol=tol)
-        t = min(prob._tstop, (prob._rstop/isol.ϕi)^2)
+        t = min(prob._tstop, (prob._rstop/isol.oi)^2)
         if prob isa FiniteReservoirProblem
             t = min(t, (prob.capacity/sorptivity(isol))^2)
             used = sorptivity(isol)*√t
@@ -251,15 +251,15 @@ function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; N=500, tol=1e-3, Δt
     Df = similar(D, length(D)-1)
 
     while t < prob._tstop
-        if t + Δt > prob._tstop
-            Δt = prob._tstop - t
+        if t + dt > prob._tstop
+            dt = prob._tstop - t
         end
 
         change = Inf
         sweeps = 0
         while change > tol
             if sweeps >= 7
-                Δt /= 3
+                dt /= 3
                 θ .= θs[end]
                 sweeps = 0
             end
@@ -267,19 +267,19 @@ function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; N=500, tol=1e-3, Δt
             D .= prob.eq.D.(θ)
             Df .= 2D[begin:end-1].*D[begin+1:end]./(D[begin:end-1] + D[begin+1:end])
 
-            Ad[begin] = 1 + Df[begin]/Δr²*Δt
-            Ad[begin+1:end-1] .= 1 .+ (Df[begin:end-1] .+ Df[begin+1:end])./Δr².*Δt
-            Ad[end] = 1 + Df[end]/Δr²*Δt
+            Ad[begin] = 1 + Df[begin]/Δr²*dt
+            Ad[begin+1:end-1] .= 1 .+ (Df[begin:end-1] .+ Df[begin+1:end])./Δr².*dt
+            Ad[end] = 1 + Df[end]/Δr²*dt
 
-            Al .= -Df./Δr².*Δt
-            Au .= -Df./Δr².*Δt
+            Al .= -Df./Δr².*dt
+            Au .= -Df./Δr².*dt
 
             A = Tridiagonal(Al, Ad, Au)
             B .= θ
 
             # Apply boundary conditions
             if prob isa FiniteReservoirProblem
-                influx = min(-Df[begin]*(θ[begin+1] - prob.b)/Δr*Δt, prob.capacity - used)
+                influx = min(-Df[begin]*(θ[begin+1] - prob.b)/Δr*dt, prob.capacity - used)
             end
 
             if prob isa FiniteDirichletProblem || (prob isa FiniteReservoirProblem && influx < prob.capacity - used)
@@ -289,7 +289,7 @@ function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; N=500, tol=1e-3, Δt
             elseif (prob isa FiniteFluxProblem && prob.qb != zero(prob.qb)) || (prob isa FiniteReservoirProblem && influx > zero(influx))
                 A[begin,begin] = Df[begin]/Δr
                 A[begin,begin+1] = -Df[begin]/Δr
-                B[begin] = prob isa FiniteReservoirProblem ? influx/Δt : prob.qb
+                B[begin] = prob isa FiniteReservoirProblem ? influx/dt : prob.qb
             end
 
             θ_prev_sweep .= θ
@@ -298,18 +298,18 @@ function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; N=500, tol=1e-3, Δt
             change = maximum(abs.(θ .- θ_prev_sweep))
         end
 
-        t += Δt
+        t += dt
 
         push!(ts, t)
         push!(θs, copy(θ))
 
         if prob isa FiniteReservoirProblem
-            influx = -Df[begin]*(θ[begin+1] - θ[begin])/Δr*Δt
+            influx = -Df[begin]*(θ[begin+1] - θ[begin])/Δr*dt
             used += influx
         end
 
         if sweeps < 3
-            Δt *= 1.3
+            dt *= 1.3
         end
     end
 

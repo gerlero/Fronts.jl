@@ -1,17 +1,17 @@
 @testset "CauchyProblem" begin
 
     @testset "constant solution" begin
-    prob = CauchyProblem(identity, b=1, d_dϕb=0)
+    prob = CauchyProblem(identity, b=1, d_dob=0)
 
     θ = solve(prob)
 
-    ϕ = range(0, 20, length=100)
+    o = range(0, 20, length=100)
 
-    @test all(θ.(ϕ) .≈ θ.i)
-    @test all(θ.(ϕ) .≈ θ.b)
-    @inferred θ(ϕ[begin])
-    @test all(d_dϕ.(θ, ϕ) .≈ 0)
-    @inferred d_dϕ(θ, ϕ[begin])
+    @test all(θ.(o) .≈ θ.i)
+    @test all(θ.(o) .≈ θ.b)
+    @inferred θ(o[begin])
+    @test all(d_do.(θ, o) .≈ 0)
+    @inferred d_do(θ, o[begin])
     @test θ.iterations == 0
     @test isnan(@inferred θ(-1))
     end
@@ -25,14 +25,14 @@
     prob1 = DirichletProblem(D, i=0, b=1)
     θ1 = solve(prob1)
 
-    prob2 = CauchyProblem(D, b=θ1.b, d_dϕb=θ1.d_dϕb)
+    prob2 = CauchyProblem(D, b=θ1.b, d_dob=θ1.d_dob)
     θ2 = solve(prob2)
 
     @test θ2.i == θ1.i
     @test θ2.b == θ1.b
-    @test θ2.d_dϕb == θ1.d_dϕb
-    @test θ2.ϕi == θ1.ϕi
-    @test θ2.ϕb == θ1.ϕb
+    @test θ2.d_dob == θ1.d_dob
+    @test θ2.oi == θ1.oi
+    @test θ2.ob == θ1.ob
     
     @test θ2.iterations == 0
 

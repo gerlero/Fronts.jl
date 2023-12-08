@@ -5,13 +5,14 @@
 
     θ = solve(prob)
 
-    ϕ = range(0, 20, length=100)
+    
+    o = range(0, 20, length=100)
 
-    @test all(θ.(ϕ) .== θ.i)
-    @test all(θ.(ϕ) .== θ.b)
-    @inferred θ(ϕ[begin])
-    @test all(d_dϕ.(θ, ϕ) .== 0)
-    @inferred d_dϕ(θ, ϕ[begin])
+    @test all(θ.(o) .== θ.i)
+    @test all(θ.(o) .== θ.b)
+    @inferred θ(o[begin])
+    @test all(d_do.(θ, o) .== 0)
+    @inferred d_do(θ, o[begin])
     @test ((@inferred sorptivity(θ))) == 0
     @test θ.iterations == 0
     @test isnan(@inferred θ(-1))
@@ -25,10 +26,10 @@
 
     θ = solve(prob)
 
-    ϕ = range(0, 20, length=100)
+    o = range(0, 20, length=100)
 
-    @test all(@. isapprox(θ(ϕ), exp(-ϕ), atol=1e-3))
-    @test all(@. isapprox(d_dϕ(θ,ϕ), -exp(-ϕ), atol=1e-3))
+    @test all(@. isapprox(θ(o), exp(-o), atol=1e-3))
+    @test all(@. isapprox(d_do(θ,o), -exp(-o), atol=1e-3))
     @test (@inferred sorptivity(θ)) ≈ 1 atol=1e-3
     @test θ.iterations > 0
     end
@@ -76,7 +77,7 @@
 
     @test all(@. isapprox(θ(r,t), θ_pmf, atol=1e-3))
     @test all(@. isapprox(flux(θ,r,t), U_pmf, atol=1e-6))
-    @test all(@. flux(θ,r,t) ≈ -Dθ(model, θ(r,t))*∂_∂r(θ,r,t))
+    @test all(@. flux(θ,r,t) ≈ -Dθ(model, θ(r,t))*d_dr(θ,r,t))
     @test θ.iterations > 0
     @test isnan(@inferred θ(-1,t))
     end
@@ -95,9 +96,9 @@
     θxs = solve(DirichletProblem(xs, i=θi, b=θs-ϵ))
     θd = solve(DirichletProblem(d, i=θi, b=θs-ϵ))
 
-    ϕ = range(0, max(θxs.ϕi, θd.ϕi), length=100)
+    o = range(0, max(θxs.oi, θd.oi), length=100)
 
-    @test all(@. isapprox(θd(ϕ), θxs(ϕ), atol=5e-2))
+    @test all(@. isapprox(θd(o), θxs(o), atol=5e-2))
     end
 
 

@@ -40,7 +40,7 @@ See also: [`MathiasAndSander`](@ref), [`Solution`](@ref), [`SolvingError`](@ref)
 """
 function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSander; maxiter=100)
 
-    @argcheck iszero(prob.ϕb)
+    @argcheck iszero(prob.ob)
 
     z, diff = chebdif(alg.N, 2)
     d_dz = diff[:,:,1]
@@ -80,10 +80,10 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSa
         
         if all(abs.(F .- F_prev) .≤ alg.Ftol)
             S = √S²
-            ϕ = S.*d_dθ*F
-            dθ_dϕ = -S.*F./2D
-            itp = Interpolator(ϕ, θ, dθ_dϕ)
-            return Solution(prob.eq, itp, b=θ[begin], i=θ[end], ϕb=ϕ[begin], ϕi=ϕ[end], iterations=iterations)
+            o = S.*d_dθ*F
+            dθ_do = -S.*F./2D
+            itp = Interpolator(o, θ, dθ_do)
+            return Solution(prob.eq, itp, b=θ[begin], i=θ[end], ob=o[begin], oi=o[end], iterations=iterations)
         end
     end
 

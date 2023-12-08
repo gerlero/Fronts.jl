@@ -7,9 +7,9 @@ CurrentModule = Fronts
 Lower-level API to work with the Boltzmann transformation.
 
 ```@docs
-ϕ
-∂ϕ_∂r
-∂ϕ_∂t
+o
+do_dr
+do_dt
 r
 t
 transform

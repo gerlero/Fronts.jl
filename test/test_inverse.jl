@@ -3,9 +3,9 @@
     @testset "exact" begin
         # Reference: Philip (1960) Table 1, No. 13
         # https://doi.org/10.1071/PH600001
-        ϕ = range(0, 20, length=100)
+        o = range(0, 20, length=100)
 
-        D = inverse(ϕ, exp.(-ϕ))
+        D = inverse(o, exp.(-o))
 
         θ = range(1e-6, 0.99, length=100)
         
@@ -20,7 +20,7 @@
 
         θ2 = solve(DirichletProblem(D, i=0, b=1))
 
-        @test all(@. isapprox(θ2.(ϕ), exp.(-ϕ), atol=5e-3))
+        @test all(@. isapprox(θ2.(o), exp.(-o), atol=5e-3))
     end
 
     @testset "sorptivity" begin
@@ -28,8 +28,8 @@
         # https://doi.org/10.1071/PH600001
         θ = solve(DirichletProblem(θ -> 0.5*(1 - log(θ)), i=0, b=1))
 
-        ϕ = range(0, 20, length=100)
+        o = range(0, 20, length=100)
 
-        @test sorptivity(ϕ, θ.(ϕ)) ≈ sorptivity(θ) atol=5e-3
+        @test sorptivity(o, θ.(o)) ≈ sorptivity(θ) atol=5e-3
     end
 end

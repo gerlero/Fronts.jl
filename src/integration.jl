@@ -1,14 +1,14 @@
 """
     transform(prob::CauchyProblem) -> DifferentialEquations.ODEProblem
 
-Transform `prob` into an ODE problem in terms of ϕ. The ODE problem is set up to terminate automatically
+Transform `prob` into an ODE problem in terms of `o`. The ODE problem is set up to terminate automatically
 (`ReturnCode.Terminated`) when the steady state is reached.
 
 See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/)
 """
 function transform(prob::CauchyProblem)
-    u0 = @SVector [prob.b, prob.d_dϕb]
-    ϕb = float(prob.ϕb)
+    u0 = @SVector [prob.b, prob.d_dob]
+    ob = float(prob.ob)
     settled = DiscreteCallback(
         let direction=monotonicity(prob)
             (u, t, integrator) -> direction*u[2] ≤ zero(u[2])
@@ -16,7 +16,7 @@ function transform(prob::CauchyProblem)
         terminate!,
         save_positions=(false,false)
     )
-    ODEProblem(transform(prob.eq), u0, (ϕb, typemax(ϕb)), callback=settled)
+    ODEProblem(transform(prob.eq), u0, (ob, typemax(ob)), callback=settled)
 end
 
 monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
@@ -40,7 +40,7 @@ function _init(prob::CauchyProblem; limit=nothing)
 end
 
 function _reinit!(integrator, prob::CauchyProblem)
-    reinit!(integrator, @SVector [prob.b, prob.d_dϕb])
+    reinit!(integrator, @SVector [prob.b, prob.d_dob])
     return integrator
 end
 
@@ -60,12 +60,12 @@ end
 
 function Solution(_eq, _odesol::ODESolution; iterations)
     return Solution(_eq,
-                    ϕ -> _odesol(ϕ, idxs=1),
-                    ϕ -> _odesol(ϕ, idxs=2),
+                    o -> _odesol(o, idxs=1),
+                    o -> _odesol(o, idxs=2),
                     i=_odesol.u[end][1],
                     b=_odesol.u[1][1],
-                    d_dϕb=_odesol.u[1][2],
-                    ϕb=_odesol.t[1],
-                    ϕi=_odesol.t[end],
+                    d_dob=_odesol.u[1][2],
+                    ob=_odesol.t[1],
+                    oi=_odesol.t[end],
                     iterations=iterations)
 end

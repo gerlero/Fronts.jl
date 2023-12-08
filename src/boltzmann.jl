@@ -1,74 +1,68 @@
 """
-    Fronts.ϕ(r, t)
+    Fronts.o(r, t)
 
-Evaluate the Boltzmann variable ϕ at position `r` and time `t`.
+Evaluate the Boltzmann variable `o` at position `r` and time `t`.
 
-Type `\\phi<tab>` to obtain the `ϕ` symbol.
-
-The Boltzmann variable is defined as `ϕ=r/√t` and makes the Boltzmann transformation possible.
+The Boltzmann variable is defined as `o=r/√t` and makes the Boltzmann transformation possible.
 
 To prevent possible name clashes, this function is not exported.
 
 See also: [`transform`](@ref)
 """
-ϕ(r, t) = r/√t
+o(r, t) = r/√t
 
 """
-    ∂ϕ_∂r(r, t)
+    do_dr(r, t)
 
 Partial derivative of the Boltzmann variable.
 
-Type `\\partial<tab>` to obtain the `∂` symbol; `\\phi<tab>` to obtain the `ϕ` symbol.
-
-See also: [`ϕ`](@ref)
+See also: [`o`](@ref)
 """
-∂ϕ_∂r(r, t) = 1/√t
+do_dr(_, t) = 1/√t
 
 """
-    ∂ϕ_∂t(r, t)
+    do_dt(r, t)
 
 Partial derivative of the Boltzmann variable.
 
-Type `\\partial<tab>` to obtain the `∂` symbol; `\\phi<tab>` to obtain the `ϕ` symbol.
-
-See also: [`ϕ`](@ref)
+See also: [`o`](@ref)
 """
-∂ϕ_∂t(r, t) = -ϕ(r,t)/2t
+do_dt(r, t) = -o(r,t)/2t
 
 """
-    Fronts.r(ϕ, t)
+    Fronts.r(o, t)
 
 Convert back from the Boltzmann variable to `r`.
 
 To prevent possible name clashes, this function is not exported.
 
-See also: [`ϕ`](@ref)
+See also: [`o`](@ref)
 """
-r(ϕ, t) = ϕ*√t
+r(o, t) = o*√t
 
 """
-    Fronts.t(ϕ, r)
+    Fronts.t(o, r)
 
 Convert back from the Boltzmann variable to `t`.
 
 To prevent possible name clashes, this function is not exported.
 
-See also: [`ϕ`](@ref)
+See also: [`o`](@ref)
 """
-t(ϕ, r) = (r/ϕ)^2
+t(o, r) = (r/o)^2
 
 """
     transform(r, t)
 
-Same as `ϕ(r,t)`.
+Same as `o(r,t)`.
 
-See also: [`ϕ`](@ref)
+See also: [`o`](@ref)
 """
-transform(r, t) = ϕ(r,t)
+transform(r, t) = o(r,t)
 
 
-d_dϕ(f, r, t) = d_dϕ(f, ϕ(r,t))
+d_do(f, r, t) = d_do(f, o(r,t))
 
-∂_∂r(f, r, t) = d_dϕ(f, r, t)*∂ϕ_∂r(r, t)
+d_dr(f, r, t) = d_do(f, r, t)*do_dr(r, t)
 
-∂_∂t(f, r, t) = d_dϕ(f, r, t)*∂ϕ_∂t(r, t)
+d_dt(f, r, t) = d_do(f, r, t)*do_dt(r, t)

@@ -6,10 +6,10 @@ CurrentModule = Fronts
 
 ```@docs
 Solution
-∂_∂r
-∂_∂t
+d_dr
+d_dt
 flux
-d_dϕ
+d_do
 rb
 sorptivity(::Solution)
 sorptivity(::Solution, _)

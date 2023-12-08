@@ -6,15 +6,15 @@ using Plots
 
 # Reference: Philip (1960) Table 1, No. 13
 # https://doi.org/10.1071/PH600001
-# Exact solution: θ(ϕ) = exp(-ϕ)
+# Exact solution: θ(o) = exp(-o)
 prob = DirichletProblem(θ -> 0.5*(1 - log(θ)), i=0, b=1)
 
 θ = solve(prob)
 
-ϕ = range(0, 20, length=200)
+o = range(0, 20, length=200)
 
 plt = plot(θ, label="Fronts")
-plot!(ϕ, exp.(-ϕ), label="Exact")
+plot!(o, exp.(-o), label="Exact")
 display(plt)
 
 end

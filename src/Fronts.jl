@@ -29,19 +29,17 @@ import NumericalIntegration
 using RecipesBase
 
 """
-    solve(prob::DirichletProblem[; itol, maxiter, d_dϕb_hint]) -> Solution
-    solve(prob::FlowrateProblem[; itol, ϕbtol, maxiter, b_hint]) -> Solution
+    solve(prob::DirichletProblem[; itol, maxiter, d_dob_hint]) -> Solution
+    solve(prob::FlowrateProblem[; itol, obtol, maxiter, b_hint]) -> Solution
     solve(prob::CauchyProblem) -> Solution
 
 Solve the problem `prob`.
 
 # Keyword arguments
 - `itol=1e-3`: absolute tolerance for the initial condition.
-- `ϕbtol=1e-6`: maximum tolerance for `ϕb`. Allows solving `FlowrateProblem`s with boundaries at `r=0`.
+- `obtol=1e-6`: maximum tolerance for `ob`. Allows solving `FlowrateProblem`s with boundaries at `r=0`.
 - `maxiter=100`: maximum number of iterations.
-- `d_dϕb_hint`, `b_hint`: optional hints for the algorithms.
-
-Type `\\phi<tab>` to obtain the `ϕ` symbol.
+- `d_dob_hint`, `b_hint`: optional hints for the algorithms.
 
 # Exceptions
 This function throws an `SolvingError` if an acceptable solution is not found (within the
@@ -70,7 +68,7 @@ include("inverse.jl")
 include("finite.jl")
 
 export Equation, DiffusionEquation, RichardsEquation, isindomain, diffusivity, flow_diffusivity
-export d_dϕ, ∂_∂r, ∂_∂t, transform
+export d_do, d_dr, d_dt, transform
 export sorptivity
 export Problem, DirichletProblem, FlowrateProblem, CauchyProblem, monotonicity
 export MathiasAndSander
