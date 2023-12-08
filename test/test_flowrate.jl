@@ -6,13 +6,13 @@
 
     θ = solve(prob)
 
-    ϕ = range(1e-6, 20, length=100)
+    o = range(1e-6, 20, length=100)
 
-    @test all(θ.(ϕ) .≈ θ.i)
-    @test all(θ.(ϕ) .≈ θ.b)
-    @inferred θ(ϕ[begin])
-    @test all(d_dϕ.(θ, ϕ) .≈ 0)
-    @inferred d_dϕ(θ, ϕ[begin])
+    @test all(θ.(o) .≈ θ.i)
+    @test all(θ.(o) .≈ θ.b)
+    @inferred θ(o[begin])
+    @test all(d_do.(θ, o) .≈ 0)
+    @inferred d_do(θ, o[begin])
     @test θ.iterations == 0
     end
 

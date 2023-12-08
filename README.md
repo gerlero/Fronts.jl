@@ -28,13 +28,13 @@ julia> prob = DirichletProblem(eq, i=0.1, b=1)
 julia> c = solve(prob)
 Solution c obtained after 10 iterations
 cb = 1.0
-dc/dϕ|b = -0.28388671875000004
+dc/do|b = -0.28388671875000004
 ci = 0.10006060603081587
 
 julia> c(0.25, 2) # Evaluate the solution anywhere and at any time
 0.9440546607878473
 
-julia> ∂_∂r(c, 0.25, 2) # Obtain derivatives
+julia> d_dr(c, 0.25, 2) # Obtain derivatives
 -0.25038534184881966
 
 julia> flux(c, 0.25, 2) # Obtain the flux

@@ -9,6 +9,6 @@ FiniteProblem
 FiniteDirichletProblem
 FiniteFluxProblem
 FiniteReservoirProblem
-solve(prob::FiniteProblem{<:DiffusionEquation{1}}, tstop)
+solve(prob::FiniteProblem{<:DiffusionEquation{1}})
 FiniteSolution
 ```

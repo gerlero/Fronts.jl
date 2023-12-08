@@ -20,27 +20,27 @@ function _shoot!(integrator, prob::CauchyProblem; i, itol)
     return integrator, residual
 end
 
-function _shoot!(integrator, prob::DirichletProblem; d_dϕb, itol)
+function _shoot!(integrator, prob::DirichletProblem; d_dob, itol)
     return _shoot!(integrator,
-                   CauchyProblem(prob.eq, b=prob.b, d_dϕb=d_dϕb, ϕb=prob.ϕb),
+                   CauchyProblem(prob.eq, b=prob.b, d_dob=d_dob, ob=prob.ob),
                    i=prob.i, itol=itol)
 end
 
-function _shoot!(integrator, prob::FlowrateProblem; b, itol, ϕbtol)
+function _shoot!(integrator, prob::FlowrateProblem; b, itol, obtol)
     if isindomain(prob.eq, b)
-        ϕb = !iszero(prob.ϕb) ? prob.ϕb : ϕbtol
+        ob = !iszero(prob.ob) ? prob.ob : obtol
 
-        d_dϕb = d_dϕ(prob, :b, b=b, ϕb=ϕb)
+        d_dob = d_do(prob, :b, b=b, ob=ob)
     
         return _shoot!(integrator,
-                       CauchyProblem(prob.eq, b=b, d_dϕb=d_dϕb, ϕb=ϕb),
+                       CauchyProblem(prob.eq, b=b, d_dob=d_dob, ob=ob),
                        i=prob.i, itol=itol)
     end
     return integrator, -monotonicity(prob)*typemax(prob.i)
 end
 
 
-function solve(prob::DirichletProblem; d_dϕb_hint=nothing,
+function solve(prob::DirichletProblem; d_dob_hint=nothing,
                                        itol=1e-3,
                                        maxiter=100)
 
@@ -52,23 +52,23 @@ function solve(prob::DirichletProblem; d_dϕb_hint=nothing,
     residual = prob.b - prob.i
 
     if abs(residual) ≤ itol
-        integrator, _ = _shoot!(nothing, prob, d_dϕb=zero(prob.b/prob.ϕb), itol=itol)
+        integrator, _ = _shoot!(nothing, prob, d_dob=zero(prob.b/prob.ob), itol=itol)
         return Solution(prob.eq, integrator.sol, iterations=0)
     end
 
     @argcheck isindomain(prob.eq, prob.i - monotonicity(prob)*itol) DomainError(prob.i, "prob.i not valid for the given equation and itol")
 
-    if !isnothing(d_dϕb_hint)
-        @argcheck sign(d_dϕb_hint) == monotonicity(prob) "sign of d_dϕb_hint must be consistent with initial and boundary conditions"
+    if !isnothing(d_dob_hint)
+        @argcheck sign(d_dob_hint) == monotonicity(prob) "sign of d_dob_hint must be consistent with initial and boundary conditions"
     else
-        d_dϕb_hint = d_dϕ(prob, :b_hint)
+        d_dob_hint = d_do(prob, :b_hint)
     end
 
-    d_dϕb_trial = bracket_bisect(zero(d_dϕb_hint), d_dϕb_hint, residual)
+    d_dob_trial = bracket_bisect(zero(d_dob_hint), d_dob_hint, residual)
     integrator = nothing
 
     for iterations in 1:maxiter
-        integrator, residual = _shoot!(integrator, prob, d_dϕb=d_dϕb_trial(residual), itol=itol)
+        integrator, residual = _shoot!(integrator, prob, d_dob=d_dob_trial(residual), itol=itol)
 
         if abs(residual) ≤ itol
             return Solution(prob.eq, integrator.sol, iterations=iterations)
@@ -81,19 +81,19 @@ end
 
 function solve(prob::FlowrateProblem; b_hint=nothing,
                                       itol=1e-3,
-                                      ϕbtol=1e-6,
+                                      obtol=1e-6,
                                       maxiter=100)
 
     @argcheck itol≥zero(itol)
-    if iszero(prob.ϕb)
-        @argcheck ϕbtol>zero(ϕbtol)
+    if iszero(prob.ob)
+        @argcheck obtol>zero(obtol)
     else
-        @argcheck ϕbtol≥zero(ϕbtol)
+        @argcheck obtol≥zero(obtol)
     end
     @argcheck maxiter≥0
 
     if monotonicity(prob) == 0
-        integrator, residual = _shoot!(nothing, prob, b=prob.i, itol=itol, ϕbtol=ϕbtol)
+        integrator, residual = _shoot!(nothing, prob, b=prob.i, itol=itol, obtol=obtol)
         @assert iszero(residual)
         return Solution(prob.eq, integrator.sol, iterations=0)
     end
@@ -110,7 +110,7 @@ function solve(prob::FlowrateProblem; b_hint=nothing,
     residual = nothing
 
     for iterations in 1:maxiter
-        integrator, residual = _shoot!(integrator, prob, b=b_trial(residual), itol=itol, ϕbtol=ϕbtol)
+        integrator, residual = _shoot!(integrator, prob, b=b_trial(residual), itol=itol, obtol=obtol)
 
         if abs(residual) ≤ itol
             return Solution(prob.eq, integrator.sol, iterations=iterations)

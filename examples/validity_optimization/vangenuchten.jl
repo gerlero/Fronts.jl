@@ -15,7 +15,7 @@ using Plots
 θs = 0.7
 
 file = npzread("$(@__DIR__)/processed.npz")
-ϕref = file["o"]
+oref = file["o"]
 Yref = file["I"] .± file["std"]
 
 θref = θi .+ (θs - θi).*Yref
@@ -33,7 +33,7 @@ function unpack(cand::Vector)
     return NamedTuple(zip(keys(search_range), map(x -> round(x, sigdigits=4), cand)))
 end
 
-cost = RSSCostFunction{true}(ϕref, Measurements.value.(θref), inv.(Measurements.uncertainty.(θref).^2),
+cost = RSSCostFunction{true}(oref, Measurements.value.(θref), inv.(Measurements.uncertainty.(θref).^2),
                             catch_errors=(SolvingError, DomainError), D0tol=1e-6) do params
     model = VanGenuchten(; θs=θs, unpack(params)...)
 
@@ -62,17 +62,17 @@ prob = DirichletProblem(model, i=θi.val, b=θs-ϵ)
 
 θ = solve(prob, itol=θi.err)
 
-rchisq = round(sum(Measurements.stdscore.(θref, θ.(ϕref)).^2)/(length(ϕref) - length(search_range) - 1), sigdigits=2)
+rchisq = round(sum(Measurements.stdscore.(θref, θ.(oref)).^2)/(length(oref) - length(search_range) - 1), sigdigits=2)
 
 @show rchisq
 
-ϕplot = range(0, 0.0024, length=1000)
-plt = scatter(ϕref, θref, label="Experimental", xlabel="ϕ", ylabel="θ", legend=:bottomleft)
-plot!(ϕplot, θ.(ϕplot), label="Optimization (Van Genuchten model)")
+oplot = range(0, 0.0024, length=1000)
+plt = scatter(oref, θref, label="Experimental", xlabel="ϕ", ylabel="θ", legend=:bottomleft)
+plot!(oplot, θ.(oplot), label="Optimization (Van Genuchten model)")
 display(plt)
 
 θplot = range(θi.val, θs, length=1000)
-D = inverse(ϕref[2:end][diff(Measurements.value.(θref)) .≤ 0], Measurements.value.(θref)[2:end][diff(Measurements.value.(θref)) .≤ 0])
+D = inverse(oref[2:end][diff(Measurements.value.(θref)) .≤ 0], Measurements.value.(θref)[2:end][diff(Measurements.value.(θref)) .≤ 0])
 plt = plot(θplot, D.(θplot), label="Inverse", yaxis=:log, xlabel="θ", ylabel="D", legend=:topleft)
 plot!(θplot, Dθ.(model, θplot), label="Van Genuchten")
 display(plt)

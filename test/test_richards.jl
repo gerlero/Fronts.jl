@@ -34,7 +34,7 @@
 
     @test all(@. isapprox(θ(r,t), θh(model, h(r,t)), atol=1e-1))
     @test all(@. isapprox(flux(θ,r[2:end],t), flux(h,r[2:end],t), atol=1e-4))
-    @test all(@. flux(h,r,t) ≈ -Kh(model, h(r,t))*∂_∂r(h,r,t))
+    @test all(@. flux(h,r,t) ≈ -Kh(model, h(r,t))*d_dr(h,r,t))
     end
 
     @testset "FlowrateProblem" begin
