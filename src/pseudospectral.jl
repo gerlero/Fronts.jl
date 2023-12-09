@@ -25,12 +25,12 @@ struct MathiasAndSander{_TN, _TFtol}
 end
 
 """
-    solve(::DirichletProblem{<:DiffusionEquation{1}}, ::MathiasAndSander[; maxiter]) -> Solution
+    solve(::DirichletProblem{<:DiffusionEquation{1}}, ::MathiasAndSander[; maxiters]) -> Solution
 
 Solve a Dirichlet problem using the pseudospectral method of Mathias and Sander (2021).
 
 # Keyword arguments
-- `maxiter`: maximum number of iterations.
+- `maxiters`: maximum number of iterations.
 
 # References
 MATHIAS, S. A.; SANDER, G. C. Pseudospectral methods provide fast and accurate solutions for the horizontal infiltration equation.
@@ -38,7 +38,7 @@ Journal of Hydrology, 2021, vol. 598, p. 126407.
 
 See also: [`MathiasAndSander`](@ref), [`Solution`](@ref), [`SolvingError`](@ref)
 """
-function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSander; maxiter=100)
+function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSander; maxiters=100)
 
     @argcheck iszero(prob.ob)
 
@@ -62,7 +62,7 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSa
     first = [i==1 for i in 1:alg.N]
     last = [i==alg.N for i in 1:alg.N]
 
-    for iterations in 1:maxiter
+    for iterations in 1:maxiters
         S² = ∫*(2*(θ .- prob.i).*D./F)
         d²F_dθ² = -2*D./S²./F
 
@@ -87,5 +87,5 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSa
         end
     end
 
-    throw(SolvingError("failed to converge within $maxiter iterations"))
+    throw(SolvingError("failed to converge within $maxiters iterations"))
 end

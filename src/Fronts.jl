@@ -29,8 +29,8 @@ import NumericalIntegration
 using RecipesBase
 
 """
-    solve(prob::DirichletProblem[; itol, maxiter, d_dob_hint]) -> Solution
-    solve(prob::FlowrateProblem[; itol, obtol, maxiter, b_hint]) -> Solution
+    solve(prob::DirichletProblem[; itol, maxiters, d_dob_hint]) -> Solution
+    solve(prob::FlowrateProblem[; itol, obtol, maxiters, b_hint]) -> Solution
     solve(prob::CauchyProblem) -> Solution
 
 Solve the problem `prob`.
@@ -38,7 +38,7 @@ Solve the problem `prob`.
 # Keyword arguments
 - `itol=1e-3`: absolute tolerance for the initial condition.
 - `obtol=1e-6`: maximum tolerance for `ob`. Allows solving `FlowrateProblem`s with boundaries at `r=0`.
-- `maxiter=100`: maximum number of iterations.
+- `maxiters=100`: maximum number of iterations.
 - `d_dob_hint`, `b_hint`: optional hints for the algorithms.
 
 # Exceptions
