@@ -12,5 +12,6 @@ flux
 d_do
 rb
 sorptivity(::Solution)
-sorptivity(::Solution, _)
+sorptivity(::Solution, Any)
+FiniteSolution
 ```

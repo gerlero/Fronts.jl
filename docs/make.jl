@@ -22,7 +22,6 @@ makedocs(;
         "Solutions" => "solution.md",
         "Boltzmann transformation" => "boltzmann.md",
         "Inverse problems" => "inverse.md",
-        "Finite domains" => "finite.md",
         "Parameter estimation" => "ParamEstim.md",
         "Unsaturated flow models" => "PorousModels.md",
     ],

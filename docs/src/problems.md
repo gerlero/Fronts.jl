@@ -9,5 +9,8 @@ Problem
 DirichletProblem
 FlowrateProblem
 CauchyProblem
+FiniteProblem
+FiniteDirichletProblem
+FiniteReservoirProblem
 monotonicity
 ```
