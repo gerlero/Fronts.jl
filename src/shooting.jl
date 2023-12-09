@@ -42,10 +42,10 @@ end
 
 function solve(prob::DirichletProblem; d_dob_hint=nothing,
                                        itol=1e-3,
-                                       maxiter=100)
+                                       maxiters=100)
 
-    @argcheck itol≥zero(itol)
-    @argcheck maxiter≥0
+    @argcheck itol ≥ zero(itol)
+    @argcheck maxiters ≥ 0
 
     @argcheck isindomain(prob.eq, prob.b) DomainError(prob.b, "prob.b not valid for the given equation")
 
@@ -67,7 +67,7 @@ function solve(prob::DirichletProblem; d_dob_hint=nothing,
     d_dob_trial = bracket_bisect(zero(d_dob_hint), d_dob_hint, residual)
     integrator = nothing
 
-    for iterations in 1:maxiter
+    for iterations in 1:maxiters
         integrator, residual = _shoot!(integrator, prob, d_dob=d_dob_trial(residual), itol=itol)
 
         if abs(residual) ≤ itol
@@ -75,22 +75,22 @@ function solve(prob::DirichletProblem; d_dob_hint=nothing,
         end
     end
 
-    throw(SolvingError("failed to converge within $maxiter iterations"))
+    throw(SolvingError("failed to converge within $maxiters iterations"))
 end
 
 
 function solve(prob::FlowrateProblem; b_hint=nothing,
                                       itol=1e-3,
                                       obtol=1e-6,
-                                      maxiter=100)
+                                      maxiters=100)
 
-    @argcheck itol≥zero(itol)
+    @argcheck itol ≥ zero(itol)
     if iszero(prob.ob)
-        @argcheck obtol>zero(obtol)
+        @argcheck obtol > zero(obtol)
     else
-        @argcheck obtol≥zero(obtol)
+        @argcheck obtol ≥ zero(obtol)
     end
-    @argcheck maxiter≥0
+    @argcheck maxiters ≥ 0
 
     if monotonicity(prob) == 0
         integrator, residual = _shoot!(nothing, prob, b=prob.i, itol=itol, obtol=obtol)
@@ -109,7 +109,7 @@ function solve(prob::FlowrateProblem; b_hint=nothing,
     integrator = nothing
     residual = nothing
 
-    for iterations in 1:maxiter
+    for iterations in 1:maxiters
         integrator, residual = _shoot!(integrator, prob, b=b_trial(residual), itol=itol, obtol=obtol)
 
         if abs(residual) ≤ itol
@@ -117,7 +117,5 @@ function solve(prob::FlowrateProblem; b_hint=nothing,
         end
     end
 
-    throw(SolvingError("failed to converge within $maxiter iterations"))
+    throw(SolvingError("failed to converge within $maxiters iterations"))
 end
-
-export solve

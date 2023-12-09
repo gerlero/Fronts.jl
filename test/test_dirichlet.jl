@@ -104,13 +104,13 @@
 
     @testset "bad argument" begin
     prob = DirichletProblem(identity, i=0, b=1)
-    @test_throws ArgumentError solve(prob, maxiter=-1)
+    @test_throws ArgumentError solve(prob, maxiters=-1)
     end
 
 
     @testset "unsolved" begin
     prob = DirichletProblem(identity, i=0, b=1)
-    @test_throws SolvingError solve(prob, maxiter=0)
+    @test_throws SolvingError solve(prob, maxiters=0)
     end
 
 

@@ -23,7 +23,7 @@ monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
 
 function _init(prob::CauchyProblem; limit=nothing)
     odeprob = transform(prob)
-    ode_maxiters = 1000
+    ODE_MAXITERS = 1000
 
     if !isnothing(limit)
         past_limit = DiscreteCallback(
@@ -33,10 +33,10 @@ function _init(prob::CauchyProblem; limit=nothing)
             terminate!,
             save_positions=(false,false)
         )
-        return init(odeprob, RadauIIA5(), callback=past_limit, verbose=false, maxiters=ode_maxiters)
+        return init(odeprob, RadauIIA5(), callback=past_limit, verbose=false, maxiters=ODE_MAXITERS)
     end
 
-    return init(odeprob, RadauIIA5(), verbose=false, maxiters=ode_maxiters)
+    return init(odeprob, RadauIIA5(), verbose=false, maxiters=ODE_MAXITERS)
 end
 
 function _reinit!(integrator, prob::CauchyProblem)
