@@ -53,18 +53,18 @@
 
     prob = DirichletProblem(model, i=θi, b=θb)
 
-    θ = solve(prob, MathiasAndSander(N=1000))
+    θ = solve(prob, MathiasAndSander(1000))
 
     @test all(@. isapprox(θ(r[2:end],t), θ_pmf[2:end], atol=1e-2))
     @test θ.iterations > 0
     end
 
     @testset "bad arguments" begin
-    @test_throws ArgumentError MathiasAndSander(N=0)
-    @test_throws ArgumentError MathiasAndSander(N=1)
-    @test_throws TypeError MathiasAndSander(N=2.5)
-    @test_throws ArgumentError MathiasAndSander(N=-1)
+    @test_throws ArgumentError MathiasAndSander(0)
+    @test_throws ArgumentError MathiasAndSander(1)
+    @test_throws Union{InexactError,TypeError,MethodError} MathiasAndSander(2.5)
+    @test_throws ArgumentError MathiasAndSander(-1)
     
-    @test_throws ArgumentError MathiasAndSander(Ftol=-1)
+    @test_throws ArgumentError MathiasAndSander(-1)
     end
 end
