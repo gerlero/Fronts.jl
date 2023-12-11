@@ -267,7 +267,7 @@ function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProble
         return FiniteSolution(prob.eq, r, ts, θs, _isol=isol)
     else
         @assert isnothing(isol)
-        return Solution(prob.eq, Interpolator(transform.(r, t), θ), ob=prob.ob, oi=transform.(r[end], t), iterations=timesteps)
+        return Solution(prob.eq, Interpolator(boltzmann.(r, t), θ), ob=prob.ob, oi=boltzmann.(r[end], t), iterations=timesteps)
     end
 end
 

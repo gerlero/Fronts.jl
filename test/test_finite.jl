@@ -40,6 +40,7 @@ end
 
         @test θ2.(r, 314) ≈ θ.(r, 314) atol=5e-2
         @test θ2.(r, 31400) ≈ θ.(r, 31400) atol=5e-2
+        @test flux.(θ2, r, 31.4) ≈ flux.(θ, r, 31.4) atol=5e-2
     end
 
     @testset "FiniteReservoirProblem" begin

@@ -1,12 +1,13 @@
 """
-    transform(prob::CauchyProblem) -> DifferentialEquations.ODEProblem
+    boltzmann(prob::CauchyProblem) -> DifferentialEquations.ODEProblem
 
-Transform `prob` into an ODE problem in terms of `o`. The ODE problem is set up to terminate automatically
-(`ReturnCode.Terminated`) when the steady state is reached.
+Transform `prob` into an ODE problem in terms of the Boltzmann variable `o`.
+
+The ODE problem is set up to terminate automatically (`ReturnCode.Terminated`) when the steady state is reached.
 
 See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/)
 """
-function transform(prob::CauchyProblem)
+function boltzmann(prob::CauchyProblem)
     u0 = @SVector [prob.b, prob.d_dob]
     ob = float(prob.ob)
     settled = DiscreteCallback(
@@ -16,13 +17,13 @@ function transform(prob::CauchyProblem)
         terminate!,
         save_positions=(false,false)
     )
-    ODEProblem(transform(prob.eq), u0, (ob, typemax(ob)), callback=settled)
+    ODEProblem(boltzmann(prob.eq), u0, (ob, typemax(ob)), callback=settled)
 end
 
 monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
 
 function _init(prob::CauchyProblem; limit=nothing)
-    odeprob = transform(prob)
+    odeprob = boltzmann(prob)
     ODE_MAXITERS = 1000
 
     if !isnothing(limit)
