@@ -68,7 +68,7 @@ include("inverse.jl")
 include("finite.jl")
 
 export Equation, DiffusionEquation, RichardsEquation, isindomain, diffusivity, flow_diffusivity
-export d_do, d_dr, d_dt, transform
+export d_do, d_dr, d_dt, boltzmann
 export sorptivity
 export Problem, DirichletProblem, FlowrateProblem, CauchyProblem, monotonicity
 export MathiasAndSander

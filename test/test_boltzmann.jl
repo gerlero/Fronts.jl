@@ -1,7 +1,7 @@
-@testset "transform" begin
+@testset "boltzmann" begin
 
     @testset "basic" begin
-        @test transform(2, 3) == Fronts.o(2,3)
+        @test boltzmann(2, 3) == Fronts.o(2,3)
     end
 
     @testset "ODEs" begin
@@ -9,7 +9,7 @@
         @testset "types" begin
             eq = DiffusionEquation(identity)
 
-            odefun = @inferred transform(eq)
+            odefun = @inferred boltzmann(eq)
 
             @test odefun isa ODEFunction
             
@@ -19,7 +19,7 @@
             
             prob = CauchyProblem(eq, b=1, d_dob=0)
             
-            @test transform(prob) isa ODEProblem
+            @test boltzmann(prob) isa ODEProblem
         end
 
         @testset "Jacobian" begin
@@ -35,11 +35,11 @@
             model = VanGenuchten(n=n, α=α, k=k, θr=θr, θs=θs)
 
             eq = DiffusionEquation(model)
-            odefun = transform(eq)
+            odefun = boltzmann(eq)
             
             @testset "DiffusionEquation" begin
                 for m in 1:3
-                    odefun = @inferred transform(DiffusionEquation{m}(model))
+                    odefun = @inferred boltzmann(DiffusionEquation{m}(model))
                     for θ in range(0.05, θs - 1e-7, length=5), dθ_do in range(-2, 0, length=5), o in range(m == 1 ? 0 : 1e-6, 0.0025, length=5)
                         du = @SVector [θ, dθ_do]
                         J = @inferred odefun.jac(du, NullParameters(), o)
@@ -50,7 +50,7 @@
 
             @testset "RichardsEquation" begin
                 for m in 1:3
-                    odefun = transform(RichardsEquation{m}(model))
+                    odefun = boltzmann(RichardsEquation{m}(model))
                     for h in range(-50, 10, length=5), dh_do in range(-1, 0, length=5), o in range(m == 1 ? 0 : 1e-6, 0.0025, length=5)
                         du = @SVector [h, dh_do]
                         J = @inferred odefun.jac(du, NullParameters(), o)

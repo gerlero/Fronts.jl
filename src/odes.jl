@@ -1,5 +1,5 @@
 """
-    transform(eq::Equation) -> DifferentialEquations.ODEFunction
+boltzmann(eq::Equation) -> DifferentialEquations.ODEFunction
 
 Transform `eq` into an ordinary differential equation (ODE) defined in terms of the Boltzmann variable `o`.
 
@@ -9,7 +9,7 @@ the second component is the `o`-derivative of the solution. The ODE is optimized
 
 See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/), [`StaticArrays.SVector`](https://juliaarrays.github.io/StaticArrays.jl/stable/pages/api/#SVector-1)
 """
-function transform(eq::DiffusionEquation{1})
+function boltzmann(eq::DiffusionEquation{1})
     let D = eq.D
         function f((θ, dθ_do), ::NullParameters, o)
             try
@@ -37,7 +37,7 @@ function transform(eq::DiffusionEquation{1})
     end
 end
 
-function transform(eq::DiffusionEquation{m}) where m
+function boltzmann(eq::DiffusionEquation{m}) where m
     @assert m in 2:3
     let D = eq.D, k = m-1
         function f((θ, dθ_do), ::NullParameters, o)
@@ -67,7 +67,7 @@ function transform(eq::DiffusionEquation{m}) where m
 end
 
 
-function transform(eq::RichardsEquation{1})
+function boltzmann(eq::RichardsEquation{1})
     let C = eq.C, K = eq.K
         function f((h, dh_do), ::NullParameters, o)
             try
@@ -96,7 +96,7 @@ function transform(eq::RichardsEquation{1})
     end
 end
 
-function transform(eq::RichardsEquation{m}) where m
+function boltzmann(eq::RichardsEquation{m}) where m
     @assert m in 2:3
     let C = eq.C, K = eq.K, k=m-1
         function f((h, dh_do), ::NullParameters, o)

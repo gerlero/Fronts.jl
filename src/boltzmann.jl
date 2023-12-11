@@ -7,7 +7,7 @@ The Boltzmann variable is defined as `o=r/√t` and makes the Boltzmann transfor
 
 To prevent possible name clashes, this function is not exported.
 
-See also: [`transform`](@ref)
+See also: [`boltzmann`](@ref)
 """
 o(r, t) = r/√t
 
@@ -52,13 +52,13 @@ See also: [`o`](@ref)
 t(o, r) = (r/o)^2
 
 """
-    transform(r, t)
+    boltzmann(r, t)
 
 Same as `o(r,t)`.
 
 See also: [`o`](@ref)
 """
-transform(r, t) = o(r,t)
+boltzmann(r, t) = o(r,t)
 
 
 d_do(f, r, t) = d_do(f, o(r,t))
