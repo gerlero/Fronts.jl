@@ -51,7 +51,7 @@ export MathiasAndSander
 export solve
 export Solution, rb, flux, sorptivity
 export SolvingError
-export inverse
+export InverseProblem
 export FiniteDifference, FiniteProblem, FiniteDirichletProblem, FiniteReservoirProblem, FiniteSolution
 
 include("ParamEstim.jl")
