@@ -6,6 +6,6 @@ CurrentModule = Fronts
 
 ```@docs
 InverseProblem
-inverse
+diffusivity(::InverseProblem)
 sorptivity(::InverseProblem)
 ```

@@ -35,9 +35,7 @@ struct InverseProblem{_To,_Tθ,_Tweights,_Ti,_Tb,_Tob}
 end
 
 """
-    inverse(prob::InverseProblem) -> Function
-
-    inverse(o, θ) -> Function
+    diffusivity(prob::InverseProblem) -> Function
 
 Extract a diffusivity function `D` from a solution to a semi-infinite one-dimensional nonlinear diffusion problem,
 where the solution is given as a set of discrete points.
@@ -48,8 +46,6 @@ Due to the method used for interpolation, `D` will be continuous but will have d
 
 # Arguments
 - `prob::InverseProblem`: inverse problem. See [`InverseProblem`](@ref).
-- `o::AbstractVector`: values of the Boltzmann variable. See [`o`](@ref).
-- `θ::AbstractVector`: solution values at each point in `o`.
 
 # References
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
@@ -58,7 +54,7 @@ Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 BRUCE, R. R.; KLUTE, A. The measurement of soil moisture diffusivity.
 Soil Science Society of America Journal, 1956, vol. 20, no. 4, p. 458-462.
 """
-function inverse(prob::InverseProblem)
+function diffusivity(prob::InverseProblem)
     o = !isnothing(prob._b) ? ArrayPartition(prob._ob, prob._o) : prob._o
     θ = !isnothing(prob._b) ? ArrayPartition(prob._b, prob._θ) : prob._θ
     i = !isnothing(prob._i) ? prob._i : prob._θ[end]
@@ -82,12 +78,8 @@ function inverse(prob::InverseProblem)
     end
 end
 
-inverse(o::AbstractVector, θ::AbstractVector) = inverse(InverseProblem(o, θ))
-
 """
     sorptivity(::InverseProblem)
-    sorptivity(o, θ)
-
 Calculate the sorptivity of a solution to a semi-infinite one-dimensional nonlinear diffusion problem,
 where the solution is given as a set of discrete points.
 
@@ -95,8 +87,6 @@ Uses numerical integration.
 
 # Arguments
 - `prob::InverseProblem`: inverse problem. See [`InverseProblem`](@ref).
-- `o::AbstractVector`: values of the Boltzmann variable. See [`o`](@ref).
-- `θ::AbstractVector`: solution values at each point in `o`.
 
 # Keyword arguments
 - `i=nothing`: initial value. If `nothing`, the initial value is taken from `θ[end]`.
@@ -114,5 +104,3 @@ function sorptivity(prob::InverseProblem)
 
     return NumericalIntegration.integrate(o, θ .- i)
 end
-
-sorptivity(o::AbstractVector, θ::AbstractVector) = sorptivity(InverseProblem(o, θ))

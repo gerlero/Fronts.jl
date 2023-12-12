@@ -8,8 +8,6 @@ using LsqFit: curve_fit
 """
     RSSCostFunction{fit_D0}(func, prob::InverseProblem; catch_errors, D0tol, oi_hint])
 
-    RSSCostFunction{fit_D0}(func, o, data[, weights; catch_errors, D0tol, oi_hint])
-
 Residual sum of squares cost function for parameter estimation.
 
 # Type parameters
@@ -25,9 +23,6 @@ retrieved by calling the `candidate` function.
 return `nothing` to signal that no solution could be found for the parameter values, which will imply an 
 infinite cost (see also the `catch_errors` keyword argument).
 - `prob::InverseProblem`: inverse problem. See [`InverseProblem`](@ref).
-- `o`: vector of values of the Boltzmann variable. See [`Fronts.o`](@ref).
-- `data`: data to fit. Must be a vector of the same length as `o`.
-- `weights`: optional weights for the data. If given, must be a vector of the same length as `data`.
 
 # Keyword arguments
 - `catch_errors=(Fronts.SolvingError,)`: collection of exception types that `func` is allowed to throw;

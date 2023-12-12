@@ -5,7 +5,7 @@
         # https://doi.org/10.1071/PH600001
         o = range(0, 20, length=100)
 
-        D = inverse(o, exp.(-o))
+        D = diffusivity(InverseProblem(o, exp.(-o)))
 
         θ = range(1e-6, 0.99, length=100)
         
@@ -30,6 +30,6 @@
 
         o = range(0, 20, length=100)
 
-        @test sorptivity(o, θ.(o)) ≈ sorptivity(θ) atol=5e-3
+        @test sorptivity(InverseProblem(o, θ.(o))) ≈ sorptivity(θ) atol=5e-3
     end
 end
