@@ -1,4 +1,35 @@
 """
+    BoltzmannODE(odealg::DifferentialEquations.ODEAlgorithm[; b_hint, d_dob_hint, kwargs...])
+
+Default algorithm for solving semi-infinite problems.
+
+Uses the Boltzmann transformation and repeated ODE integration via `DifferentialEquations.jl`.
+
+# Arguments
+- `odealg=DifferentialEquations.RadauIIA5()`: ODE algorithm for solving the transformed problem.
+
+# Keyword arguments
+- `b_hint`: optional hint for the boundary value.
+- `d_dob_hint`: optional hint for the boundary `o`-derivative.
+- `kwargs...`: additional keyword arguments are passed to the `DifferentialEquations` solver.
+
+# References
+GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
+Capillarity, 2023, vol. 6, no. 2, p. 31-40.
+"""
+struct BoltzmannODE{_Todealg,_Tθ,_Td_do,_Tode_kwargs}
+    _odealg::_Todealg
+    b_hint::_Tθ
+    d_dob_hint::_Td_do
+    _ode_kwargs::_Tode_kwargs
+
+    function BoltzmannODE(odealg=RadauIIA5(); b_hint=nothing, d_dob_hint=nothing, maxiters=1000, kwargs...)
+        ode_kwargs = (maxiters=maxiters, kwargs...)
+        new{typeof(odealg),typeof(b_hint),typeof(d_dob_hint),typeof(ode_kwargs)}(odealg, b_hint, d_dob_hint, ode_kwargs)
+    end
+end
+
+"""
     boltzmann(prob::CauchyProblem) -> DifferentialEquations.ODEProblem
 
 Transform `prob` into an ODE problem in terms of the Boltzmann variable `o`.
@@ -22,9 +53,8 @@ end
 
 monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
 
-function _init(prob::CauchyProblem; limit=nothing)
+function _init(prob::CauchyProblem, alg::BoltzmannODE; limit=nothing)
     odeprob = boltzmann(prob)
-    ODE_MAXITERS = 1000
 
     if !isnothing(limit)
         past_limit = DiscreteCallback(
@@ -34,10 +64,10 @@ function _init(prob::CauchyProblem; limit=nothing)
             terminate!,
             save_positions=(false,false)
         )
-        return init(odeprob, RadauIIA5(), callback=past_limit, verbose=false, maxiters=ODE_MAXITERS)
+        return init(odeprob, alg._odealg; callback=past_limit, verbose=false, alg._ode_kwargs...)
     end
 
-    return init(odeprob, RadauIIA5(), verbose=false, maxiters=ODE_MAXITERS)
+    return init(odeprob, alg._odealg; verbose=false, alg._ode_kwargs...)
 end
 
 function _reinit!(integrator, prob::CauchyProblem)
@@ -45,11 +75,32 @@ function _reinit!(integrator, prob::CauchyProblem)
     return integrator
 end
 
-function solve(prob::CauchyProblem)
+"""
+    solve(prob::CauchyProblem[, alg::BoltzmannODE]) -> Solution
+
+Solve the problem `prob`.
+
+# Arguments
+- `prob`: problem to solve.
+- `alg=BoltzmannODE()`: algorithm to use.
+
+# Exceptions
+This function throws an `SolvingError` if an acceptable solution is not found (within the
+maximum number of iterations, if applicable). However, in situations where `solve` can determine
+that the problem is "unsolvable" before the attempt to solve it, it will signal this by throwing a
+`DomainError` instead. Other invalid argument values will raise `ArgumentError`s.
+
+# References
+GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
+Capillarity, 2023, vol. 6, no. 2, p. 31-40.
+
+See also: [`Solution`](@ref), [`SolvingError`](@ref)
+"""
+function solve(prob::CauchyProblem, alg::BoltzmannODE=BoltzmannODE())
 
     @argcheck isindomain(prob.eq, prob.b) DomainError(prob.b, "prob.b not valid for the given equation")
 
-    odesol = solve!(_init(prob))
+    odesol = solve!(_init(prob, alg))
 
     if odesol.retcode != Terminated
         throw(SolvingError("could not find a solution to the problem"))
