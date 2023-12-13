@@ -62,8 +62,8 @@ function Base.show(io::IO, prob::FiniteDirichletProblem)
     else
         println(io, "⎧ ", prob.eq, ", 0<r≤", prob._rstop, ",0<t≤", prob._tstop)
     end
-    println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
-    print(io, "⎩ ", prob.eq.symbol, "(0,t) = ", prob.b, ", t>0")
+    println(io, "⎨ ", prob.eq.sym, "(r,0) = ", prob.i, ", r>0")
+    print(io, "⎩ ", prob.eq.sym, "(0,t) = ", prob.b, ", t>0")
 end
 
 """
@@ -127,7 +127,7 @@ function Base.show(io::IO, prob::FiniteReservoirProblem)
     else
         println(io, "⎧ ", prob.eq, ", 0<r≤", prob._rstop, ",0<t≤", prob._tstop)
     end
-    println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
+    println(io, "⎨ ", prob.eq.sym, "(r,0) = ", prob.i, ", r>0")
     print(io, "⎩ Finite reservoir with capacity ", prob.capacity)
 end
 

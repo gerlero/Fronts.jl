@@ -69,11 +69,11 @@ function Base.show(io::IO, prob::DirichletProblem)
     else
         println(io, "⎧ ", prob.eq, ", r>rb(t),t>0")
     end
-    println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
+    println(io, "⎨ ", prob.eq.sym, "(r,0) = ", prob.i, ", r>0")
     if iszero(prob.ob)
-        print(io, "⎩ ", prob.eq.symbol, "(0,t) = ", prob.b, ", t>0")
+        print(io, "⎩ ", prob.eq.sym, "(0,t) = ", prob.b, ", t>0")
     else
-        println(io, "⎩ ", prob.eq.symbol, "(rb(t),t) = ", prob.b, ", t>0")
+        println(io, "⎩ ", prob.eq.sym, "(rb(t),t) = ", prob.b, ", t>0")
         print(io, "with rb(t) = ", prob.ob, "*√t")
     end
 end
@@ -142,7 +142,7 @@ function Base.show(io::IO, prob::FlowrateProblem)
     else
         println(io, "⎧ ", prob.eq, ", r>rb(t),t>0")
     end
-    println(io, "⎨ ", prob.eq.symbol, "(r,0) = ", prob.i, ", r>0")
+    println(io, "⎨ ", prob.eq.sym, "(r,0) = ", prob.i, ", r>0")
     if iszero(prob.ob)
         print(io, "⎩ Qb(0,t) = ", prob.Qb, ", t>0")
     else
@@ -208,12 +208,12 @@ end
 function Base.show(io::IO, prob::CauchyProblem)
     if iszero(prob.ob)
         println(io, "⎧ ", prob.eq, ", r>0,t>0")
-        println(io, "⎨ ", prob.eq.symbol, "(0,t) = ", prob.b, ", t>0")
-        print(io, "⎩ √t*∂", prob.eq.symbol, "/∂r(0,t) = ", prob.d_dob, ", t>0")
+        println(io, "⎨ ", prob.eq.sym, "(0,t) = ", prob.b, ", t>0")
+        print(io, "⎩ √t*∂", prob.eq.sym, "/∂r(0,t) = ", prob.d_dob, ", t>0")
     else
         println(io, "⎧ ", prob.eq, ",r>rb(t),t>0")
-        println(io, "⎨ ", prob.eq.symbol, "(rb(t),t) = ", prob.b, ", t>0")
-        println(io, "⎩ √t*∂", prob.eq.symbol, "/∂r(rb(t),t) = ", prob.d_dob, ", t>0")
+        println(io, "⎨ ", prob.eq.sym, "(rb(t),t) = ", prob.b, ", t>0")
+        println(io, "⎩ √t*∂", prob.eq.sym, "/∂r(rb(t),t) = ", prob.d_dob, ", t>0")
         print(io, "with rb(t) = ", prob.ob, "*√t")
     end
 end

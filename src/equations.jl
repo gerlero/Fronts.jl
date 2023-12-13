@@ -30,8 +30,8 @@ Delegates to [`diffusivity`](@ref) by default.
 flow_diffusivity(eq::Equation, val) = diffusivity(eq, val)
 
 """
-    DiffusionEquation(D; symbol=:θ) <: Equation{1}
-    DiffusionEquation{m}(D; symbol=:θ) <: Equation{m}
+    DiffusionEquation(D; sym=:θ) <: Equation{1}
+    DiffusionEquation{m}(D; sym=:θ) <: Equation{m}
 
 Nonlinear diffusion equation.
 
@@ -45,7 +45,7 @@ Nonlinear diffusion equation describing flow in a porous medium, with the diffus
 - `model::PorousModels.UnsaturatedFlowModel`: unsaturated flow model from which to obtain the diffusivity function.
 
 # Keyword arguments
-- `symbol::Symbol=:θ`: optional symbol used to represent the unknown function in the output.
+- `sym::Symbol=:θ`: optional symbol used to represent the unknown function in the output.
 
 # Type parameters
 - `m::Int=1`: number of spatial dimensions:
@@ -64,7 +64,7 @@ julia> eq = Fronts.DiffusionEquation(D)
 julia> eq = Fronts.DiffusionEquation{2}(D)
 ∂θ/∂t = 1/r*∂(r*D(θ)*∂θ/∂r)/∂r
 
-julia> eq = Fronts.DiffusionEquation{3}(D, symbol=:c)
+julia> eq = Fronts.DiffusionEquation{3}(D, sym=:c)
 ∂c/∂t = 1/r²*∂(r²*D(c)*∂c/∂r)/∂r
 ```
 
@@ -72,16 +72,16 @@ See also: [`PorousModels.UnsaturatedFlowModel`](@ref)
 """
 struct DiffusionEquation{m, _TD} <: Equation{m}
     D::_TD
-    symbol::Symbol
+    sym::Symbol
 
-    function DiffusionEquation{m}(D; symbol::Symbol = :θ) where {m}
+    function DiffusionEquation{m}(D; sym::Symbol = :θ) where {m}
         @argcheck m isa Int TypeError(:m, Int, m)
         @argcheck m in 1:3
-        new{m, typeof(D)}(D, symbol)
+        new{m, typeof(D)}(D, sym)
     end
 end
 
-DiffusionEquation(D; symbol::Symbol = :θ) = DiffusionEquation{1}(D, symbol = symbol)
+DiffusionEquation(D; sym::Symbol = :θ) = DiffusionEquation{1}(D, sym = sym)
 
 function DiffusionEquation{m}(model::PorousModels.UnsaturatedFlowModel) where {m}
     function D(θ)
@@ -93,40 +93,40 @@ end
 DiffusionEquation(model::PorousModels.UnsaturatedFlowModel) = DiffusionEquation{1}(model)
 
 function Base.show(io::IO, eq::DiffusionEquation{1})
-    print(io, "∂", eq.symbol, "/∂t = ∂(", eq.D, "(", eq.symbol, ")*∂", eq.symbol, "/∂r)/∂r")
+    print(io, "∂", eq.sym, "/∂t = ∂(", eq.D, "(", eq.sym, ")*∂", eq.sym, "/∂r)/∂r")
 end
 
 function Base.show(io::IO, eq::DiffusionEquation{2})
     print(io,
         "∂",
-        eq.symbol,
+        eq.sym,
         "/∂t = 1/r*∂(r*",
         eq.D,
         "(",
-        eq.symbol,
+        eq.sym,
         ")*∂",
-        eq.symbol,
+        eq.sym,
         "/∂r)/∂r")
 end
 
 function Base.show(io::IO, eq::DiffusionEquation{3})
     print(io,
         "∂",
-        eq.symbol,
+        eq.sym,
         "/∂t = 1/r²*∂(r²*",
         eq.D,
         "(",
-        eq.symbol,
+        eq.sym,
         ")*∂",
-        eq.symbol,
+        eq.sym,
         "/∂r)/∂r")
 end
 
 diffusivity(eq::DiffusionEquation, θ) = eq.D(θ)
 
 """
-    RichardsEquation(; C, K, symbol=:h) <: Equation{1}
-    RichardsEquation{m}(; C, K, symbol=:h) <: Equation{m}
+    RichardsEquation(; C, K, sym=:h) <: Equation{1}
+    RichardsEquation{m}(; C, K, sym=:h) <: Equation{m}
 
 Horizontal Richards equation, pressure-based formulation.
 
@@ -141,7 +141,7 @@ Horizontal Richards equation, pressure-based formulation, with properties define
 # Keyword arguments
 - `C`: hydraulic capacity function, defined in terms of the unknown.
 - `K`: hydraulic conductivity function, defined in terms of the unknown.
-- `symbol::Symbol=:h`: optional symbol used to represent the unknown function in the output.
+- `sym::Symbol=:h`: optional symbol used to represent the unknown function in the output.
 
 # Type parameters
 - `m::Int=1`: number of spatial dimensions:
@@ -154,17 +154,17 @@ See also: [`PorousModels.UnsaturatedFlowModel`](@ref)
 struct RichardsEquation{m, _TC, _TK} <: Equation{m}
     C::_TC
     K::_TK
-    symbol::Symbol
+    sym::Symbol
 
-    function RichardsEquation{m}(; C, K, symbol::Symbol = :h) where {m}
+    function RichardsEquation{m}(; C, K, sym::Symbol = :h) where {m}
         @argcheck m isa Int TypeError(:m, Int, m)
         @argcheck m in 1:3
-        new{m, typeof(C), typeof(K)}(C, K, symbol)
+        new{m, typeof(C), typeof(K)}(C, K, sym)
     end
 end
 
-function RichardsEquation(; C, K, symbol::Symbol = :h)
-    RichardsEquation{1}(C = C, K = K, symbol = symbol)
+function RichardsEquation(; C, K, sym::Symbol = :h)
+    RichardsEquation{1}(C = C, K = K, sym = sym)
 end
 
 function RichardsEquation{m}(model::PorousModels.UnsaturatedFlowModel) where {m}
@@ -183,13 +183,13 @@ function Base.show(io::IO, eq::RichardsEquation{1})
     print(io,
         eq.C,
         "*∂",
-        eq.symbol,
+        eq.sym,
         "/∂t = ∂(",
         eq.K,
         "(",
-        eq.symbol,
+        eq.sym,
         ")*∂",
-        eq.symbol,
+        eq.sym,
         "/∂r)/∂r")
 end
 
@@ -197,13 +197,13 @@ function Base.show(io::IO, eq::RichardsEquation{2})
     print(io,
         eq.C,
         "*∂",
-        eq.symbol,
+        eq.sym,
         "/∂t = 1/r*∂(r*",
         eq.K,
         "(",
-        eq.symbol,
+        eq.sym,
         ")*∂",
-        eq.symbol,
+        eq.sym,
         "/∂r)/∂r")
 end
 
@@ -211,13 +211,13 @@ function Base.show(io::IO, eq::RichardsEquation{3})
     print(io,
         eq.C,
         "*∂",
-        eq.symbol,
+        eq.sym,
         "/∂t = 1/r²*∂(r²*",
         eq.K,
         "(",
-        eq.symbol,
+        eq.sym,
         ")*∂",
-        eq.symbol,
+        eq.sym,
         "/∂r)/∂r")
 end
 
