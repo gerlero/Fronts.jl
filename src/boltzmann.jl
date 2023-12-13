@@ -9,7 +9,7 @@ To prevent possible name clashes, this function is not exported.
 
 See also: [`boltzmann`](@ref)
 """
-o(r, t) = r/√t
+o(r, t) = r / √t
 
 """
     do_dr(r, t)
@@ -18,7 +18,7 @@ Partial derivative of the Boltzmann variable.
 
 See also: [`o`](@ref)
 """
-do_dr(_, t) = 1/√t
+do_dr(_, t) = 1 / √t
 
 """
     do_dt(r, t)
@@ -27,7 +27,7 @@ Partial derivative of the Boltzmann variable.
 
 See also: [`o`](@ref)
 """
-do_dt(r, t) = -o(r,t)/2t
+do_dt(r, t) = -o(r, t) / 2t
 
 """
     Fronts.r(o, t)
@@ -38,7 +38,7 @@ To prevent possible name clashes, this function is not exported.
 
 See also: [`o`](@ref)
 """
-r(o, t) = o*√t
+r(o, t) = o * √t
 
 """
     Fronts.t(o, r)
@@ -49,7 +49,7 @@ To prevent possible name clashes, this function is not exported.
 
 See also: [`o`](@ref)
 """
-t(o, r) = (r/o)^2
+t(o, r) = (r / o)^2
 
 """
     boltzmann(r, t)
@@ -58,11 +58,10 @@ Same as `o(r,t)`.
 
 See also: [`o`](@ref)
 """
-boltzmann(r, t) = o(r,t)
+boltzmann(r, t) = o(r, t)
 
+d_do(f, r, t) = d_do(f, o(r, t))
 
-d_do(f, r, t) = d_do(f, o(r,t))
+d_dr(f, r, t) = d_do(f, r, t) * do_dr(r, t)
 
-d_dr(f, r, t) = d_do(f, r, t)*do_dr(r, t)
-
-d_dt(f, r, t) = d_do(f, r, t)*do_dt(r, t)
+d_dt(f, r, t) = d_do(f, r, t) * do_dt(r, t)

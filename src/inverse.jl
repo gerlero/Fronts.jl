@@ -16,21 +16,31 @@ Problem type for inverse functions and parameter estimation with experimental da
 # See also
 [`diffusivity`](@ref), [`sorptivity`](@ref), `Fronts.ParamEstim`
 """
-struct InverseProblem{_To,_Tθ,_Tweights,_Ti,_Tb,_Tob}
+struct InverseProblem{_To, _Tθ, _Tweights, _Ti, _Tb, _Tob}
     _o::_To
     _θ::_Tθ
     _weights::_Tweights
     _i::_Ti
     _b::_Tb
     _ob::_Tob
-    function InverseProblem(o::AbstractVector, θ::AbstractVector, weights=nothing; i=nothing, b=nothing, ob=zero(eltype(o)))
+    function InverseProblem(o::AbstractVector,
+            θ::AbstractVector,
+            weights = nothing;
+            i = nothing,
+            b = nothing,
+            ob = zero(eltype(o)))
         @argcheck length(o) ≥ 2
-        @argcheck all(o1 ≤ o2 for (o1, o2) in zip(o[begin:end-1], o[begin+1:end])) "o must be monotonically increasing"
-        @argcheck length(o) == length(θ) DimensionMismatch
-        !isnothing(weights) && @argcheck length(weights) == length(o) DimensionMismatch
+        @argcheck all(o1 ≤ o2 for (o1, o2) in zip(o[begin:(end - 1)], o[(begin + 1):end])) "o must be monotonically increasing"
+        @argcheck length(o)==length(θ) DimensionMismatch
+        !isnothing(weights) && @argcheck length(weights)==length(o) DimensionMismatch
         @argcheck zero(ob) ≤ ob ≤ o[begin]
 
-        new{typeof(o),typeof(θ),typeof(weights),typeof(i),typeof(b),typeof(ob)}(o, θ, weights, i, b, ob)
+        new{typeof(o), typeof(θ), typeof(weights), typeof(i), typeof(b), typeof(ob)}(o,
+            θ,
+            weights,
+            i,
+            b,
+            ob)
     end
 end
 
@@ -69,11 +79,11 @@ function diffusivity(prob::InverseProblem)
 
     o = Interpolator(θ, o)
 
-    let o=o, i=i
+    let o = o, i = i
         function D(θ)
             do_dθ = derivative(o, θ)
             ∫odθ = integrate(o, i, θ)
-            return -(do_dθ*∫odθ)/2
+            return -(do_dθ * ∫odθ) / 2
         end
     end
 end

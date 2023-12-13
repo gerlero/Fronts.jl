@@ -8,7 +8,7 @@ Abstract supertype for problems that can be solved with this package.
 
 See also: [`Equation`](@ref)
 """
-abstract type Problem{Eq<:Equation} end
+abstract type Problem{Eq <: Equation} end
 
 """
     monotonicity(prob) -> Int
@@ -45,21 +45,23 @@ julia> prob = Fronts.DirichletProblem(D, i=1, b=2)
 
 See also: [`Equation`](@ref)
 """
-struct DirichletProblem{Teq,_T,_To} <: Problem{Teq}
+struct DirichletProblem{Teq, _T, _To} <: Problem{Teq}
     eq::Teq
     i::_T
     b::_T
     ob::_To
-    function DirichletProblem(eq::Equation{1}; i, b, ob=0)
-        new{typeof(eq),promote_type(typeof(i),typeof(b)),typeof(ob)}(eq, i, b, ob)
+    function DirichletProblem(eq::Equation{1}; i, b, ob = 0)
+        new{typeof(eq), promote_type(typeof(i), typeof(b)), typeof(ob)}(eq, i, b, ob)
     end
     function DirichletProblem(eq::Equation; i, b, ob)
-        @argcheck ob>0
-        new{typeof(eq),promote_type(typeof(i),typeof(b)),typeof(ob)}(eq, i, b, ob)
+        @argcheck ob > 0
+        new{typeof(eq), promote_type(typeof(i), typeof(b)), typeof(ob)}(eq, i, b, ob)
     end
 end
 
-DirichletProblem(D; i, b, ob=0) = DirichletProblem(DiffusionEquation(D), i=i, b=b, ob=ob)
+function DirichletProblem(D; i, b, ob = 0)
+    DirichletProblem(DiffusionEquation(D), i = i, b = b, ob = ob)
+end
 
 function Base.show(io::IO, prob::DirichletProblem)
     if iszero(prob.ob)
@@ -81,12 +83,11 @@ monotonicity(prob::DirichletProblem)::Int = sign(prob.i - prob.b)
 function d_do(prob::DirichletProblem, symbol::Symbol)
     @argcheck symbol === :b_hint
     Db = diffusivity(prob.eq, prob.b)
-    if !isfinite(Db) || Db≤zero(Db)
-        return (prob.i - prob.b)/√oneunit(Db)
+    if !isfinite(Db) || Db ≤ zero(Db)
+        return (prob.i - prob.b) / √oneunit(Db)
     end
-    return (prob.i - prob.b)/(2*√Db)
+    return (prob.i - prob.b) / (2 * √Db)
 end
-
 
 """
     FlowrateProblem(eq; i, Qb[, angle, height, ob]) <: Problem{typeof(eq)}
@@ -119,18 +120,19 @@ julia> prob = Fronts.FlowrateProblem(eq, i=1, Qb=1)
 
 See also: [`Equation`](@ref)
 """
-struct FlowrateProblem{Teq,_Tθ,_To,_TQ,_Th} <: Problem{Teq}
+struct FlowrateProblem{Teq, _Tθ, _To, _TQ, _Th} <: Problem{Teq}
     eq::Teq
     i::_Tθ
     Qb::_TQ
     _αh::_Th
     ob::_To
 
-    function FlowrateProblem(eq::Equation{2}; i, Qb, angle=2π, height=1, ob=0)
-        @argcheck 0<angle≤2π; @argcheck height>zero(height)
-        @argcheck ob≥zero(ob)
-        αh = angle*height
-        new{typeof(eq),typeof(i),typeof(ob),typeof(Qb),typeof(αh)}(eq, i, Qb, αh, ob)
+    function FlowrateProblem(eq::Equation{2}; i, Qb, angle = 2π, height = 1, ob = 0)
+        @argcheck 0 < angle ≤ 2π
+        @argcheck height > zero(height)
+        @argcheck ob ≥ zero(ob)
+        αh = angle * height
+        new{typeof(eq), typeof(i), typeof(ob), typeof(Qb), typeof(αh)}(eq, i, Qb, αh, ob)
     end
 end
 
@@ -149,9 +151,9 @@ function Base.show(io::IO, prob::FlowrateProblem)
     end
 end
 
-function d_do(prob::FlowrateProblem, symbol::Symbol; b, ob=prob.ob)
+function d_do(prob::FlowrateProblem, symbol::Symbol; b, ob = prob.ob)
     @argcheck symbol === :b
-    return d_do(prob.eq, b, ob, prob.Qb/prob._αh)
+    return d_do(prob.eq, b, ob, prob.Qb / prob._αh)
 end
 
 monotonicity(prob::FlowrateProblem)::Int = -sign(prob.Qb)
@@ -185,27 +187,29 @@ julia> prob = Fronts.CauchyProblem(D, b=2, d_dob=-0.1)
 
 See also: [`Equation`](@ref)
 """
-struct CauchyProblem{Teq,_T,_To,_Td_do} <: Problem{Teq}
+struct CauchyProblem{Teq, _T, _To, _Td_do} <: Problem{Teq}
     eq::Teq
     b::_T
     d_dob::_Td_do
     ob::_To
-    function CauchyProblem(eq::Equation{1}; b, d_dob, ob=0)
-        new{typeof(eq),typeof(b),typeof(ob),typeof(d_dob)}(eq, b, d_dob, ob)
+    function CauchyProblem(eq::Equation{1}; b, d_dob, ob = 0)
+        new{typeof(eq), typeof(b), typeof(ob), typeof(d_dob)}(eq, b, d_dob, ob)
     end
     function CauchyProblem(eq::Equation; b, d_dob, ob)
-        @argcheck ob>zero(ob)
-        new{typeof(eq),typeof(b),typeof(ob),typeof(d_dob)}(eq, b, d_dob, ob)
+        @argcheck ob > zero(ob)
+        new{typeof(eq), typeof(b), typeof(ob), typeof(d_dob)}(eq, b, d_dob, ob)
     end
 end
 
-CauchyProblem(D; b, d_dob, ob=0) = CauchyProblem(DiffusionEquation(D), b=b, d_dob=d_dob, ob=ob)
+function CauchyProblem(D; b, d_dob, ob = 0)
+    CauchyProblem(DiffusionEquation(D), b = b, d_dob = d_dob, ob = ob)
+end
 
 function Base.show(io::IO, prob::CauchyProblem)
     if iszero(prob.ob)
         println(io, "⎧ ", prob.eq, ", r>0,t>0")
         println(io, "⎨ ", prob.eq.symbol, "(0,t) = ", prob.b, ", t>0")
-        print(io,   "⎩ √t*∂", prob.eq.symbol, "/∂r(0,t) = ", prob.d_dob, ", t>0")
+        print(io, "⎩ √t*∂", prob.eq.symbol, "/∂r(0,t) = ", prob.d_dob, ", t>0")
     else
         println(io, "⎧ ", prob.eq, ",r>rb(t),t>0")
         println(io, "⎨ ", prob.eq.symbol, "(rb(t),t) = ", prob.b, ", t>0")

@@ -55,13 +55,22 @@ struct RSSCostFunction{fit_D0, _Tfunc, _Tprob, _TD0tol, _Toi_hint, _Tsorptivity}
     _oi_hint::_Toi_hint
     _sorptivity::_Tsorptivity
 
-    function RSSCostFunction{true}(func, prob::InverseProblem; D0tol=1e-3, oi_hint=nothing)
+    function RSSCostFunction{true}(func,
+            prob::InverseProblem;
+            D0tol = 1e-3,
+            oi_hint = nothing)
         S = isnothing(oi_hint) ? sorptivity(prob) : nothing
-        new{true,typeof(func),typeof(prob),typeof(D0tol),typeof(oi_hint),typeof(S)}(func, prob, D0tol, oi_hint, S)
+        new{true, typeof(func), typeof(prob), typeof(D0tol), typeof(oi_hint), typeof(S)}(func,
+            prob,
+            D0tol,
+            oi_hint,
+            S)
     end
 
     function RSSCostFunction{false}(func, prob::InverseProblem)
-        new{false,typeof(func),typeof(prob),Nothing,Nothing,Nothing}(func, prob, nothing)
+        new{false, typeof(func), typeof(prob), Nothing, Nothing, Nothing}(func,
+            prob,
+            nothing)
     end
 end
 
@@ -98,9 +107,11 @@ function candidate(cf::RSSCostFunction{false}, sol::Solution)
     end
 
     if !isnothing(cf._prob._weights)
-        return _Candidate(sol, 1, sum(cf._prob._weights.*(sol.(cf._prob._o) .- cf._prob._θ).^2))
+        return _Candidate(sol,
+            1,
+            sum(cf._prob._weights .* (sol.(cf._prob._o) .- cf._prob._θ) .^ 2))
     else
-        return _Candidate(sol, 1, sum((sol.(cf._prob._o) .- cf._prob._θ).^2))
+        return _Candidate(sol, 1, sum((sol.(cf._prob._o) .- cf._prob._θ) .^ 2))
     end
 end
 
@@ -109,29 +120,29 @@ function candidate(cf::RSSCostFunction{true}, sol::Solution)
         return _Candidate(sol, NaN, Inf)
     end
 
-    scaled!(ret, o, (D0,)) = (ret .= sol.(o./√D0))
+    scaled!(ret, o, (D0,)) = (ret .= sol.(o ./ √D0))
 
     if !isnothing(cf._oi_hint)
-        D0_hint = (cf._oi_hint/sol.oi)^2
+        D0_hint = (cf._oi_hint / sol.oi)^2
     else
-        D0_hint = (cf._sorptivity/sorptivity(sol))^2
+        D0_hint = (cf._sorptivity / sorptivity(sol))^2
     end
 
     scaling = curve_fit(scaled!,
-                        cf._prob._o,
-                        cf._prob._θ,
-                        (!isnothing(cf._prob._weights) ? (cf._prob._weights,) : ())...,
-                        [D0_hint],
-                        inplace=true,
-                        lower=[0.0],
-                        autodiff=:forwarddiff,
-                        x_tol=cf._D0tol)
+        cf._prob._o,
+        cf._prob._θ,
+        (!isnothing(cf._prob._weights) ? (cf._prob._weights,) : ())...,
+        [D0_hint],
+        inplace = true,
+        lower = [0.0],
+        autodiff = :forwarddiff,
+        x_tol = cf._D0tol)
 
     if !scaling.converged
         @warn "Attempt to fit D0 did not converge"
     end
 
-    return _Candidate(sol, only(scaling.param), sum(scaling.resid.^2))
+    return _Candidate(sol, only(scaling.param), sum(scaling.resid .^ 2))
 end
 
 export RSSCostFunction, candidate

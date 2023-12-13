@@ -18,21 +18,25 @@ n = 2.3521
 hi = -30.591486389337
 hb = 0
 
-model = VanGenuchten(n=n, α=α, k=k, θr=θr, θs=θs)
+model = VanGenuchten(n = n, α = α, k = k, θr = θr, θs = θs)
 
-prob = DirichletProblem(RichardsEquation(model), i=hi, b=hb)
+prob = DirichletProblem(RichardsEquation(model), i = hi, b = hb)
 
 h = solve(prob)
 
-r = range(0, 0.05, length=500)
+r = range(0, 0.05, length = 500)
 
-plt = plot(r, r -> h(r,60), label="t = 60 s", xguide="r [m]", yguide="h [m]")
+plt = plot(r, r -> h(r, 60), label = "t = 60 s", xguide = "r [m]", yguide = "h [m]")
 display(plt)
 
-plt = plot(r, r -> θh(model, h(r,60)), label="t = 60 s", xguide="r [m]", yguide="θ")
+plt = plot(r, r -> θh(model, h(r, 60)), label = "t = 60 s", xguide = "r [m]", yguide = "θ")
 display(plt)
 
-plt = plot(r[2:end], r -> flux(h, r, 60), label="t = 60 s", xguide="r [m]", yguide="U [m/s]")
+plt = plot(r[2:end],
+    r -> flux(h, r, 60),
+    label = "t = 60 s",
+    xguide = "r [m]",
+    yguide = "U [m/s]")
 display(plt)
 
 end

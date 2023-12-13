@@ -96,7 +96,6 @@ A default definition of this function exists for any custom `UnsaturatedFlowMode
 
 See also: [`Kθ`](@ref), [`Kh`](@ref), [`hθ`](@ref), [`Cθ`](@ref), [`Ch`](@ref), [`θh`](@ref)
 """
-Dθ(pm::UnsaturatedFlowModel, θ) = Kθ(pm, θ)/Cθ(pm, θ)
-
+Dθ(pm::UnsaturatedFlowModel, θ) = Kθ(pm, θ) / Cθ(pm, θ)
 
 Base.broadcastable(pm::UnsaturatedFlowModel) = Ref(pm)

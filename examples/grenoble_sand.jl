@@ -14,17 +14,17 @@ Ks = 15.37 # cm/h
 m = 0.5096
 θs = 0.312
 
-D0 = (1-m)*Ks/(α*m*θs) # cm²/h
+D0 = (1 - m) * Ks / (α * m * θs) # cm²/h
 
-model = VanGenuchten(m=m, Ks=Ks, α=α, θs=θs)
+model = VanGenuchten(m = m, Ks = Ks, α = α, θs = θs)
 
-prob = DirichletProblem(model, i=0, b=θs-ϵ)
+prob = DirichletProblem(model, i = 0, b = θs - ϵ)
 
 θ = solve(prob)
 
-ξ = range(0, 1.5, length=500)
+ξ = range(0, 1.5, length = 500)
 
-plt = plot(ξ, ξ -> θ(ξ*√D0), xguide="ξ*", yguide="θ", legend=false)
+plt = plot(ξ, ξ -> θ(ξ * √D0), xguide = "ξ*", yguide = "θ", legend = false)
 display(plt)
 
 end
