@@ -4,7 +4,7 @@
         θ = solve(DirichletProblem(θ -> 2*θ, i=0, b=1))
         o = range(0, 20, length=100)
     
-        cf = RSSCostFunction{false}(o, θ.(o), catch_errors=(DomainError,)) do (k,)
+        cf = RSSCostFunction{false}(InverseProblem(o, θ.(o)), catch_errors=(DomainError,)) do (k,)
             DirichletProblem(θ -> k*θ, i=0, b=1)
         end
         
@@ -20,7 +20,7 @@
         θ = solve(DirichletProblem(θ -> 2*θ, i=0, b=1))
         o = range(0, 20, length=100)
     
-        cf = RSSCostFunction{true}(o, θ.(o), D0tol=1e-4) do (k,)
+        cf = RSSCostFunction{true}(InverseProblem(o, θ.(o)), D0tol=1e-4) do (k,)
             DirichletProblem(θ -> k*θ, i=0, b=1)
         end
         

@@ -68,10 +68,6 @@ struct RSSCostFunction{fit_D0, _Tfunc, _Tprob, _Tcatch_errors, _TD0tol,  _Toi_hi
     end
 end
 
-function RSSCostFunction{fit_D0}(func, o, θ, weights=nothing; kwargs...) where {fit_D0}
-    return RSSCostFunction{fit_D0}(func, InverseProblem(o, θ, weights); kwargs...)
-end
-
 (cf::RSSCostFunction)(arg) = candidate(cf, arg).cost
 
 """
