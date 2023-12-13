@@ -73,7 +73,7 @@
 
     prob = DirichletProblem(model, i=θi, b=θb)
 
-    θ = solve(prob, itol=1e-7)
+    θ = solve(prob, abstol=1e-7)
 
     @test all(@. isapprox(θ(r,t), θ_pmf, atol=1e-3))
     @test all(@. isapprox(flux(θ,r,t), U_pmf, atol=1e-6))

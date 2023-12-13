@@ -1,5 +1,5 @@
 """
-    FiniteDifference([; N, tol])
+    FiniteDifference([N])
 
 Finite difference–based algorithm.
 
@@ -120,8 +120,8 @@ FiniteReservoirProblem(D, rstop, tstop=Inf; i, b, capacity) = FiniteReservoirPro
 
 
 """
-    solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::FiniteDifference[; tol, dt]) -> Solution
-    solve(prob::FiniteProblem{<:DiffusionEquation{1}}[, alg::FiniteDifference; tol, dt]) -> FiniteSolution
+    solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::FiniteDifference[; abstol]) -> Solution
+    solve(prob::FiniteProblem{<:DiffusionEquation{1}}[, alg::FiniteDifference; abstol]) -> FiniteSolution
 
 Solve the `DirichletProblem` or `FiniteProblem` `prob` with a finite-difference scheme.
 
@@ -132,12 +132,11 @@ Uses backward Euler time discretization and a second-order central difference sc
 - `alg=FiniteDifference(500)`: `FiniteDifference` is the default algorithm for `FiniteProblem`s. For `DirichletProblem`s, it must be specified explicitly.
 
 # Keyword arguments
-- `tol=1e-3`: nonlinear solver tolerance.
-- `dt=1.0`: initial time step.
+- `abstol=1e-3`: nonlinear solver tolerance.
 """
-function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProblem{<:DiffusionEquation{1}}}, alg::FiniteDifference; tol=1e-3, dt=1.0)
+function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProblem{<:DiffusionEquation{1}}}, alg::FiniteDifference; abstol=1e-3)
     if prob isa DirichletProblem
-        @argcheck iszero(prob.ob)
+        @argcheck iszero(prob.ob) "FiniteDifference only supports fixed boundaries"
     end
 
     r = range(0, prob isa FiniteProblem ? prob._rstop : 1, length=alg._N)
@@ -149,12 +148,13 @@ function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProble
     end
 
     θ = similar(r)
-    t = float(zero(dt))
+    t = 0.0
+    Δt = 1.0
 
     isol = nothing
     # For `FiniteProblem`s, solve with the regular Fronts algorithm as much as possible
     if (prob isa FiniteDirichletProblem || prob isa FiniteReservoirProblem) && prob.i isa Number
-        isol = solve(DirichletProblem(prob.eq, i=prob.i, b=prob.b), itol=tol)
+        isol = solve(DirichletProblem(prob.eq, i=prob.i, b=prob.b), abstol=abstol)
         if isol.retcode == ReturnCode.Success
             t = min((prob._rstop/isol.oi)^2, prob._tstop)
             if prob isa FiniteReservoirProblem
@@ -187,15 +187,15 @@ function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProble
     Df = similar(D, length(D)-1)
 
     while !(prob isa FiniteProblem) || t < prob._tstop
-        if prob isa FiniteProblem && t + dt > prob._tstop
-            dt = prob._tstop - t
+        if prob isa FiniteProblem && t + Δt > prob._tstop
+            Δt = prob._tstop - t
         end
 
         change = eltype(θ)(Inf)
         sweeps = 0
-        while change > tol
+        while change > abstol
             if sweeps >= 7
-                dt /= 3
+                Δt /= 3
                 if prob isa FiniteProblem
                     θ .= θs[end]
                 else
@@ -207,18 +207,18 @@ function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProble
             D .= prob.eq.D.(θ)
             Df .= 2D[begin:end-1].*D[begin+1:end]./(D[begin:end-1] + D[begin+1:end])
 
-            Ad[begin] = 1 + Df[begin]/Δr²*dt
-            Ad[begin+1:end-1] .= 1 .+ (Df[begin:end-1] .+ Df[begin+1:end])./Δr².*dt
-            Ad[end] = 1 + Df[end]/Δr²*dt
+            Ad[begin] = 1 + Df[begin]/Δr²*Δt
+            Ad[begin+1:end-1] .= 1 .+ (Df[begin:end-1] .+ Df[begin+1:end])./Δr².*Δt
+            Ad[end] = 1 + Df[end]/Δr²*Δt
 
-            Al .= -Df./Δr².*dt
-            Au .= -Df./Δr².*dt
+            Al .= -Df./Δr².*Δt
+            Au .= -Df./Δr².*Δt
 
             A = Tridiagonal(Al, Ad, Au)
             B .= θ
 
             if prob isa FiniteReservoirProblem
-                influx = min(-Df[begin]*(θ[begin+1] - prob.b)/Δr*dt, prob.capacity - used)
+                influx = min(-Df[begin]*(θ[begin+1] - prob.b)/Δr*Δt, prob.capacity - used)
             end
 
             if prob isa DirichletProblem || prob isa FiniteDirichletProblem || (prob isa FiniteReservoirProblem && influx < prob.capacity - used)
@@ -226,8 +226,8 @@ function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProble
                 A[begin,begin+1] = 0
                 B[begin] = prob.b
             elseif prob isa FiniteReservoirProblem && influx > zero(influx)
-                A[begin,begin] = Df[begin]/Δr*dt
-                A[begin,begin+1] = -Df[begin]/Δr*dt
+                A[begin,begin] = Df[begin]/Δr*Δt
+                A[begin,begin+1] = -Df[begin]/Δr*Δt
                 B[begin] = influx
             end
 
@@ -238,7 +238,7 @@ function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProble
         end
 
         if prob isa FiniteReservoirProblem
-            influx = -Df[begin]*(θ[begin+1] - θ[begin])/Δr*dt
+            influx = -Df[begin]*(θ[begin+1] - θ[begin])/Δr*Δt
             used += influx
         end
 
@@ -246,24 +246,24 @@ function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProble
             if θ ≈ θs[end]
                 t = oftype(t, Inf)
             else
-                t += dt
+                t += Δt
             end
 
             push!(ts, t)
             push!(θs, copy(θ))
         else
-            if abs(θ[end] - prob.i) > tol
+            if abs(θ[end] - prob.i) > abstol
                 θ .= θ_old
                 break
             end
 
-            t += dt
+            t += Δt
             timesteps += 1
             θ_old .= θ
         end
 
         if sweeps < 3
-            dt *= 1.3
+            Δt *= 1.3
         end
     end
 
@@ -275,7 +275,7 @@ function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProble
     end
 end
 
-solve(prob::FiniteProblem{<:DiffusionEquation{1}}; tol=1e-3, dt=1.0) = solve(prob, FiniteDifference(), tol=tol, dt=dt)
+solve(prob::FiniteProblem{<:DiffusionEquation{1}}; abstol=1e-3) = solve(prob, FiniteDifference(), abstol=abstol)
 
 
 """

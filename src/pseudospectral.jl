@@ -1,5 +1,5 @@
 """
-    MathiasAndSander(N)
+    MathiasAndSander([N])
 
 Pseudospectral method of Mathias and Sander (2021).
 
@@ -27,7 +27,6 @@ end
 Solve a Dirichlet problem using the pseudospectral method of Mathias and Sander (2021).
 
 # Keyword arguments
-- `Ftol=1e-6`: tolerance for the flux–concentration relationship.
 - `maxiters=100`: maximum number of iterations.
 
 # References
@@ -36,10 +35,9 @@ Journal of Hydrology, 2021, vol. 598, p. 126407.
 
 See also: [`MathiasAndSander`](@ref), [`Solution`](@ref)
 """
-function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSander; Ftol=1e-6, maxiters=100)
+function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSander; maxiters=100)
 
     @argcheck iszero(prob.ob) "MathiasAndSander only supports fixed boundaries"
-    @argcheck Ftol ≥ zero(Ftol)
 
     z, diff = chebdif(alg._N, 2)
     d_dz = diff[:,:,1]
@@ -77,7 +75,7 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSa
 
         F = max.(eps(eltype(F)), F - ∂R_∂F\R)
         
-        if all(abs.(F .- F_prev) .≤ Ftol)
+        if all(abs.(F .- F_prev) .≤ 1e-6)
             S = √S²
             o = S.*d_dθ*F
             dθ_do = -S.*F./2D

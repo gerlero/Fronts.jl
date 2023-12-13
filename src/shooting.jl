@@ -1,6 +1,6 @@
-function _shoot!(integrator, prob::CauchyProblem; i, itol)
+function _shoot!(integrator, prob::CauchyProblem; i, abstol)
     direction = monotonicity(prob)
-    limit = i + direction*itol
+    limit = i + direction*abstol
 
     integrator = _reinit!(integrator, prob)
 
@@ -23,20 +23,20 @@ function _shoot!(integrator, prob::CauchyProblem; i, itol)
 end
 
 
-function _init(prob::DirichletProblem, alg::BoltzmannODE; d_dob, itol)
+function _init(prob::DirichletProblem, alg::BoltzmannODE; d_dob, abstol)
     return _init(CauchyProblem(prob.eq, b=prob.b, d_dob=d_dob, ob=prob.ob),
                  alg,
-                 i=prob.i, itol=itol)
+                 i=prob.i, abstol=abstol)
 end
 
-function _shoot!(integrator, prob::DirichletProblem; d_dob, itol)
+function _shoot!(integrator, prob::DirichletProblem; d_dob, abstol)
     return _shoot!(integrator,
                    CauchyProblem(prob.eq, b=prob.b, d_dob=d_dob, ob=prob.ob),
-                   i=prob.i, itol=itol)
+                   i=prob.i, abstol=abstol)
 end
 
 """
-    solve(prob::DirichletProblem[, alg::BoltzmannODE; itol, maxiters, d_dob_hint]) -> Solution
+    solve(prob::DirichletProblem[, alg::BoltzmannODE; abstol, maxiters, d_dob_hint]) -> Solution
 
 Solve the problem `prob`.
 
@@ -45,7 +45,7 @@ Solve the problem `prob`.
 - `alg=BoltzmannODE()`: algorithm to use.
 
 # Keyword arguments
-- `itol=1e-3`: absolute tolerance for the initial condition.
+- `abstol=1e-3`: absolute tolerance for the initial condition.
 - `maxiters=100`: maximum number of iterations.
 
 # References
@@ -55,9 +55,9 @@ Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
 """
 function solve(prob::DirichletProblem, alg::BoltzmannODE=BoltzmannODE();
-                                       itol=1e-3,
+                                       abstol=1e-3,
                                        maxiters=100)
-    @argcheck itol ≥ zero(itol)
+    @argcheck abstol ≥ zero(abstol)
     @argcheck maxiters ≥ 0
 
     if !isnothing(alg.d_dob_hint)
@@ -69,9 +69,9 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE=BoltzmannODE();
 
     resid = prob.b - prob.i
 
-    integrator = _init(prob, alg, d_dob=d_dob_hint, itol=itol)
+    integrator = _init(prob, alg, d_dob=d_dob_hint, abstol=abstol)
 
-    if abs(resid) ≤ itol
+    if abs(resid) ≤ abstol
         solve!(integrator)
         @assert integrator.sol.retcode != ReturnCode.Success
         retcode = integrator.sol.retcode == ReturnCode.Terminated ? ReturnCode.Success : integrator.sol.retcode
@@ -81,8 +81,8 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE=BoltzmannODE();
     d_dob_trial = bracket_bisect(zero(d_dob_hint), d_dob_hint, resid)
 
     for niter in 1:maxiters
-        integrator, resid = _shoot!(integrator, prob, d_dob=d_dob_trial(resid), itol=itol)
-        if abs(resid) ≤ itol
+        integrator, resid = _shoot!(integrator, prob, d_dob=d_dob_trial(resid), abstol=abstol)
+        if abs(resid) ≤ abstol
             return Solution(integrator.sol, prob, alg, _retcode=ReturnCode.Success, _niter=niter)
         end
     end
@@ -91,19 +91,19 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE=BoltzmannODE();
 end
 
 
-function _init(prob::FlowrateProblem, alg::BoltzmannODE; b, itol, obtol)
-    ob = !iszero(prob.ob) ? prob.ob : obtol
-    return _init(CauchyProblem(prob.eq, b=b, d_dob=monotonicity(prob), ob=ob), alg, i=prob.i, itol=itol)
+function _init(prob::FlowrateProblem, alg::BoltzmannODE; b, abstol)
+    ob = !iszero(prob.ob) ? prob.ob : 1e-6
+    return _init(CauchyProblem(prob.eq, b=b, d_dob=monotonicity(prob), ob=ob), alg, i=prob.i, abstol=abstol)
 end
 
-function _shoot!(integrator, prob::FlowrateProblem; b, itol, obtol)
-    ob = !iszero(prob.ob) ? prob.ob : obtol
+function _shoot!(integrator, prob::FlowrateProblem; b, abstol)
+    ob = !iszero(prob.ob) ? prob.ob : 1e-6
 
     try
         d_dob = d_do(prob, :b, b=b, ob=ob)
         return _shoot!(integrator,
                        CauchyProblem(prob.eq, b=b, d_dob=d_dob, ob=ob),
-                       i=prob.i, itol=itol)
+                       i=prob.i, abstol=abstol)
     catch e
         e isa ArgumentError || e isa DomainError || rethrow()
         return integrator, -monotonicity(prob)*typemax(prob.i)
@@ -111,7 +111,7 @@ function _shoot!(integrator, prob::FlowrateProblem; b, itol, obtol)
 end
 
 """
-    solve(prob::FlowrateProblem[, BoltzmannODE; itol, obtol, maxiters, b_hint]) -> Solution
+    solve(prob::FlowrateProblem[, BoltzmannODE; abstol, maxiters, b_hint]) -> Solution
 
 Solve the problem `prob`.
 
@@ -120,8 +120,7 @@ Solve the problem `prob`.
 - `alg=BoltzmannODE()`: algorithm to use.
 
 # Keyword arguments
-- `itol=1e-3`: absolute tolerance for the initial condition.
-- `obtol=1e-6`: maximum tolerance for `ob`. Allows solving radial problems with boundaries at `r=0`.
+- `abstol=1e-3`: absolute tolerance for the initial condition.
 - `maxiters=100`: maximum number of iterations.
 
 # References
@@ -131,15 +130,9 @@ Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
 """
 function solve(prob::FlowrateProblem; alg::BoltzmannODE=BoltzmannODE(),
-                                      itol=1e-3,
-                                      obtol=1e-6,
+                                      abstol=1e-3,
                                       maxiters=100)
-    @argcheck itol ≥ zero(itol)
-    if iszero(prob.ob)
-        @argcheck obtol > zero(obtol)
-    else
-        @argcheck obtol ≥ zero(obtol)
-    end
+    @argcheck abstol ≥ zero(abstol)
     @argcheck maxiters ≥ 0
 
     if !isnothing(alg.b_hint)
@@ -151,10 +144,10 @@ function solve(prob::FlowrateProblem; alg::BoltzmannODE=BoltzmannODE(),
 
     resid = prob.i - oneunit(prob.i)*monotonicity(prob)
 
-    integrator = _init(prob, alg, b=b_hint, itol=itol, obtol=obtol)
+    integrator = _init(prob, alg, b=b_hint, abstol=abstol)
 
     if monotonicity(prob) == 0
-        integrator, resid = _shoot!(integrator, prob, b=prob.i, itol=itol, obtol=obtol)
+        integrator, resid = _shoot!(integrator, prob, b=prob.i, abstol=abstol)
         @assert iszero(resid)
         return Solution(integrator.sol, prob, alg, _retcode=ReturnCode.Success, _niter=0)
     end
@@ -162,9 +155,9 @@ function solve(prob::FlowrateProblem; alg::BoltzmannODE=BoltzmannODE(),
     b_trial = bracket_bisect(prob.i, b_hint)
 
     for niter in 1:maxiters
-        integrator, resid = _shoot!(integrator, prob, b=b_trial(resid), itol=itol, obtol=obtol)
+        integrator, resid = _shoot!(integrator, prob, b=b_trial(resid), abstol=abstol)
 
-        if abs(resid) ≤ itol
+        if abs(resid) ≤ abstol
             return Solution(integrator.sol, prob, alg, _retcode=ReturnCode.Success, _niter=niter)
         end
     end
