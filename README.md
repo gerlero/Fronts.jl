@@ -5,6 +5,7 @@
 [![Build Status](https://github.com/gerlero/Fronts.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/gerlero/Fronts.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/gerlero/Fronts.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/gerlero/Fronts.jl)
 [![PkgEval](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/F/Fronts.svg)](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/F/Fronts.html)
+[![SciML Code Style](https://img.shields.io/static/v1?label=code%20style&message=SciML&color=9558b2&labelColor=389826)](https://github.com/SciML/SciMLStyle)
 [![Docker image](https://img.shields.io/badge/docker%20image-microfluidica%2Ffronts.jl-0085a0)](https://hub.docker.com/r/microfluidica/fronts.jl)
 
 **_Fronts_, at the speed of Julia ⚡️**
