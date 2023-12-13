@@ -29,7 +29,6 @@ Delegates to [`diffusivity`](@ref) by default.
 """
 flow_diffusivity(eq::Equation, val) = diffusivity(eq, val)
 
-
 """
     DiffusionEquation(D; symbol=:θ) <: Equation{1}
     DiffusionEquation{m}(D; symbol=:θ) <: Equation{m}
@@ -71,20 +70,20 @@ julia> eq = Fronts.DiffusionEquation{3}(D, symbol=:c)
 
 See also: [`PorousModels.UnsaturatedFlowModel`](@ref)
 """
-struct DiffusionEquation{m,_TD} <: Equation{m}
+struct DiffusionEquation{m, _TD} <: Equation{m}
     D::_TD
     symbol::Symbol
 
-    function DiffusionEquation{m}(D; symbol::Symbol=:θ) where m
+    function DiffusionEquation{m}(D; symbol::Symbol = :θ) where {m}
         @argcheck m isa Int TypeError(:m, Int, m)
         @argcheck m in 1:3
-        new{m,typeof(D)}(D, symbol)
+        new{m, typeof(D)}(D, symbol)
     end
 end
 
-DiffusionEquation(D; symbol::Symbol=:θ) = DiffusionEquation{1}(D, symbol=symbol)
+DiffusionEquation(D; symbol::Symbol = :θ) = DiffusionEquation{1}(D, symbol = symbol)
 
-function DiffusionEquation{m}(model::PorousModels.UnsaturatedFlowModel) where m
+function DiffusionEquation{m}(model::PorousModels.UnsaturatedFlowModel) where {m}
     function D(θ)
         PorousModels.Dθ(model, θ)
     end
@@ -98,15 +97,32 @@ function Base.show(io::IO, eq::DiffusionEquation{1})
 end
 
 function Base.show(io::IO, eq::DiffusionEquation{2})
-    print(io, "∂", eq.symbol, "/∂t = 1/r*∂(r*", eq.D, "(", eq.symbol, ")*∂", eq.symbol, "/∂r)/∂r")
+    print(io,
+        "∂",
+        eq.symbol,
+        "/∂t = 1/r*∂(r*",
+        eq.D,
+        "(",
+        eq.symbol,
+        ")*∂",
+        eq.symbol,
+        "/∂r)/∂r")
 end
 
 function Base.show(io::IO, eq::DiffusionEquation{3})
-    print(io, "∂", eq.symbol, "/∂t = 1/r²*∂(r²*", eq.D, "(", eq.symbol, ")*∂", eq.symbol, "/∂r)/∂r")
+    print(io,
+        "∂",
+        eq.symbol,
+        "/∂t = 1/r²*∂(r²*",
+        eq.D,
+        "(",
+        eq.symbol,
+        ")*∂",
+        eq.symbol,
+        "/∂r)/∂r")
 end
 
 diffusivity(eq::DiffusionEquation, θ) = eq.D(θ)
-
 
 """
     RichardsEquation(; C, K, symbol=:h) <: Equation{1}
@@ -135,44 +151,76 @@ Horizontal Richards equation, pressure-based formulation, with properties define
 
 See also: [`PorousModels.UnsaturatedFlowModel`](@ref)
 """
-struct RichardsEquation{m,_TC,_TK} <: Equation{m}
+struct RichardsEquation{m, _TC, _TK} <: Equation{m}
     C::_TC
     K::_TK
     symbol::Symbol
 
-    function RichardsEquation{m}(; C, K, symbol::Symbol=:h) where m
+    function RichardsEquation{m}(; C, K, symbol::Symbol = :h) where {m}
         @argcheck m isa Int TypeError(:m, Int, m)
         @argcheck m in 1:3
-        new{m,typeof(C),typeof(K)}(C, K, symbol)
+        new{m, typeof(C), typeof(K)}(C, K, symbol)
     end
 end
 
-RichardsEquation(; C, K, symbol::Symbol=:h) = RichardsEquation{1}(C=C, K=K, symbol=symbol)
+function RichardsEquation(; C, K, symbol::Symbol = :h)
+    RichardsEquation{1}(C = C, K = K, symbol = symbol)
+end
 
-function RichardsEquation{m}(model::PorousModels.UnsaturatedFlowModel) where m
+function RichardsEquation{m}(model::PorousModels.UnsaturatedFlowModel) where {m}
     function C(h)
         PorousModels.Ch(model, h)
     end
     function K(h)
         PorousModels.Kh(model, h)
     end
-    RichardsEquation{m}(; C=C, K=K)
+    RichardsEquation{m}(; C = C, K = K)
 end
 
 RichardsEquation(model::PorousModels.UnsaturatedFlowModel) = RichardsEquation{1}(model)
 
 function Base.show(io::IO, eq::RichardsEquation{1})
-    print(io, eq.C, "*∂", eq.symbol, "/∂t = ∂(", eq.K, "(", eq.symbol, ")*∂", eq.symbol, "/∂r)/∂r")
+    print(io,
+        eq.C,
+        "*∂",
+        eq.symbol,
+        "/∂t = ∂(",
+        eq.K,
+        "(",
+        eq.symbol,
+        ")*∂",
+        eq.symbol,
+        "/∂r)/∂r")
 end
 
 function Base.show(io::IO, eq::RichardsEquation{2})
-    print(io, eq.C, "*∂", eq.symbol, "/∂t = 1/r*∂(r*", eq.K, "(", eq.symbol, ")*∂", eq.symbol, "/∂r)/∂r")
+    print(io,
+        eq.C,
+        "*∂",
+        eq.symbol,
+        "/∂t = 1/r*∂(r*",
+        eq.K,
+        "(",
+        eq.symbol,
+        ")*∂",
+        eq.symbol,
+        "/∂r)/∂r")
 end
 
 function Base.show(io::IO, eq::RichardsEquation{3})
-    print(io, eq.C, "*∂", eq.symbol, "/∂t = 1/r²*∂(r²*", eq.K, "(", eq.symbol, ")*∂", eq.symbol, "/∂r)/∂r")
+    print(io,
+        eq.C,
+        "*∂",
+        eq.symbol,
+        "/∂t = 1/r²*∂(r²*",
+        eq.K,
+        "(",
+        eq.symbol,
+        ")*∂",
+        eq.symbol,
+        "/∂r)/∂r")
 end
 
-diffusivity(eq::RichardsEquation, h) = eq.K(h)/eq.C(h)
+diffusivity(eq::RichardsEquation, h) = eq.K(h) / eq.C(h)
 
 flow_diffusivity(eq::RichardsEquation, h) = eq.K(h)

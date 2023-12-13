@@ -17,7 +17,7 @@ Evaluate the solution.
 - `alg`: algorithm used.
 - `original`: original solution object, if applicable.
 """
-struct Solution{_T,_Td_do,_To,_Toriginal,_Tprob,_Talg,_Tsol,_Tderiv}
+struct Solution{_T, _Td_do, _To, _Toriginal, _Tprob, _Talg, _Tsol, _Tderiv}
     i::_T
     b::_T
     d_dob::_Td_do
@@ -31,11 +31,30 @@ struct Solution{_T,_Td_do,_To,_Toriginal,_Tprob,_Talg,_Tsol,_Tderiv}
     _sol::_Tsol
     _deriv::_Tderiv
 
-    function Solution(_sol, _prob, _alg, _deriv=o -> derivative(_sol, o);
-                      _oi, _ob, _i=_sol(_oi), _b=_sol(_ob), _d_dob=_deriv(_ob), _original=nothing, _retcode, _niter)
-        new{promote_type(typeof(_i),typeof(_b)),typeof(_d_dob),promote_type(typeof(_ob),typeof(_oi)),typeof(_original),typeof(_prob),typeof(_alg),typeof(_sol),typeof(_deriv)}(
-            _i, _b, _d_dob, _ob, _oi, _original, _retcode, _prob, _alg, _niter, _sol, _deriv
-        )
+    function Solution(_sol, _prob, _alg, _deriv = o -> derivative(_sol, o);
+            _oi, _ob, _i = _sol(_oi), _b = _sol(_ob), _d_dob = _deriv(_ob), _original = nothing,
+            _retcode, _niter)
+        new{
+            promote_type(typeof(_i), typeof(_b)),
+            typeof(_d_dob),
+            promote_type(typeof(_ob), typeof(_oi)),
+            typeof(_original),
+            typeof(_prob),
+            typeof(_alg),
+            typeof(_sol),
+            typeof(_deriv),
+        }(_i,
+            _b,
+            _d_dob,
+            _ob,
+            _oi,
+            _original,
+            _retcode,
+            _prob,
+            _alg,
+            _niter,
+            _sol,
+            _deriv)
     end
 end
 
@@ -49,7 +68,7 @@ function (sol::Solution)(o)
     return sol._sol(o)
 end
 
-(sol::Solution)(r, t) = sol(o(r,t))
+(sol::Solution)(r, t) = sol(o(r, t))
 
 Base.broadcastable(sol::Solution) = Ref(sol)
 
@@ -94,11 +113,10 @@ Spatial derivative of the solution.
 Spatial derivative of the solution at the boundary.
 
 """
-function d_dr(sol::Solution, symbol::Symbol, t) 
+function d_dr(sol::Solution, symbol::Symbol, t)
     @argcheck symbol === :b
-    d_dr(sol, rb(sol,t), t)
+    d_dr(sol, rb(sol, t), t)
 end
-
 
 """
     d_dt(::Solution, r, t)
@@ -111,9 +129,9 @@ Time derivative of the solutio.
 
 Time derivative of the solution at the boundary.
 """
-function d_dt(sol::Solution, symbol::Symbol, t) 
+function d_dt(sol::Solution, symbol::Symbol, t)
     @argcheck symbol === :b
-    d_dt(sol, rb(sol,t), t)
+    d_dt(sol, rb(sol, t), t)
 end
 
 """
@@ -121,16 +139,16 @@ end
 
 Flux.
 """
-flux(sol::Solution, r, t) = sorptivity(sol, o(r,t))/(2*√t)
+flux(sol::Solution, r, t) = sorptivity(sol, o(r, t)) / (2 * √t)
 
 """
     flux(::Solution, :b, t)
 
 Boundary flux.
 """
-function flux(sol::Solution, symbol::Symbol, t) 
+function flux(sol::Solution, symbol::Symbol, t)
     @argcheck symbol === :b
-    flux(sol, rb(sol,t), t)
+    flux(sol, rb(sol, t), t)
 end
 
 """
@@ -155,15 +173,15 @@ Sorptivity, computed from the given value of o.
 PHILIP, J. R. The theory of infiltration: 4. Sorptivity and algebraic infiltration equations.
 Soil Science, 1957, vol. 84, no. 3, p. 257-264.
 """
-sorptivity(sol::Solution, o=sol.ob) = sorptivity(sol.prob.eq, sol, o)
-
+sorptivity(sol::Solution, o = sol.ob) = sorptivity(sol.prob.eq, sol, o)
 
 # Plot recipe
-@recipe function _(sol::Solution) \
+@recipe function _(sol::Solution)
+    \
     label --> string(sol.prob.eq.symbol)
     xguide --> "o=r/√t"
     yguide --> string(sol.prob.eq.symbol)
 
-    o = range(sol.ob, stop=sol.oi*1.1, length=1000)
+    o = range(sol.ob, stop = sol.oi * 1.1, length = 1000)
     return o, sol.(o)
 end

@@ -1,5 +1,4 @@
 @testset "PorousModels" begin
-
     @testset "BrooksAndCorey" begin
         # HF135 membrane, Brooks and Corey model
         # Data from Buser (PhD thesis, 2016)
@@ -7,10 +6,10 @@
         θr = 1.07e-6
         θs = 0.936
         k = 5.50e-13  # m**2
-        α = 1/1.96  # 1/m
+        α = 1 / 1.96  # 1/m
         n = 0.669
 
-        bc = BrooksAndCorey(n=n, α=α, k=k, θr=θr, θs=θs)
+        bc = BrooksAndCorey(n = n, α = α, k = k, θr = θr, θs = θs)
 
         htest = -10.0
 
@@ -26,7 +25,8 @@
         @test (@inferred θh(bc, @inferred hθ(bc, θtest))) ≈ θtest
         @test (@inferred Ch(bc, @inferred hθ(bc, θtest))) ≈ @inferred Cθ(bc, θtest)
         @test (@inferred Kh(bc, @inferred hθ(bc, θtest))) ≈ @inferred Kθ(bc, θtest)
-        @test (@inferred Dθ(bc, θtest)) ≈ (@inferred Kθ(bc, θtest))/@inferred Cθ(bc, θtest)
+        @test (@inferred Dθ(bc, θtest)) ≈
+              (@inferred Kθ(bc, θtest)) / @inferred Cθ(bc, θtest)
     end
 
     @testset "VanGenuchten" begin
@@ -39,7 +39,7 @@
         α = 0.2555  # 1/m
         n = 2.3521
 
-        vg = VanGenuchten(n=n, α=α, k=k, θr=θr, θs=θs)
+        vg = VanGenuchten(n = n, α = α, k = k, θr = θr, θs = θs)
 
         htest = -10.0
 
@@ -58,6 +58,7 @@
         @test (@inferred θh(vg, @inferred hθ(vg, θtest))) ≈ θtest
         @test (@inferred Ch(vg, @inferred hθ(vg, θtest))) ≈ @inferred Cθ(vg, θtest)
         @test (@inferred Kh(vg, @inferred hθ(vg, θtest))) ≈ @inferred Kθ(vg, θtest)
-        @test (@inferred Dθ(vg, θtest)) ≈ (@inferred Kθ(vg, θtest))/@inferred Cθ(vg, θtest)
+        @test (@inferred Dθ(vg, θtest)) ≈
+              (@inferred Kθ(vg, θtest)) / @inferred Cθ(vg, θtest)
     end
 end

@@ -23,7 +23,7 @@ In: Proceedings of the International Symposium of the Society of Core Analysts, 
 GERLERO, G. S.; VALDEZ, A.; URTEAGA, R; KLER, P. A. Validity of capillary imbibition models in paper-based microfluidic applications.
 Transport in Porous Media, 2022, vol. 141, no. 7, p. 1-20.
 """
-struct LETxs{_TLw,_TEw,_TTw,_TLs,_TEs,_TTs,_Tα,_TKs,_Tθ} <: UnsaturatedFlowModel
+struct LETxs{_TLw, _TEw, _TTw, _TLs, _TEs, _TTs, _Tα, _TKs, _Tθ} <: UnsaturatedFlowModel
     Lw::_TLw
     Ew::_TEw
     Tw::_TTw
@@ -35,23 +35,42 @@ struct LETxs{_TLw,_TEw,_TTw,_TLs,_TEs,_TTs,_Tα,_TKs,_Tθ} <: UnsaturatedFlowMod
     θr::_Tθ
     θs::_Tθ
 
-    function LETxs(; Lw, Ew, Tw, Ls, Es, Ts, α=1, Ks=nothing, k=nothing,
-                            θr=0, θs=1, ρ=1e3, μ=1e-3, g=9.81)
-        @argcheck α>zero(α)
-        @argcheck θr<θs
+    function LETxs(; Lw, Ew, Tw, Ls, Es, Ts, α = 1, Ks = nothing, k = nothing,
+            θr = 0, θs = 1, ρ = 1e3, μ = 1e-3, g = 9.81)
+        @argcheck α > zero(α)
+        @argcheck θr < θs
 
-        Ks = _asKs(Ks=Ks, k=k, ρ=ρ, μ=μ, g=g)
+        Ks = _asKs(Ks = Ks, k = k, ρ = ρ, μ = μ, g = g)
 
-        new{typeof(Lw),typeof(Ew),typeof(Tw),typeof(Ls),typeof(Es),typeof(Ts),typeof(α),typeof(Ks),promote_type(typeof(θr),typeof(θs))}(Lw,Ew,Tw,Ls,Es,Ts,α,Ks,θr,θs)
+        new{
+            typeof(Lw),
+            typeof(Ew),
+            typeof(Tw),
+            typeof(Ls),
+            typeof(Es),
+            typeof(Ts),
+            typeof(α),
+            typeof(Ks),
+            promote_type(typeof(θr), typeof(θs)),
+        }(Lw,
+            Ew,
+            Tw,
+            Ls,
+            Es,
+            Ts,
+            α,
+            Ks,
+            θr,
+            θs)
     end
 end
 
 function Dθ(pm::LETxs, θ)
-    Dwt = pm.Ks/pm.α
+    Dwt = pm.Ks / pm.α
 
     θr = pm.θr
     θs = pm.θs
-    Swir = θr/θs
+    Swir = θr / θs
 
     Lw = pm.Lw
     Ew = pm.Ew
@@ -60,7 +79,9 @@ function Dθ(pm::LETxs, θ)
     Es = pm.Es
     Ts = pm.Ts
 
-    Swp = (θ - θr)/(θs - θr)
+    Swp = (θ - θr) / (θs - θr)
 
-    return Es*Dwt/θs*Swp^Lw*Swp^Ts*(1 - Swp)^Ls*(Ls*Swp - Swp*Ts + Ts)/(Swp*(Swir - 1)*(Swp - 1)*(Es*Swp^Ts + (1 - Swp)^Ls)^2*(Ew*(1 - Swp)^Tw + Swp^Lw))
+    return Es * Dwt / θs * Swp^Lw * Swp^Ts * (1 - Swp)^Ls * (Ls * Swp - Swp * Ts + Ts) /
+           (Swp * (Swir - 1) * (Swp - 1) * (Es * Swp^Ts + (1 - Swp)^Ls)^2 *
+            (Ew * (1 - Swp)^Tw + Swp^Lw))
 end

@@ -20,7 +20,7 @@ Create a Brooks and Corey porous model.
 BROOKS, R.; COREY, T. Hydraulic properties of porous media.
 Hydrology Papers, Colorado State University, 1964, vol. 24, p. 37.
 """
-struct BrooksAndCorey{_Tnl,_Tα,_TKs,_Tθ} <: UnsaturatedFlowModel
+struct BrooksAndCorey{_Tnl, _Tα, _TKs, _Tθ} <: UnsaturatedFlowModel
     n::_Tnl
     l::_Tnl
     α::_Tα
@@ -28,50 +28,68 @@ struct BrooksAndCorey{_Tnl,_Tα,_TKs,_Tθ} <: UnsaturatedFlowModel
     θr::_Tθ
     θs::_Tθ
 
-    function BrooksAndCorey(; n, l=1, α=1, Ks=nothing, k=nothing, θr=0, θs=1, ρ=1e3, μ=1e-3, g=9.81)
-        
-        @argcheck α>zero(α)
-        @argcheck θr<θs
-    
-        Ks = _asKs(Ks=Ks, k=k, ρ=ρ, μ=μ, g=g)
+    function BrooksAndCorey(;
+            n,
+            l = 1,
+            α = 1,
+            Ks = nothing,
+            k = nothing,
+            θr = 0,
+            θs = 1,
+            ρ = 1e3,
+            μ = 1e-3,
+            g = 9.81)
+        @argcheck α > zero(α)
+        @argcheck θr < θs
 
-        new{promote_type(typeof(n),typeof(l)),typeof(α),typeof(Ks),promote_type(typeof(θr),typeof(θs))}(n,l,α,Ks,θr,θs)
+        Ks = _asKs(Ks = Ks, k = k, ρ = ρ, μ = μ, g = g)
+
+        new{
+            promote_type(typeof(n), typeof(l)),
+            typeof(α),
+            typeof(Ks),
+            promote_type(typeof(θr), typeof(θs)),
+        }(n,
+            l,
+            α,
+            Ks,
+            θr,
+            θs)
     end
 end
 
-
 function θh(pm::BrooksAndCorey, h)
-    if h ≥ -1/pm.α
+    if h ≥ -1 / pm.α
         return pm.θs
     end
 
-    Se = 1/(pm.α*(-h))^pm.n
+    Se = 1 / (pm.α * (-h))^pm.n
 
-    return pm.θr + Se*(pm.θs - pm.θr)
+    return pm.θr + Se * (pm.θs - pm.θr)
 end
 
 function hθ(pm::BrooksAndCorey, θ)
-    Se = (θ - pm.θr)/(pm.θs - pm.θr)
+    Se = (θ - pm.θr) / (pm.θs - pm.θr)
 
-    return -1/(pm.α*Se^(1/pm.n))
+    return -1 / (pm.α * Se^(1 / pm.n))
 end
 
 function Ch(pm::BrooksAndCorey, h)
-    if h ≥ -1/pm.α
-        return zero(1/h)
+    if h ≥ -1 / pm.α
+        return zero(1 / h)
     end
 
-    return -pm.n/h*(pm.θs - pm.θr)/(pm.α*(-h))^pm.n
+    return -pm.n / h * (pm.θs - pm.θr) / (pm.α * (-h))^pm.n
 end
 
 function Kθ(pm::BrooksAndCorey, θ)
-    Se = (θ - pm.θr)/(pm.θs - pm.θr)
+    Se = (θ - pm.θr) / (pm.θs - pm.θr)
 
-    return pm.Ks*Se^(2/pm.n + pm.l + 2)
+    return pm.Ks * Se^(2 / pm.n + pm.l + 2)
 end
 
 function Kh(pm::BrooksAndCorey, h)
-    if h ≥ -1/pm.α
+    if h ≥ -1 / pm.α
         return pm.Ks
     end
 
@@ -79,6 +97,6 @@ function Kh(pm::BrooksAndCorey, h)
 end
 
 function Dθ(pm::BrooksAndCorey, θ)
-    Se = (θ - pm.θr)/(pm.θs - pm.θr)
-    return pm.Ks*Se^(1/pm.n + pm.l + 1)/(pm.α*pm.n*(pm.θs - pm.θr))
+    Se = (θ - pm.θr) / (pm.θs - pm.θr)
+    return pm.Ks * Se^(1 / pm.n + pm.l + 1) / (pm.α * pm.n * (pm.θs - pm.θr))
 end

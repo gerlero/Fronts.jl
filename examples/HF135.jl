@@ -18,18 +18,18 @@ n = 2.3521
 θr = 0.0473
 θs = 0.945
 
-model = VanGenuchten(n=n, α=α, k=k, θr=θr, θs=θs)
+model = VanGenuchten(n = n, α = α, k = k, θr = θr, θs = θs)
 
-prob = DirichletProblem(model, i=θi, b=θs-ϵ)
+prob = DirichletProblem(model, i = θi, b = θs - ϵ)
 
 θ = solve(prob)
 
-r = range(0, 0.05, length=500)
+r = range(0, 0.05, length = 500)
 
-plt = plot(r, r -> θ(r,60), label="t=60 s", xguide="r [m]", yguide="θ")
+plt = plot(r, r -> θ(r, 60), label = "t=60 s", xguide = "r [m]", yguide = "θ")
 display(plt)
 
-plt = plot(r, r -> flux(θ, r, 60), label="t=60 s", xguide="r [m]", yguide="U [m/s]")
+plt = plot(r, r -> flux(θ, r, 60), label = "t=60 s", xguide = "r [m]", yguide = "U [m/s]")
 display(plt)
 
 end

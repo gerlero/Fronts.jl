@@ -13,7 +13,7 @@ Create a LETd porous model.
 GERLERO, G. S.; VALDEZ, A.; URTEAGA, R; KLER, P. A. Validity of capillary imbibition models in paper-based microfluidic applications.
 Transport in Porous Media, 2022, vol. 141, no. 7, p. 1-20.
 """
-struct LETd{_TL,_TE,_TT,_TDwt,_Tθ} <: UnsaturatedFlowModel
+struct LETd{_TL, _TE, _TT, _TDwt, _Tθ} <: UnsaturatedFlowModel
     L::_TL
     E::_TE
     T::_TT
@@ -21,15 +21,26 @@ struct LETd{_TL,_TE,_TT,_TDwt,_Tθ} <: UnsaturatedFlowModel
     θr::_Tθ
     θs::_Tθ
 
-    function LETd(; L, E, T, Dwt=1, θr=0, θs=1)
-        @argcheck Dwt>zero(Dwt)
-        @argcheck θr<θs
+    function LETd(; L, E, T, Dwt = 1, θr = 0, θs = 1)
+        @argcheck Dwt > zero(Dwt)
+        @argcheck θr < θs
 
-        new{typeof(L),typeof(E),typeof(T),typeof(Dwt),promote_type(typeof(θr),typeof(θs))}(L,E,T,Dwt,θr,θs)
+        new{
+            typeof(L),
+            typeof(E),
+            typeof(T),
+            typeof(Dwt),
+            promote_type(typeof(θr), typeof(θs)),
+        }(L,
+            E,
+            T,
+            Dwt,
+            θr,
+            θs)
     end
 end
 
 function Dθ(pm::LETd, θ)
-    Swp = (θ - pm.θr)/(pm.θs - pm.θr)
-    return pm.Dwt*Swp^pm.L/(Swp^pm.L + pm.E*(1 - Swp)^pm.T)
+    Swp = (θ - pm.θr) / (pm.θs - pm.θr)
+    return pm.Dwt * Swp^pm.L / (Swp^pm.L + pm.E * (1 - Swp)^pm.T)
 end

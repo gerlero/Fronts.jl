@@ -17,15 +17,22 @@ Uses the Boltzmann transformation and repeated ODE integration via `Differential
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
 Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 """
-struct BoltzmannODE{_Todealg,_Tθ,_Td_do,_Tode_kwargs}
+struct BoltzmannODE{_Todealg, _Tθ, _Td_do, _Tode_kwargs}
     _odealg::_Todealg
     b_hint::_Tθ
     d_dob_hint::_Td_do
     _ode_kwargs::_Tode_kwargs
 
-    function BoltzmannODE(odealg=RadauIIA5(); b_hint=nothing, d_dob_hint=nothing, maxiters=1000, kwargs...)
-        ode_kwargs = (maxiters=maxiters, kwargs...)
-        new{typeof(odealg),typeof(b_hint),typeof(d_dob_hint),typeof(ode_kwargs)}(odealg, b_hint, d_dob_hint, ode_kwargs)
+    function BoltzmannODE(odealg = RadauIIA5();
+            b_hint = nothing,
+            d_dob_hint = nothing,
+            maxiters = 1000,
+            kwargs...)
+        ode_kwargs = (maxiters = maxiters, kwargs...)
+        new{typeof(odealg), typeof(b_hint), typeof(d_dob_hint), typeof(ode_kwargs)}(odealg,
+            b_hint,
+            d_dob_hint,
+            ode_kwargs)
     end
 end
 
@@ -41,36 +48,40 @@ See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/)
 function boltzmann(prob::CauchyProblem)
     u0 = @SVector [prob.b, prob.d_dob]
     ob = float(prob.ob)
-    settled = DiscreteCallback(
-        let direction=monotonicity(prob)
-            (u, t, integrator) -> direction*u[2] ≤ zero(u[2])
+    settled = DiscreteCallback(let direction = monotonicity(prob)
+            (u, t, integrator) -> direction * u[2] ≤ zero(u[2])
         end,
         terminate!,
-        save_positions=(false,false)
-    )
-    ODEProblem(boltzmann(prob.eq), u0, (ob, typemax(ob)), callback=settled)
+        save_positions = (false, false))
+    ODEProblem(boltzmann(prob.eq), u0, (ob, typemax(ob)), callback = settled)
 end
 
 monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
 
-function _init(odeprob::ODEProblem, alg::BoltzmannODE; i=nothing, abstol)
+function _init(odeprob::ODEProblem, alg::BoltzmannODE; i = nothing, abstol)
     if !isnothing(i)
         direction = monotonicity(odeprob)
 
-        past_limit = DiscreteCallback(
-            let direction=direction, limit=i + direction*abstol
-                (u, t, integrator) -> direction*u[1] > direction*limit
+        past_limit = DiscreteCallback(let direction = direction,
+                limit = i + direction * abstol
+
+                (u, t, integrator) -> direction * u[1] > direction * limit
             end,
             terminate!,
-            save_positions=(false,false)
-        )
-        return init(odeprob, alg._odealg; callback=past_limit, verbose=false, alg._ode_kwargs...)
+            save_positions = (false, false))
+        return init(odeprob,
+            alg._odealg;
+            callback = past_limit,
+            verbose = false,
+            alg._ode_kwargs...)
     end
 
-    return init(odeprob, alg._odealg; verbose=false, alg._ode_kwargs...)
+    return init(odeprob, alg._odealg; verbose = false, alg._ode_kwargs...)
 end
 
-_init(prob::CauchyProblem, alg::BoltzmannODE; i=nothing, abstol=0) = _init(boltzmann(prob), alg, i=i, abstol=abstol)
+function _init(prob::CauchyProblem, alg::BoltzmannODE; i = nothing, abstol = 0)
+    _init(boltzmann(prob), alg, i = i, abstol = abstol)
+end
 
 function _reinit!(integrator, prob::CauchyProblem)
     @assert sign(prob.d_dob) == sign(integrator.sol.u[1][2])
@@ -93,31 +104,29 @@ Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 
 See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
 """
-function solve(prob::CauchyProblem, alg::BoltzmannODE=BoltzmannODE(); abstol=1e-3)
-
-    odesol = solve!(_init(prob, alg, abstol=abstol))
+function solve(prob::CauchyProblem, alg::BoltzmannODE = BoltzmannODE(); abstol = 1e-3)
+    odesol = solve!(_init(prob, alg, abstol = abstol))
 
     @assert odesol.retcode != ReturnCode.Success
 
     if odesol.retcode != ReturnCode.Terminated
-        return Solution(odesol, prob, alg, _retcode=odesol.retcode, _niter=1)
+        return Solution(odesol, prob, alg, _retcode = odesol.retcode, _niter = 1)
     end
-    
-    return Solution(odesol, prob, alg, _retcode=ReturnCode.Success, _niter=1)
+
+    return Solution(odesol, prob, alg, _retcode = ReturnCode.Success, _niter = 1)
 end
 
-
 function Solution(_odesol::ODESolution, _prob, _alg::BoltzmannODE; _retcode, _niter)
-    return Solution(o -> _odesol(o, idxs=1),
-                    _prob,
-                    _alg,
-                    o -> _odesol(o, idxs=2),
-                    _i=_odesol.u[end][1],
-                    _b=_odesol.u[1][1],
-                    _d_dob=_odesol.u[1][2],
-                    _ob=_odesol.t[1],
-                    _oi=_odesol.t[end],
-                    _original=_odesol,
-                    _retcode=_retcode,
-                    _niter=_niter)
+    return Solution(o -> _odesol(o, idxs = 1),
+        _prob,
+        _alg,
+        o -> _odesol(o, idxs = 2),
+        _i = _odesol.u[end][1],
+        _b = _odesol.u[1][1],
+        _d_dob = _odesol.u[1][2],
+        _ob = _odesol.t[1],
+        _oi = _odesol.t[end],
+        _original = _odesol,
+        _retcode = _retcode,
+        _niter = _niter)
 end

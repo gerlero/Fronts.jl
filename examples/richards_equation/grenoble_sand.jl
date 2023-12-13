@@ -14,22 +14,26 @@ Ks = 15.37 # cm/h
 m = 0.5096
 θs = 0.312
 
-D0 = (1-m)*Ks/(α*m*θs) # cm²/h
+D0 = (1 - m) * Ks / (α * m * θs) # cm²/h
 
-model = VanGenuchten(m=m, Ks=Ks, α=α, θs=θs)
+model = VanGenuchten(m = m, Ks = Ks, α = α, θs = θs)
 
-dprob = DirichletProblem(model, i=0, b=θs-ϵ)
+dprob = DirichletProblem(model, i = 0, b = θs - ϵ)
 
 θ = solve(dprob)
 
-prob = DirichletProblem(RichardsEquation(model), i=-10000, b=0)
+prob = DirichletProblem(RichardsEquation(model), i = -10000, b = 0)
 
 h = solve(prob)
 
-ξ = range(0, 1.5, length=500)
+ξ = range(0, 1.5, length = 500)
 
-plot(ξ, ξ -> θ(ξ*√D0), xguide="ξ*", yguide="θ", label="using DiffusionEquation")
-plt = plot!(ξ, ξ -> θh(model, h(ξ*√D0)), xguide="ξ*", yguide="θ", label="using RichardsEquation")
+plot(ξ, ξ -> θ(ξ * √D0), xguide = "ξ*", yguide = "θ", label = "using DiffusionEquation")
+plt = plot!(ξ,
+    ξ -> θh(model, h(ξ * √D0)),
+    xguide = "ξ*",
+    yguide = "θ",
+    label = "using RichardsEquation")
 display(plt)
 
 end
