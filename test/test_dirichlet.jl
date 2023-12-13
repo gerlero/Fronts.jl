@@ -14,7 +14,7 @@
     @test all(d_do.(θ, o) .== 0)
     @inferred d_do(θ, o[begin])
     @test ((@inferred sorptivity(θ))) == 0
-    @test θ.iterations == 0
+    @test θ._niter == 0
     @test isnan(@inferred θ(-1))
     end
 
@@ -31,7 +31,7 @@
     @test all(@. isapprox(θ(o), exp(-o), atol=1e-3))
     @test all(@. isapprox(d_do(θ,o), -exp(-o), atol=1e-3))
     @test (@inferred sorptivity(θ)) ≈ 1 atol=1e-3
-    @test θ.iterations > 0
+    @test θ._niter > 0
     end
 
     @testset "HF135" begin
@@ -78,7 +78,7 @@
     @test all(@. isapprox(θ(r,t), θ_pmf, atol=1e-3))
     @test all(@. isapprox(flux(θ,r,t), U_pmf, atol=1e-6))
     @test all(@. flux(θ,r,t) ≈ -Dθ(model, θ(r,t))*d_dr(θ,r,t))
-    @test θ.iterations > 0
+    @test θ._niter > 0
     @test isnan(@inferred θ(-1,t))
     end
 
@@ -94,7 +94,10 @@
     d = LETd(L=0.004569, E=12930, T=1.505, Dwt=4.660e-4, θr=0.019852, θs=θs)
 
     θxs = solve(DirichletProblem(xs, i=θi, b=θs-ϵ))
+    @test θxs.retcode == ReturnCode.Success
+
     θd = solve(DirichletProblem(d, i=θi, b=θs-ϵ))
+    @test θd.retcode == ReturnCode.Success
 
     o = range(0, max(θxs.oi, θd.oi), length=100)
 
@@ -110,16 +113,19 @@
 
     @testset "unsolved" begin
     prob = DirichletProblem(identity, i=0, b=1)
-    @test_throws SolvingError solve(prob, maxiters=0)
+    θ = solve(prob, maxiters=0)
+    @test θ.retcode == ReturnCode.MaxIters
     end
 
 
     @testset "unsolvable" begin
     prob = DirichletProblem(identity, i=-1e-3, b=1)
-    @test_throws DomainError solve(prob)
+    θ = solve(prob)
+    @test_broken θ.retcode == ReturnCode.Unstable
 
     prob = DirichletProblem(identity, i=0, b=-1)
-    @test_throws DomainError solve(prob)
+    θ = solve(prob)
+    @test_broken θ.retcode == ReturnCode.Unstable
     end
 
 end

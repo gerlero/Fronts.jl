@@ -1,12 +1,13 @@
 module ParamEstim
 
 import ..Fronts
-using ..Fronts: InverseProblem, Problem, Solution, solve, SolvingError, sorptivity
+using ..Fronts: InverseProblem, Problem, Solution, sorptivity, ReturnCode
+import ..Fronts: solve
 
 using LsqFit: curve_fit
 
 """
-    RSSCostFunction{fit_D0}(func, prob::InverseProblem; catch_errors, D0tol, oi_hint])
+    RSSCostFunction{fit_D0}(func, prob::InverseProblem[; D0tol, oi_hint])
 
 Residual sum of squares cost function for parameter estimation.
 
@@ -19,14 +20,11 @@ retrieved by calling the `candidate` function.
 
 # Arguments
 - `func`: function that takes a vector of parameter values and returns either a `Fronts.Solution` or a
-`Fronts.Problem`. If func returns a `Problem`, it is solved with `trysolve`. `func` is also allowed to
-return `nothing` to signal that no solution could be found for the parameter values, which will imply an 
-infinite cost (see also the `catch_errors` keyword argument).
-- `prob::InverseProblem`: inverse problem. See [`InverseProblem`](@ref).
+`Fronts.Problem`. If func returns a `Problem`, it is solved with `solve`. `Solution`s with a `ReturnCode`
+of `Success` are passed to the cost function; otherwise, the cost is set to `Inf`.
+- `prob`: inverse problem. See [`InverseProblem`](@ref).
 
 # Keyword arguments
-- `catch_errors=(Fronts.SolvingError,)`: collection of exception types that `func` is allowed to throw;
-any of these exceptions will be caught and will result in an infinite cost.
 - `D0tol=1e-3`: if `fit_D0` is `true`, a tolerance for `D0`.
 - `oi_hint=nothing`: if `fit_D0` is `true`, an optional hint as to the point in `o` where the initial
 condition begins. The hint will be used as an aid in finding the optimal value for `D0`. Otherwise, the
@@ -48,78 +46,31 @@ objective function.
 
 If you need to know more than just the cost, call the `candidate` function instead.
 
-See also: [`candidate`](@ref), [`Fronts.Solution`](@ref), [`Fronts.Problem`](@ref), [`trysolve`](@ref)
+See also: [`candidate`](@ref), [`Fronts.Solution`](@ref), [`Fronts.Problem`](@ref)
 """
-struct RSSCostFunction{fit_D0, _Tfunc, _Tprob, _Tcatch_errors, _TD0tol,  _Toi_hint, _Tsorptivity}
+struct RSSCostFunction{fit_D0, _Tfunc, _Tprob, _TD0tol, _Toi_hint, _Tsorptivity}
     _func::_Tfunc
     _prob::_Tprob
-    _catch_errors::_Tcatch_errors
     _D0tol::_TD0tol
     _oi_hint::_Toi_hint
     _sorptivity::_Tsorptivity
 
-    function RSSCostFunction{true}(func, prob::InverseProblem; catch_errors=(SolvingError,), D0tol=1e-3, oi_hint=nothing)
+    function RSSCostFunction{true}(func, prob::InverseProblem; D0tol=1e-3, oi_hint=nothing)
         S = isnothing(oi_hint) ? sorptivity(prob) : nothing
-        new{true,typeof(func),typeof(prob),typeof(catch_errors),typeof(D0tol),typeof(oi_hint),typeof(S)}(func, prob, catch_errors, D0tol, oi_hint, S)
+        new{true,typeof(func),typeof(prob),typeof(D0tol),typeof(oi_hint),typeof(S)}(func, prob, D0tol, oi_hint, S)
     end
 
-    function RSSCostFunction{false}(func, prob::InverseProblem; catch_errors=(SolvingError,))
-        new{false,typeof(func),typeof(prob),typeof(catch_errors),Nothing,Nothing,Nothing}(func, prob, catch_errors, nothing)
+    function RSSCostFunction{false}(func, prob::InverseProblem)
+        new{false,typeof(func),typeof(prob),Nothing,Nothing,Nothing}(func, prob, nothing)
     end
 end
 
 (cf::RSSCostFunction)(arg) = candidate(cf, arg).cost
 
-"""
-    trysolve(prob[, catch_errors, kwargs...])::Union{Fronts.Solution, Nothing}
-
-Attempt to solve a problem with `Fronts.solve` and return the solution, but catch any exceptions of
-the types included in `catch_errors` and return `nothing` on such failures.
-
-# Arguments
-- `prob`: problem to be solved.
-
-# Keyword arguments
-- `catch_errors=(Fronts.SolvingError,)`: collection of exception types that should be caught.
-- `kwargs...`: any additional keyword arguments are passed to `solve`.
-
-See also: [`Fronts.solve`](@ref), [`Fronts.SolvingError`](@ref)
-"""
-function trysolve(args...; catch_errors=(SolvingError,), kwargs...)
-    try
-        solve(args...; kwargs...)
-    catch e
-        if any(e isa err for err in catch_errors)
-            return nothing
-        else
-            rethrow(e)
-        end
-    end
-end
-
-function trysolve(cf::RSSCostFunction, params::AbstractVector)
-    try
-        return trysolve(cf, cf._func(params))
-    catch e
-        if any(e isa err for err in cf._catch_errors)
-            return nothing
-        else
-            rethrow(e)
-        end
-    end
-end
-
-function trysolve(cf::RSSCostFunction, prob::Problem)
-    return trysolve(prob, catch_errors=cf._catch_errors)
-end
-
-trysolve(::RSSCostFunction, sol::Solution) = sol
-
-trysolve(::RSSCostFunction, ::Nothing) = nothing
-
+solve(cf::RSSCostFunction, params::AbstractVector) = solve(cf._func(params))
 
 struct _Candidate
-    sol::Union{Solution,Nothing}
+    sol::Solution
     D0::Float64
     cost::Float64
 end
@@ -128,25 +79,24 @@ end
     candidate(cf::RSSCostFunction, ::AbstractVector)
     candidate(cf::RSSCostFunction, ::Fronts.Problem)
     candidate(cf::RSSCostFunction, ::Fronts.Solution)
-    candidate(cf::RSSCostFunction, ::Nothing)
 
 Return the candidate solution (including the cost) for a given cost function and parameter values,
 problem, or solution.
 
 The return of this function has the following fields:
-- `sol`: the solution, or `nothing` if no solution could be found.
-- `D0`: if `cf` has `fit_D0` set to `true` and `sol` is not `nothing`, the found value of `D0`.
+- `sol`: the solution.
+- `D0`: if `cf` has `fit_D0` set to `true` and `sol` is succesful, the found value of `D0`.
 - `cost`: the cost of the solution; infinite if `sol` is `nothing`.
 """
-candidate(cf::RSSCostFunction, params::AbstractVector) = candidate(cf, trysolve(cf, params))
+candidate(cf::RSSCostFunction, params::AbstractVector) = candidate(cf, solve(cf, params))
 
-candidate(cf::RSSCostFunction, prob::Problem) = candidate(cf, trysolve(cf, prob))
-
-candidate(::RSSCostFunction{true}, ::Nothing) = _Candidate(nothing, NaN, Inf)
-
-candidate(::RSSCostFunction{false}, ::Nothing) = _Candidate(nothing, 1, Inf)
+candidate(cf::RSSCostFunction, prob::Problem) = candidate(cf, solve(cf, prob))
 
 function candidate(cf::RSSCostFunction{false}, sol::Solution)
+    if sol.retcode != ReturnCode.Success
+        return _Candidate(sol, 1, Inf)
+    end
+
     if !isnothing(cf._prob._weights)
         return _Candidate(sol, 1, sum(cf._prob._weights.*(sol.(cf._prob._o) .- cf._prob._θ).^2))
     else
@@ -155,6 +105,10 @@ function candidate(cf::RSSCostFunction{false}, sol::Solution)
 end
 
 function candidate(cf::RSSCostFunction{true}, sol::Solution)
+    if sol.retcode != ReturnCode.Success
+        return _Candidate(sol, NaN, Inf)
+    end
+
     scaled!(ret, o, (D0,)) = (ret .= sol.(o./√D0))
 
     if !isnothing(cf._oi_hint)
@@ -180,6 +134,6 @@ function candidate(cf::RSSCostFunction{true}, sol::Solution)
     return _Candidate(sol, only(scaling.param), sum(scaling.resid.^2))
 end
 
-export RSSCostFunction, candidate, trysolve
+export RSSCostFunction, candidate
 
 end

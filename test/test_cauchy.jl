@@ -4,6 +4,7 @@
     prob = CauchyProblem(identity, b=1, d_dob=0)
 
     θ = solve(prob)
+    @test θ.retcode == ReturnCode.Success
 
     o = range(0, 20, length=100)
 
@@ -12,7 +13,7 @@
     @inferred θ(o[begin])
     @test all(d_do.(θ, o) .≈ 0)
     @inferred d_do(θ, o[begin])
-    @test θ.iterations == 0
+    @test θ._niter == 1
     @test isnan(@inferred θ(-1))
     end
 
@@ -24,9 +25,11 @@
 
     prob1 = DirichletProblem(D, i=0, b=1)
     θ1 = solve(prob1)
+    @test θ1.retcode == ReturnCode.Success
 
     prob2 = CauchyProblem(D, b=θ1.b, d_dob=θ1.d_dob)
     θ2 = solve(prob2)
+    @test θ2.retcode == ReturnCode.Success
 
     @test θ2.i == θ1.i
     @test θ2.b == θ1.b
@@ -34,7 +37,7 @@
     @test θ2.oi == θ1.oi
     @test θ2.ob == θ1.ob
     
-    @test θ2.iterations == 0
+    @test θ2._niter == 1
 
     @test isnan(@inferred θ2(-1))
 

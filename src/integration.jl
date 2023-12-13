@@ -53,12 +53,12 @@ end
 
 monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
 
-function _init(prob::CauchyProblem, alg::BoltzmannODE; limit=nothing)
-    odeprob = boltzmann(prob)
+function _init(odeprob::ODEProblem, alg::BoltzmannODE; i=nothing, itol=0)
+    if !isnothing(i)
+        direction = monotonicity(odeprob)
 
-    if !isnothing(limit)
         past_limit = DiscreteCallback(
-            let direction=monotonicity(odeprob)
+            let direction=direction, limit=i + direction*itol
                 (u, t, integrator) -> direction*u[1] > direction*limit
             end,
             terminate!,
@@ -70,7 +70,10 @@ function _init(prob::CauchyProblem, alg::BoltzmannODE; limit=nothing)
     return init(odeprob, alg._odealg; verbose=false, alg._ode_kwargs...)
 end
 
+_init(prob::CauchyProblem, alg::BoltzmannODE; i=nothing, itol=0) = _init(boltzmann(prob), alg, i=i, itol=itol)
+
 function _reinit!(integrator, prob::CauchyProblem)
+    @assert sign(prob.d_dob) == sign(integrator.sol.u[1][2])
     reinit!(integrator, @SVector [prob.b, prob.d_dob])
     return integrator
 end
@@ -84,40 +87,37 @@ Solve the problem `prob`.
 - `prob`: problem to solve.
 - `alg=BoltzmannODE()`: algorithm to use.
 
-# Exceptions
-This function throws an `SolvingError` if an acceptable solution is not found (within the
-maximum number of iterations, if applicable). However, in situations where `solve` can determine
-that the problem is "unsolvable" before the attempt to solve it, it will signal this by throwing a
-`DomainError` instead. Other invalid argument values will raise `ArgumentError`s.
-
 # References
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
 Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 
-See also: [`Solution`](@ref), [`SolvingError`](@ref)
+See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
 """
 function solve(prob::CauchyProblem, alg::BoltzmannODE=BoltzmannODE())
 
-    @argcheck isindomain(prob.eq, prob.b) DomainError(prob.b, "prob.b not valid for the given equation")
-
     odesol = solve!(_init(prob, alg))
 
-    if odesol.retcode != Terminated
-        throw(SolvingError("could not find a solution to the problem"))
+    @assert odesol.retcode != ReturnCode.Success
+
+    if odesol.retcode != ReturnCode.Terminated
+        return Solution(odesol, prob, alg, _retcode=odesol.retcode, _niter=1)
     end
     
-    return Solution(prob.eq, odesol, iterations=0)
+    return Solution(odesol, prob, alg, _retcode=ReturnCode.Success, _niter=1)
 end
 
 
-function Solution(_eq, _odesol::ODESolution; iterations)
-    return Solution(_eq,
-                    o -> _odesol(o, idxs=1),
+function Solution(_odesol::ODESolution, _prob, _alg::BoltzmannODE; _retcode, _niter)
+    return Solution(o -> _odesol(o, idxs=1),
+                    _prob,
+                    _alg,
                     o -> _odesol(o, idxs=2),
-                    i=_odesol.u[end][1],
-                    b=_odesol.u[1][1],
-                    d_dob=_odesol.u[1][2],
-                    ob=_odesol.t[1],
-                    oi=_odesol.t[end],
-                    iterations=iterations)
+                    _i=_odesol.u[end][1],
+                    _b=_odesol.u[1][1],
+                    _d_dob=_odesol.u[1][2],
+                    _ob=_odesol.t[1],
+                    _oi=_odesol.t[end],
+                    _original=_odesol,
+                    _retcode=_retcode,
+                    _niter=_niter)
 end

@@ -6,7 +6,6 @@ CurrentModule = Fronts
 
 ```@docs
 solve
-SolvingError
 BoltzmannODE
 FiniteDifference
 MathiasAndSander

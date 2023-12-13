@@ -11,14 +11,6 @@ Abstract supertype for equations that can be solved with this package.
 """
 abstract type Equation{m} end
 
-
-"""
-    isindomain(eq::Equation, val) -> Bool
-
-`true` if `eq` is well defined for the solution value `val`; `false` otherwise. 
-"""
-function isindomain end
-
 """
     diffusivity(eq::Equation, val)
 
@@ -113,16 +105,6 @@ function Base.show(io::IO, eq::DiffusionEquation{3})
     print(io, "∂", eq.symbol, "/∂t = 1/r²*∂(r²*", eq.D, "(", eq.symbol, ")*∂", eq.symbol, "/∂r)/∂r")
 end
 
-function isindomain(eq::DiffusionEquation, θ)
-    try
-        D, dD_dθ = value_and_derivative(eq.D, θ)
-        return isfinite(D) && D>zero(D) && isfinite(dD_dθ)
-    catch e
-        e isa DomainError || rethrow()
-        return false
-    end
-end
-
 diffusivity(eq::DiffusionEquation, θ) = eq.D(θ)
 
 
@@ -189,17 +171,6 @@ end
 
 function Base.show(io::IO, eq::RichardsEquation{3})
     print(io, eq.C, "*∂", eq.symbol, "/∂t = 1/r²*∂(r²*", eq.K, "(", eq.symbol, ")*∂", eq.symbol, "/∂r)/∂r")
-end
-
-function isindomain(eq::RichardsEquation, h)
-    try
-        C = eq.C(h)
-        K, dK_dh = value_and_derivative(eq.K, h)
-        return isfinite(C) && isfinite(K) && K>zero(K) && isfinite(dK_dh)
-    catch e
-        e isa DomainError || rethrow()
-        return false
-    end
 end
 
 diffusivity(eq::RichardsEquation, h) = eq.K(h)/eq.C(h)

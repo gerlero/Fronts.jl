@@ -155,12 +155,16 @@ function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProble
     # For `FiniteProblem`s, solve with the regular Fronts algorithm as much as possible
     if (prob isa FiniteDirichletProblem || prob isa FiniteReservoirProblem) && prob.i isa Number
         isol = solve(DirichletProblem(prob.eq, i=prob.i, b=prob.b), itol=tol)
-        t = min((prob._rstop/isol.oi)^2, prob._tstop)
-        if prob isa FiniteReservoirProblem
-            t = min(t, (prob.capacity/sorptivity(isol))^2)
-            used = sorptivity(isol)*√t
+        if isol.retcode == ReturnCode.Success
+            t = min((prob._rstop/isol.oi)^2, prob._tstop)
+            if prob isa FiniteReservoirProblem
+                t = min(t, (prob.capacity/sorptivity(isol))^2)
+                used = sorptivity(isol)*√t
+            end
+            θ .= isol.(r, t)
+        else
+            θ .= prob.i
         end
-        θ .= isol.(r, t)
     else
         θ .= prob.i
     end
@@ -264,10 +268,10 @@ function solve(prob::Union{DirichletProblem{<:DiffusionEquation{1}},FiniteProble
     end
 
     if prob isa FiniteProblem
-        return FiniteSolution(prob.eq, r, ts, θs, _isol=isol)
+        return FiniteSolution(r, ts, θs, prob, alg, _retcode=ReturnCode.Success, _original=isol)
     else
         @assert isnothing(isol)
-        return Solution(prob.eq, Interpolator(boltzmann.(r, t), θ), ob=prob.ob, oi=boltzmann.(r[end], t), iterations=timesteps)
+        return Solution(Interpolator(boltzmann.(r, t), θ), prob, alg, _ob=prob.ob, _oi=boltzmann(r[end], t), _retcode=ReturnCode.Success, _niter=timesteps)
     end
 end
 
@@ -281,32 +285,35 @@ Solution to a finite problem.
 
 Evaluate the solution at location `r` and time `t`.
 """
-struct FiniteSolution{_Teq, _Tr, _Tt, _Tθ, _Tisol}
-    _eq::_Teq
+struct FiniteSolution{_Tr, _Tt, _Tθ, _Toriginal, _Tprob, _Talg}
     _r::_Tr
     _t::_Tt
     _θ::_Tθ
-    _isol::_Tisol
+    retcode::ReturnCode.T
+    original::_Toriginal
+    prob::_Tprob
+    alg::_Talg
 
-    function FiniteSolution(_eq, _r, _t, _θ; _isol)
+    function FiniteSolution(_r, _t, _θ, _prob, _alg; _retcode, _original=nothing)
         @assert length(_r) == length(_θ[begin]) ≥ 2
         @assert length(_t) == length(_θ)  ≥ 2
-        new{typeof(_eq),typeof(_r),typeof(_t),typeof(_θ),typeof(_isol)}(_eq, _r, _t, _θ, _isol)
+        new{typeof(_r),typeof(_t),typeof(_θ),typeof(_original),typeof(_prob),typeof(_alg)}(_r, _t, _θ, _retcode, _original, _prob, _alg)
     end
 end
 
 Base.broadcastable(sol::FiniteSolution) = Ref(sol)
 
 function Base.show(io::IO, sol::FiniteSolution)
-    print(io, "FiniteSolution with $(length(sol._t)) timesteps")
+    println(io, "FiniteSolution with $(length(sol._t)) timesteps")
+    print(io, "retcode: $(sol.retcode)")
 end
 
 function (sol::FiniteSolution)(r, t)
     i = searchsortedlast(sol._t, t)
 
-    if i == firstindex(sol._t) - 1 || (!isnothing(sol._isol) && i == firstindex(sol._t) && t == sol._t[begin])
-        if !isnothing(sol._isol) && r[begin] ≤ r ≤ r[end]
-            return sol._isol(r, t)
+    if i == firstindex(sol._t) - 1 || (!isnothing(sol.original) && i == firstindex(sol._t) && t == sol._t[begin])
+        if !isnothing(sol.original) && r[begin] ≤ r ≤ r[end]
+            return sol.original(r, t)
         else
             return eltype(sol._θ[begin])(NaN)
         end
@@ -349,5 +356,5 @@ d_dt(sol::FiniteSolution, r, t) = derivative(t -> sol(r, t), t)
 
 function flux(sol::FiniteSolution, r, t)
     val, d_dr = value_and_derivative(r -> sol(r, t), r)
-    return -flow_diffusivity(sol._eq, val)*d_dr
+    return -flow_diffusivity(sol.prob.eq, val)*d_dr
 end

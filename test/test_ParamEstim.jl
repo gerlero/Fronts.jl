@@ -4,7 +4,7 @@
         θ = solve(DirichletProblem(θ -> 2*θ, i=0, b=1))
         o = range(0, 20, length=100)
     
-        cf = RSSCostFunction{false}(InverseProblem(o, θ.(o)), catch_errors=(DomainError,)) do (k,)
+        cf = RSSCostFunction{false}(InverseProblem(o, θ.(o))) do (k,)
             DirichletProblem(θ -> k*θ, i=0, b=1)
         end
         
@@ -35,8 +35,6 @@
         cand = candidate(cf, [3])
         @test isapprox(cand.D0, 2/3, atol=1e-3)
         @test isapprox(cand.cost, 0, atol=1e-7)
-
-        @test_throws DomainError candidate(cf, [0])
     end
 
 end

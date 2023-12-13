@@ -34,7 +34,7 @@ Solve a Dirichlet problem using the pseudospectral method of Mathias and Sander 
 MATHIAS, S. A.; SANDER, G. C. Pseudospectral methods provide fast and accurate solutions for the horizontal infiltration equation.
 Journal of Hydrology, 2021, vol. 598, p. 126407.
 
-See also: [`MathiasAndSander`](@ref), [`Solution`](@ref), [`SolvingError`](@ref)
+See also: [`MathiasAndSander`](@ref), [`Solution`](@ref)
 """
 function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSander; Ftol=1e-6, maxiters=100)
 
@@ -61,7 +61,7 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSa
     first = [i==1 for i in 1:alg._N]
     last = [i==alg._N for i in 1:alg._N]
 
-    for iterations in 1:maxiters
+    for niter in 1:maxiters
         S² = ∫*(2*(θ .- prob.i).*D./F)
         d²F_dθ² = -2*D./S²./F
 
@@ -82,9 +82,13 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::MathiasAndSa
             o = S.*d_dθ*F
             dθ_do = -S.*F./2D
             itp = Interpolator(o, θ, dθ_do)
-            return Solution(prob.eq, itp, b=θ[begin], i=θ[end], ob=o[begin], oi=o[end], iterations=iterations)
+            return Solution(itp, prob, alg, _b=θ[begin], _i=θ[end], _ob=o[begin], _oi=o[end], _retcode=ReturnCode.Success, _niter=niter)
         end
     end
 
-    throw(SolvingError("failed to converge within $maxiters iterations"))
+    S = √S²
+    o = S.*d_dθ*F
+    dθ_do = -S.*F./2D
+    itp = Interpolator(o, θ, dθ_do)
+    return Solution(itp, prob, alg, _b=θ[begin], _i=θ[end], _ob=o[begin], _oi=o[end], _retcode=ReturnCode.MaxIters, _niter=niter)
 end

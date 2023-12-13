@@ -8,7 +8,6 @@ CurrentModule = Fronts
 Equation
 DiffusionEquation
 RichardsEquation
-isindomain
 diffusivity
 flow_diffusivity
 ```

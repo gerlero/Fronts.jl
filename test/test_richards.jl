@@ -28,6 +28,7 @@
     prob = DirichletProblem(RichardsEquation(model), i=hi, b=hb)
 
     h = solve(prob)
+    @test h.retcode == ReturnCode.Success
 
     r = range(0, 0.05, length=500)
     t = [10 2.73 314]
@@ -58,13 +59,14 @@
     prob = FlowrateProblem(RichardsEquation{2}(model), i=hi, Qb=Qb)
 
     h = solve(prob)
+    @test h.retcode == ReturnCode.Success
 
     t = [10 2.73 314]
 
     @test all(flux.(h, :b, t) ≈ Qb./(2π.*rb.(h, t)))
     @inferred flux(h, :b, t[begin])
     @test h.i ≈ hi atol=1e-3
-    @test h.iterations > 0
+    @test h._niter > 0
     @test all(isnan.(h.(0,t)))
     end
 end
