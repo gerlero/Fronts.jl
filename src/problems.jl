@@ -18,8 +18,8 @@ Whether the solution to `prob` must be decreasing (`-1`), constant (`0`) or incr
 function monotonicity end
 
 """
-    DirichletProblem(eq; i=<initial value>, b=<boundary value>, ob=0) <: Problem{typeof(eq)}
-    DirichletProblem(D; i=<initial value>, b=<boundary value>, ob=0) <: Problem{DiffusionEquation{1}}
+    DirichletProblem(eq; i, b[, ob]) <: Problem{typeof(eq)}
+    DirichletProblem(D; i, b[, ob]) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Dirichlet boundary condition.
 
@@ -89,7 +89,7 @@ end
 
 
 """
-    FlowrateProblem(eq; i=<initial value>, Qb=<boundary flowrate>, angle=2π, height=1, ob=0) <: Problem{typeof(eq)}
+    FlowrateProblem(eq; i, Qb[, angle, height, ob]) <: Problem{typeof(eq)}
 
 Semi-infinite radial (polar/cylindrical) problem with an imposed-flowrate boundary condition.
 
@@ -157,8 +157,8 @@ end
 monotonicity(prob::FlowrateProblem)::Int = -sign(prob.Qb)
 
 """
-    CauchyProblem(eq; b=<boundary value>, d_dob=<boundary o-derivative>, ob=0) <: Problem{typeof(eq)}
-    CauchyProblem(D; b=<boundary value>, d_dob=<boundary o-derivative>, ob=0) <: Problem{DiffusionEquation{1}}
+    CauchyProblem(eq; b, d_dob[, ob]) <: Problem{typeof(eq)}
+    CauchyProblem(D; b, d_dob[, ob]) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Cauchy boundary condition (and unknown initial condition).
 
