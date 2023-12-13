@@ -32,7 +32,7 @@ function unpack(cand::Vector)
     return NamedTuple(zip(keys(search_range), map(x -> round(x, sigdigits=4), cand)))
 end
 
-cost = RSSCostFunction{true}(oref, Measurements.value.(θref), inv.(Measurements.uncertainty.(θref).^2)) do params
+cost = RSSCostFunction{true}(InverseProblem(oref, Measurements.value.(θref), inv.(Measurements.uncertainty.(θref).^2))) do params
     model = LETd(; θs=θs, unpack(params)...)
 
     prob = DirichletProblem(model, i=θi.val, b=θs-ϵ)
