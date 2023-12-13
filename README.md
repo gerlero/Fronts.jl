@@ -26,7 +26,8 @@ julia> prob = DirichletProblem(eq, i=0.1, b=1)
 ⎩ c(0,t) = 1.0, t>0
 
 julia> c = solve(prob)
-Solution c obtained after 10 iterations
+Solution c after 10 iterations
+retcode: Success
 cb = 1.0
 dc/do|b = -0.28388671875000004
 ci = 0.10006060603081587

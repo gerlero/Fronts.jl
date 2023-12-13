@@ -9,5 +9,4 @@ The `ParamEstim` submodule provides support for optimization-based parameter est
 ```@docs
 RSSCostFunction
 candidate
-trysolve
 ```

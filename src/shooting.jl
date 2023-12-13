@@ -2,22 +2,31 @@ function _shoot!(integrator, prob::CauchyProblem; i, itol)
     direction = monotonicity(prob)
     limit = i + direction*itol
 
-    if integrator isa BoltzmannODE
-        integrator = _init(prob, integrator, limit=limit)
-    else
-        integrator = _reinit!(integrator, prob)
-    end
+    integrator = _reinit!(integrator, prob)
+
+    @assert integrator.t == prob.ob
+    @assert integrator.u[1] == prob.b
+    @assert integrator.u[2] == prob.d_dob
 
     solve!(integrator)
 
-    residual = direction*typemax(i)
+    @assert integrator.sol.retcode != ReturnCode.Success
 
-    if integrator.sol.retcode == Terminated &&
+    resid = direction*typemax(i)
+
+    if integrator.sol.retcode == ReturnCode.Terminated &&
                     direction*integrator.sol.u[end][1] <= direction*limit
-        residual = integrator.sol.u[end][1] - i
+        resid = integrator.sol.u[end][1] - i
     end
 
-    return integrator, residual
+    return integrator, resid
+end
+
+
+function _init(prob::DirichletProblem, alg::BoltzmannODE; d_dob, itol)
+    return _init(CauchyProblem(prob.eq, b=prob.b, d_dob=d_dob, ob=prob.ob),
+                 alg,
+                 i=prob.i, itol=itol)
 end
 
 function _shoot!(integrator, prob::DirichletProblem; d_dob, itol)
@@ -25,20 +34,6 @@ function _shoot!(integrator, prob::DirichletProblem; d_dob, itol)
                    CauchyProblem(prob.eq, b=prob.b, d_dob=d_dob, ob=prob.ob),
                    i=prob.i, itol=itol)
 end
-
-function _shoot!(integrator, prob::FlowrateProblem; b, itol, obtol)
-    if isindomain(prob.eq, b)
-        ob = !iszero(prob.ob) ? prob.ob : obtol
-
-        d_dob = d_do(prob, :b, b=b, ob=ob)
-    
-        return _shoot!(integrator,
-                       CauchyProblem(prob.eq, b=b, d_dob=d_dob, ob=ob),
-                       i=prob.i, itol=itol)
-    end
-    return integrator, -monotonicity(prob)*typemax(prob.i)
-end
-
 
 """
     solve(prob::DirichletProblem[, alg::BoltzmannODE; itol, maxiters, d_dob_hint]) -> Solution
@@ -53,35 +48,17 @@ Solve the problem `prob`.
 - `itol=1e-3`: absolute tolerance for the initial condition.
 - `maxiters=100`: maximum number of iterations.
 
-# Exceptions
-This function throws an `SolvingError` if an acceptable solution is not found (within the
-maximum number of iterations, if applicable). However, in situations where `solve` can determine
-that the problem is "unsolvable" before the attempt to solve it, it will signal this by throwing a
-`DomainError` instead. Other invalid argument values will raise `ArgumentError`s.
-
 # References
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
 Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 
-See also: [`Solution`](@ref), [`SolvingError`](@ref)
+See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
 """
 function solve(prob::DirichletProblem, alg::BoltzmannODE=BoltzmannODE();
                                        itol=1e-3,
                                        maxiters=100)
-
     @argcheck itol ≥ zero(itol)
     @argcheck maxiters ≥ 0
-
-    @argcheck isindomain(prob.eq, prob.b) DomainError(prob.b, "prob.b not valid for the given equation")
-
-    residual = prob.b - prob.i
-
-    if abs(residual) ≤ itol
-        integrator, _ = _shoot!(alg, prob, d_dob=zero(prob.b/prob.ob), itol=itol)
-        return Solution(prob.eq, integrator.sol, iterations=0)
-    end
-
-    @argcheck isindomain(prob.eq, prob.i - monotonicity(prob)*itol) DomainError(prob.i, "prob.i not valid for the given equation and itol")
 
     if !isnothing(alg.d_dob_hint)
         @argcheck sign(alg.d_dob_hint) == monotonicity(prob) "sign of d_dob_hint must be consistent with initial and boundary conditions"
@@ -90,18 +67,47 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE=BoltzmannODE();
         d_dob_hint = d_do(prob, :b_hint)
     end
 
-    d_dob_trial = bracket_bisect(zero(d_dob_hint), d_dob_hint, residual)
-    integrator = alg
+    resid = prob.b - prob.i
 
-    for iterations in 1:maxiters
-        integrator, residual = _shoot!(integrator, prob, d_dob=d_dob_trial(residual), itol=itol)
+    integrator = _init(prob, alg, d_dob=d_dob_hint, itol=itol)
 
-        if abs(residual) ≤ itol
-            return Solution(prob.eq, integrator.sol, iterations=iterations)
+    if abs(resid) ≤ itol
+        solve!(integrator)
+        @assert integrator.sol.retcode != ReturnCode.Success
+        retcode = integrator.sol.retcode == ReturnCode.Terminated ? ReturnCode.Success : integrator.sol.retcode
+        return Solution(integrator.sol, prob, alg, _retcode=retcode, _niter=0)
+    end
+
+    d_dob_trial = bracket_bisect(zero(d_dob_hint), d_dob_hint, resid)
+
+    for niter in 1:maxiters
+        integrator, resid = _shoot!(integrator, prob, d_dob=d_dob_trial(resid), itol=itol)
+        if abs(resid) ≤ itol
+            return Solution(integrator.sol, prob, alg, _retcode=ReturnCode.Success, _niter=niter)
         end
     end
 
-    throw(SolvingError("failed to converge within $maxiters iterations"))
+    return Solution(integrator.sol, prob, alg, _retcode=ReturnCode.MaxIters, _niter=maxiters)
+end
+
+
+function _init(prob::FlowrateProblem, alg::BoltzmannODE; b, itol, obtol)
+    ob = !iszero(prob.ob) ? prob.ob : obtol
+    return _init(CauchyProblem(prob.eq, b=b, d_dob=monotonicity(prob), ob=ob), alg, i=prob.i, itol=itol)
+end
+
+function _shoot!(integrator, prob::FlowrateProblem; b, itol, obtol)
+    ob = !iszero(prob.ob) ? prob.ob : obtol
+
+    try
+        d_dob = d_do(prob, :b, b=b, ob=ob)
+        return _shoot!(integrator,
+                       CauchyProblem(prob.eq, b=b, d_dob=d_dob, ob=ob),
+                       i=prob.i, itol=itol)
+    catch e
+        e isa ArgumentError || e isa DomainError || rethrow()
+        return integrator, -monotonicity(prob)*typemax(prob.i)
+    end
 end
 
 """
@@ -118,23 +124,16 @@ Solve the problem `prob`.
 - `obtol=1e-6`: maximum tolerance for `ob`. Allows solving radial problems with boundaries at `r=0`.
 - `maxiters=100`: maximum number of iterations.
 
-# Exceptions
-This function throws an `SolvingError` if an acceptable solution is not found (within the
-maximum number of iterations, if applicable). However, in situations where `solve` can determine
-that the problem is "unsolvable" before the attempt to solve it, it will signal this by throwing a
-`DomainError` instead. Other invalid argument values will raise `ArgumentError`s.
-
 # References
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
 Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 
-See also: [`Solution`](@ref), [`SolvingError`](@ref)
+See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
 """
 function solve(prob::FlowrateProblem; alg::BoltzmannODE=BoltzmannODE(),
                                       itol=1e-3,
                                       obtol=1e-6,
                                       maxiters=100)
-
     @argcheck itol ≥ zero(itol)
     if iszero(prob.ob)
         @argcheck obtol > zero(obtol)
@@ -143,12 +142,6 @@ function solve(prob::FlowrateProblem; alg::BoltzmannODE=BoltzmannODE(),
     end
     @argcheck maxiters ≥ 0
 
-    if monotonicity(prob) == 0
-        integrator, residual = _shoot!(alg, prob, b=prob.i, itol=itol, obtol=obtol)
-        @assert iszero(residual)
-        return Solution(prob.eq, integrator.sol, iterations=0)
-    end
-
     if !isnothing(alg.b_hint)
         @argcheck sign(prob.i - b_hint) == monotonicity(prob) "sign of b_hint must be consistent with initial and boundary conditions"
         b_hint = alg.b_hint
@@ -156,18 +149,25 @@ function solve(prob::FlowrateProblem; alg::BoltzmannODE=BoltzmannODE(),
         b_hint = prob.i - oneunit(prob.i)*monotonicity(prob)
     end
 
-    prob.i - oneunit(prob.i)*monotonicity(prob)
+    resid = prob.i - oneunit(prob.i)*monotonicity(prob)
+
+    integrator = _init(prob, alg, b=b_hint, itol=itol, obtol=obtol)
+
+    if monotonicity(prob) == 0
+        integrator, resid = _shoot!(integrator, prob, b=prob.i, itol=itol, obtol=obtol)
+        @assert iszero(resid)
+        return Solution(integrator.sol, prob, alg, _retcode=ReturnCode.Success, _niter=0)
+    end
+
     b_trial = bracket_bisect(prob.i, b_hint)
-    integrator = alg
-    residual = nothing
 
-    for iterations in 1:maxiters
-        integrator, residual = _shoot!(integrator, prob, b=b_trial(residual), itol=itol, obtol=obtol)
+    for niter in 1:maxiters
+        integrator, resid = _shoot!(integrator, prob, b=b_trial(resid), itol=itol, obtol=obtol)
 
-        if abs(residual) ≤ itol
-            return Solution(prob.eq, integrator.sol, iterations=iterations)
+        if abs(resid) ≤ itol
+            return Solution(integrator.sol, prob, alg, _retcode=ReturnCode.Success, _niter=niter)
         end
     end
 
-    throw(SolvingError("failed to converge within $maxiters iterations"))
+    return Solution(integrator.sol, prob, alg, _retcode=ReturnCode.MaxIters, _niter=maxiters)
 end

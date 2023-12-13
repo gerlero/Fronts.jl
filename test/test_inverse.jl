@@ -19,6 +19,7 @@
         @inferred D(0.5)
 
         θ2 = solve(DirichletProblem(D, i=0, b=1))
+        @test θ2.retcode == ReturnCode.Success
 
         @test all(@. isapprox(θ2.(o), exp.(-o), atol=5e-3))
     end
@@ -27,6 +28,7 @@
         # Reference: Philip (1960) Table 1, No. 13
         # https://doi.org/10.1071/PH600001
         θ = solve(DirichletProblem(θ -> 0.5*(1 - log(θ)), i=0, b=1))
+        @test θ.retcode == ReturnCode.Success
 
         o = range(0, 20, length=100)
 

@@ -11,14 +11,6 @@ using ._Chebyshev: chebdif
 
 include("PorousModels/PorousModels.jl")
 
-using OrdinaryDiffEq.DiffEqBase: NullParameters
-using OrdinaryDiffEq: ODEFunction, ODEProblem, ODESolution
-using OrdinaryDiffEq: init, solve!, reinit!
-using OrdinaryDiffEq: DiscreteCallback, terminate!
-using OrdinaryDiffEq.ReturnCode: Terminated
-using OrdinaryDiffEq: RadauIIA5
-import OrdinaryDiffEq
-
 using LinearAlgebra: Diagonal, Tridiagonal
 
 using ArgCheck: @argcheck
@@ -28,7 +20,15 @@ using PCHIPInterpolation: Interpolator, integrate
 import NumericalIntegration
 using RecipesBase
 
-const solve = OrdinaryDiffEq.solve
+using OrdinaryDiffEq.DiffEqBase: NullParameters
+using OrdinaryDiffEq: ODEFunction, ODEProblem, ODESolution
+using OrdinaryDiffEq: init, solve!, reinit!
+using OrdinaryDiffEq: DiscreteCallback, terminate!
+using OrdinaryDiffEq: RadauIIA5
+
+using Reexport: @reexport
+@reexport using OrdinaryDiffEq: ReturnCode
+@reexport import OrdinaryDiffEq: solve
 
 include("equations.jl")
 include("boltzmann.jl")
@@ -38,11 +38,10 @@ include("problems.jl")
 include("integration.jl")
 include("shooting.jl")
 include("pseudospectral.jl")
-include("exceptions.jl")
 include("inverse.jl")
 include("finite.jl")
 
-export Equation, DiffusionEquation, RichardsEquation, isindomain, diffusivity, flow_diffusivity
+export Equation, DiffusionEquation, RichardsEquation, diffusivity, flow_diffusivity
 export d_do, d_dr, d_dt, boltzmann
 export sorptivity
 export Problem, DirichletProblem, FlowrateProblem, CauchyProblem, monotonicity
@@ -50,7 +49,6 @@ export BoltzmannODE
 export MathiasAndSander
 export solve
 export Solution, rb, flux, sorptivity
-export SolvingError
 export InverseProblem
 export FiniteDifference, FiniteProblem, FiniteDirichletProblem, FiniteReservoirProblem, FiniteSolution
 

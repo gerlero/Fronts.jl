@@ -6,13 +6,14 @@
     prob = DirichletProblem(θ -> 0.5*(1 - log(θ)), i=eps(), b=1)
 
     θ = solve(prob, MathiasAndSander())
+    @test θ.retcode == ReturnCode.Success
 
     o = range(θ.ob, 20, length=100)
 
     @test all(@. isapprox(θ(o), exp(-o), atol=1e-4))
     @test all(@. isapprox(d_do(θ,o), -exp(-o), atol=1e-2))
     @test (@inferred sorptivity(θ)) ≈ 1 atol=1e-3
-    @test θ.iterations > 0
+    @test θ._niter > 0
     end
 
     @testset "HF135" begin
@@ -54,9 +55,10 @@
     prob = DirichletProblem(model, i=θi, b=θb)
 
     θ = solve(prob, MathiasAndSander(1000))
+    @test θ.retcode == ReturnCode.Success
 
     @test all(@. isapprox(θ(r[2:end],t), θ_pmf[2:end], atol=1e-2))
-    @test θ.iterations > 0
+    @test θ._niter > 0
     end
 
     @testset "bad arguments" begin
