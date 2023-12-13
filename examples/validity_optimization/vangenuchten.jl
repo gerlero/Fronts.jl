@@ -38,7 +38,7 @@ cost = RSSCostFunction{true}(InverseProblem(oref, Measurements.value.(θref), in
 
     prob = DirichletProblem(model, i=θi.val, b=θs-ϵ)
 
-    return solve(prob, itol=θi.err)
+    return solve(prob, abstol=θi.err)
 end
 
 result = bboptimize(cost,
@@ -59,7 +59,7 @@ model = VanGenuchten(; θs=θs, Ks=D0, unpack(opt)...)
 
 prob = DirichletProblem(model, i=θi.val, b=θs-ϵ)
 
-θ = solve(prob, itol=θi.err)
+θ = solve(prob, abstol=θi.err)
 
 rchisq = round(sum(Measurements.stdscore.(θref, θ.(oref)).^2)/(length(oref) - length(search_range) - 1), sigdigits=2)
 

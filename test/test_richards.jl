@@ -20,7 +20,7 @@
 
     dprob = DirichletProblem(DiffusionEquation(model), i=θi, b=θb)
 
-    θ = solve(dprob, itol=1e-7)
+    θ = solve(dprob, abstol=1e-7)
 
     hb = 0
     hi = -30.591486389337

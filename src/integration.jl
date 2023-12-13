@@ -53,12 +53,12 @@ end
 
 monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
 
-function _init(odeprob::ODEProblem, alg::BoltzmannODE; i=nothing, itol=0)
+function _init(odeprob::ODEProblem, alg::BoltzmannODE; i=nothing, abstol)
     if !isnothing(i)
         direction = monotonicity(odeprob)
 
         past_limit = DiscreteCallback(
-            let direction=direction, limit=i + direction*itol
+            let direction=direction, limit=i + direction*abstol
                 (u, t, integrator) -> direction*u[1] > direction*limit
             end,
             terminate!,
@@ -70,7 +70,7 @@ function _init(odeprob::ODEProblem, alg::BoltzmannODE; i=nothing, itol=0)
     return init(odeprob, alg._odealg; verbose=false, alg._ode_kwargs...)
 end
 
-_init(prob::CauchyProblem, alg::BoltzmannODE; i=nothing, itol=0) = _init(boltzmann(prob), alg, i=i, itol=itol)
+_init(prob::CauchyProblem, alg::BoltzmannODE; i=nothing, abstol=0) = _init(boltzmann(prob), alg, i=i, abstol=abstol)
 
 function _reinit!(integrator, prob::CauchyProblem)
     @assert sign(prob.d_dob) == sign(integrator.sol.u[1][2])
@@ -93,9 +93,9 @@ Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 
 See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
 """
-function solve(prob::CauchyProblem, alg::BoltzmannODE=BoltzmannODE())
+function solve(prob::CauchyProblem, alg::BoltzmannODE=BoltzmannODE(); abstol=1e-3)
 
-    odesol = solve!(_init(prob, alg))
+    odesol = solve!(_init(prob, alg, abstol=abstol))
 
     @assert odesol.retcode != ReturnCode.Success
 
