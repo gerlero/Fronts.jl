@@ -18,7 +18,7 @@ julia> using Fronts
 julia> D(c) = c^4
 D (generic function with 1 method)
 
-julia> eq = DiffusionEquation(D, symbol=:c)
+julia> eq = DiffusionEquation(D, sym=:c)
 ∂c/∂t = ∂(D(c)*∂c/∂r)/∂r
 
 julia> prob = DirichletProblem(eq, i=0.1, b=1)

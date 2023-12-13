@@ -32,7 +32,7 @@ function boltzmann(eq::DiffusionEquation{1})
             return @SMatrix [0 1
                 j21 j22]
         end
-        return ODEFunction{false}(f, jac = jac, syms = [eq.symbol, :d_do], indepsym = :o)
+        return ODEFunction{false}(f, jac = jac, syms = [eq.sym, :d_do], indepsym = :o)
     end
 end
 
@@ -60,7 +60,7 @@ function boltzmann(eq::DiffusionEquation{m}) where {m}
             return @SMatrix [0 1
                 j21 j22]
         end
-        return ODEFunction{false}(f, jac = jac, syms = [eq.symbol, :d_do], indepsym = :o)
+        return ODEFunction{false}(f, jac = jac, syms = [eq.sym, :d_do], indepsym = :o)
     end
 end
 
@@ -89,7 +89,7 @@ function boltzmann(eq::RichardsEquation{1})
             return @SMatrix [0 1
                 j21 j22]
         end
-        return ODEFunction{false}(f, jac = jac, syms = [eq.symbol, :d_do], indepsym = :o)
+        return ODEFunction{false}(f, jac = jac, syms = [eq.sym, :d_do], indepsym = :o)
     end
 end
 
@@ -119,7 +119,7 @@ function boltzmann(eq::RichardsEquation{m}) where {m}
             return @SMatrix [0 1
                 j21 j22]
         end
-        return ODEFunction{false}(f, jac = jac, syms = [eq.symbol, :d_do], indepsym = :o)
+        return ODEFunction{false}(f, jac = jac, syms = [eq.sym, :d_do], indepsym = :o)
     end
 end
 
