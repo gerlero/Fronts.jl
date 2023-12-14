@@ -343,8 +343,6 @@ struct FiniteSolution{_Tr, _Tt, _Tθ, _Toriginal, _Tprob, _Talg}
     alg::_Talg
 
     function FiniteSolution(_r, _t, _θ, _prob, _alg; _retcode, _original = nothing)
-        @assert length(_r) == length(_θ[begin]) ≥ 2
-        @assert length(_t) == length(_θ) ≥ 2
         new{
             typeof(_r),
             typeof(_t),
