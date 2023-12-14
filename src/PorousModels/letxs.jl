@@ -83,6 +83,6 @@ function Dθ(pm::LETxs, θ)
 
     return Es * Dwt / θs * pow(Swp, Lw) * pow(Swp, Ts) * pow(1 - Swp, Ls) *
            (Ls * Swp - Swp * Ts + Ts) /
-           (Swp * (Swir - 1) * (Swp - 1) * pow(Es * pow(Swp, Ts) + (1 - Swp)^Ls, 2) *
+           (Swp * (Swir - 1) * (Swp - 1) * pow(Es * pow(Swp, Ts) + pow(1 - Swp, Ls), 2) *
             (Ew * pow(1 - Swp, Tw) + pow(Swp, Lw)))
 end
