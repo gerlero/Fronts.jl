@@ -42,5 +42,5 @@ end
 
 function Dθ(pm::LETd, θ)
     Swp = (θ - pm.θr) / (pm.θs - pm.θr)
-    return pm.Dwt * Swp^pm.L / (Swp^pm.L + pm.E * (1 - Swp)^pm.T)
+    return pm.Dwt * pow(Swp, pm.L) / (pow(Swp, pm.L) + pm.E * pow(1 - Swp, pm.T))
 end

@@ -2,6 +2,7 @@ module PorousModels
 
 using .._Diff: derivative
 
+using NaNMath: pow
 using ArgCheck: @argcheck
 
 include("base.jl")

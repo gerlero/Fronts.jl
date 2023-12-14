@@ -69,7 +69,7 @@ function θh(pm::VanGenuchten, h)
 
     n = 1 / (1 - pm.m)
 
-    Se = 1 / (1 + (pm.α * (-h))^n)^pm.m
+    Se = 1 / pow(1 + pow(pm.α * (-h), n), pm.m)
 
     return pm.θr + Se * (pm.θs - pm.θr)
 end
@@ -79,14 +79,14 @@ function hθ(pm::VanGenuchten, θ)
 
     Se = (θ - pm.θr) / (pm.θs - pm.θr)
 
-    return -(1 / (Se^(1 / pm.m)) - 1)^(1 / n) / pm.α
+    return -pow(1 / (pow(Se, 1 / pm.m)) - 1, 1 / n) / pm.α
 end
 
 function Cθ(pm::VanGenuchten, θ)
     Se = (θ - pm.θr) / (pm.θs - pm.θr)
 
-    return pm.α * pm.m / (1 - pm.m) * (pm.θs - pm.θr) * Se^(1 / pm.m) *
-           (1 - Se^(1 / pm.m))^pm.m
+    return pm.α * pm.m / (1 - pm.m) * (pm.θs - pm.θr) * pow(Se, 1 / pm.m) *
+           pow(1 - pow(Se, 1 / pm.m), pm.m)
 end
 
 function Ch(pm::VanGenuchten, h)
@@ -100,7 +100,7 @@ end
 function Kθ(pm::VanGenuchten, θ)
     Se = (θ - pm.θr) / (pm.θs - pm.θr)
 
-    return pm.Ks * Se^pm.l * (1 - (1 - Se^(1 / pm.m))^pm.m)^2
+    return pm.Ks * pow(Se, pm.l) * pow(1 - pow(1 - pow(Se, 1 / pm.m), pm.m), 2)
 end
 
 function Kh(pm::VanGenuchten, h)
@@ -113,6 +113,7 @@ end
 
 function Dθ(pm::VanGenuchten, θ)
     Se = (θ - pm.θr) / (pm.θs - pm.θr)
-    return (1 - pm.m) * pm.Ks / (pm.α * pm.m * (pm.θs - pm.θr)) * Se^pm.l * Se^(-1 / pm.m) *
-           ((1 - Se^(1 / pm.m))^(-pm.m) + (1 - Se^(1 / pm.m))^pm.m - 2)
+    return (1 - pm.m) * pm.Ks / (pm.α * pm.m * (pm.θs - pm.θr)) * pow(Se, pm.l) *
+           pow(Se, -1 / pm.m) *
+           (pow(1 - pow(Se, 1 / pm.m), -pm.m) + pow(1 - pow(Se, 1 / pm.m), pm.m) - 2)
 end
