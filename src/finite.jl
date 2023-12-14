@@ -369,6 +369,10 @@ function Base.show(io::IO, sol::FiniteSolution)
     print(io, "retcode: $(sol.retcode)")
 end
 
+function SciMLBase.successful_retcode(sol::FiniteSolution)
+    SciMLBase.successful_retcode(sol.retcode)
+end
+
 function (sol::FiniteSolution)(r, t)
     i = searchsortedlast(sol._t, t)
 
