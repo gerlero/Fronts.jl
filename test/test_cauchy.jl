@@ -19,7 +19,7 @@
     @testset "exact" begin
         # Reference: Philip (1960) Table 1, No. 13
         # https://doi.org/10.1071/PH600001
-        D = θ -> 0.5 * (1 - log(θ))
+        D = θ -> 0.5 * (1 - NaNMath.log(θ))
 
         prob1 = DirichletProblem(D, i = 0, b = 1)
         θ1 = solve(prob1)

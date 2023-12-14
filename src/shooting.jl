@@ -112,15 +112,10 @@ end
 function _shoot!(integrator, prob::FlowrateProblem; b, abstol)
     ob = !iszero(prob.ob) ? prob.ob : 1e-6
 
-    try
-        d_dob = d_do(prob, :b, b = b, ob = ob)
-        return _shoot!(integrator,
-            CauchyProblem(prob.eq, b = b, d_dob = d_dob, ob = ob),
-            i = prob.i, abstol = abstol)
-    catch e
-        e isa ArgumentError || e isa DomainError || rethrow()
-        return integrator, -monotonicity(prob) * typemax(prob.i)
-    end
+    d_dob = d_do(prob, :b, b = b, ob = ob)
+    return _shoot!(integrator,
+        CauchyProblem(prob.eq, b = b, d_dob = d_dob, ob = ob),
+        i = prob.i, abstol = abstol)
 end
 
 """

@@ -12,16 +12,11 @@ See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/), [`StaticAr
 function boltzmann(eq::DiffusionEquation{1})
     let D = eq.D
         function f((θ, dθ_do), ::NullParameters, o)
-            try
-                D_, dD_dθ = value_and_derivative(D, θ)
+            D_, dD_dθ = value_and_derivative(D, θ)
 
-                d²θ_do² = -((o / 2 + dD_dθ * dθ_do) / D_) * dθ_do
+            d²θ_do² = -((o / 2 + dD_dθ * dθ_do) / D_) * dθ_do
 
-                return @SVector [dθ_do, d²θ_do²]
-            catch e
-                e isa DomainError || rethrow()
-                return @SVector [dθ_do, oftype(dθ_do, NaN)]
-            end
+            return @SVector [dθ_do, d²θ_do²]
         end
         function jac((θ, dθ_do), ::NullParameters, o)
             D_, dD_dθ, d²D_dθ² = value_and_derivatives(D, θ)
@@ -40,16 +35,11 @@ function boltzmann(eq::DiffusionEquation{m}) where {m}
     @assert m in 2:3
     let D = eq.D, k = m - 1
         function f((θ, dθ_do), ::NullParameters, o)
-            try
-                D_, dD_dθ = value_and_derivative(D, θ)
+            D_, dD_dθ = value_and_derivative(D, θ)
 
-                d²θ_do² = -((o / 2 + dD_dθ * dθ_do) / D_ + k / o) * dθ_do
+            d²θ_do² = -((o / 2 + dD_dθ * dθ_do) / D_ + k / o) * dθ_do
 
-                return @SVector [dθ_do, d²θ_do²]
-            catch e
-                e isa DomainError || rethrow()
-                return @SVector [dθ_do, oftype(dθ_do, NaN)]
-            end
+            return @SVector [dθ_do, d²θ_do²]
         end
         function jac((θ, dθ_do), ::NullParameters, o)
             D_, dD_dθ, d²D_dθ² = value_and_derivatives(D, θ)
@@ -67,16 +57,11 @@ end
 function boltzmann(eq::RichardsEquation{1})
     let C = eq.C, K = eq.K
         function f((h, dh_do), ::NullParameters, o)
-            try
-                K_, dK_dh = value_and_derivative(K, h)
+            K_, dK_dh = value_and_derivative(K, h)
 
-                d²h_do² = -((C(h) * o / 2 + dK_dh * dh_do) / K_) * dh_do
+            d²h_do² = -((C(h) * o / 2 + dK_dh * dh_do) / K_) * dh_do
 
-                return @SVector [dh_do, d²h_do²]
-            catch e
-                e isa DomainError || rethrow()
-                return @SVector [dh_do, oftype(dh_do, NaN)]
-            end
+            return @SVector [dh_do, d²h_do²]
         end
         function jac((h, dh_do), ::NullParameters, o)
             K_, dK_dh, d²K_dh² = value_and_derivatives(K, h)
@@ -97,16 +82,11 @@ function boltzmann(eq::RichardsEquation{m}) where {m}
     @assert m in 2:3
     let C = eq.C, K = eq.K, k = m - 1
         function f((h, dh_do), ::NullParameters, o)
-            try
-                K_, dK_dh = value_and_derivative(K, h)
+            K_, dK_dh = value_and_derivative(K, h)
 
-                d²h_do² = -((C(h) * o / 2 + dK_dh * dh_do) / K_ + k / o) * dh_do
+            d²h_do² = -((C(h) * o / 2 + dK_dh * dh_do) / K_ + k / o) * dh_do
 
-                return @SVector [dh_do, d²h_do²]
-            catch e
-                e isa DomainError || rethrow()
-                return @SVector [dh_do, oftype(dh_do, NaN)]
-            end
+            return @SVector [dh_do, d²h_do²]
         end
         function jac((h, dh_do), ::NullParameters, o)
             K_, dK_dh, d²K_dh² = value_and_derivatives(K, h)

@@ -24,7 +24,7 @@ end
     @testset "FiniteDirichletProblem" begin
         # Reference: Philip (1960) Table 1, No. 13
         # https://doi.org/10.1071/PH600001
-        prob = FiniteDirichletProblem(θ -> 0.5 * (1 - log(θ)), 100, i = 0, b = 1)
+        prob = FiniteDirichletProblem(θ -> 0.5 * (1 - NaNMath.log(θ)), 100, i = 0, b = 1)
 
         θ = solve(prob)
         @test θ.retcode == ReturnCode.Success
@@ -36,7 +36,7 @@ end
         @test θ.(r, 1)≈exp.(-r) atol=5e-2
         @test all(θ.(r, 1e6) .≈ 1)
 
-        prob2 = FiniteDirichletProblem(θ -> 0.5 * (1 - log(θ)),
+        prob2 = FiniteDirichletProblem(θ -> 0.5 * (1 - NaNMath.log(θ)),
             100,
             31400,
             i = 1e-3 * ones(500),
