@@ -1,6 +1,7 @@
 module ExampleMathiasAndSander
 
 using Fronts
+using NaNMath: pow
 using Plots
 
 ϵ = 1e-6
@@ -15,7 +16,8 @@ m = 0.2
 function getD(m)
     let m = m, L = 0.5
         return function D(ϑ)
-            D0 * (1 - m) / m * ϑ^(L - 1 / m) * (1 - (1 - ϑ^(1 / m))^m)^2 / (1 - ϑ^(1 / m))^m
+            D0 * (1 - m) / m * pow(ϑ, L - 1 / m) * pow(1 - pow(1 - pow(ϑ, 1 / m), m), 2) /
+            pow(1 - pow(ϑ, 1 / m), m)
         end
     end
 end
