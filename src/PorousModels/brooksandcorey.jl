@@ -63,7 +63,7 @@ function θh(pm::BrooksAndCorey, h)
         return pm.θs
     end
 
-    Se = 1 / (pm.α * (-h))^pm.n
+    Se = 1 / pow(pm.α * (-h), pm.n)
 
     return pm.θr + Se * (pm.θs - pm.θr)
 end
@@ -71,7 +71,7 @@ end
 function hθ(pm::BrooksAndCorey, θ)
     Se = (θ - pm.θr) / (pm.θs - pm.θr)
 
-    return -1 / (pm.α * Se^(1 / pm.n))
+    return -1 / (pm.α * pow(Se, 1 / pm.n))
 end
 
 function Ch(pm::BrooksAndCorey, h)
@@ -79,13 +79,13 @@ function Ch(pm::BrooksAndCorey, h)
         return zero(1 / h)
     end
 
-    return -pm.n / h * (pm.θs - pm.θr) / (pm.α * (-h))^pm.n
+    return -pm.n / h * (pm.θs - pm.θr) / pow(pm.α * (-h), pm.n)
 end
 
 function Kθ(pm::BrooksAndCorey, θ)
     Se = (θ - pm.θr) / (pm.θs - pm.θr)
 
-    return pm.Ks * Se^(2 / pm.n + pm.l + 2)
+    return pm.Ks * pow(Se, (2 / pm.n + pm.l + 2))
 end
 
 function Kh(pm::BrooksAndCorey, h)
@@ -98,5 +98,5 @@ end
 
 function Dθ(pm::BrooksAndCorey, θ)
     Se = (θ - pm.θr) / (pm.θs - pm.θr)
-    return pm.Ks * Se^(1 / pm.n + pm.l + 1) / (pm.α * pm.n * (pm.θs - pm.θr))
+    return pm.Ks * pow(Se, 1 / pm.n + pm.l + 1) / (pm.α * pm.n * (pm.θs - pm.θr))
 end
