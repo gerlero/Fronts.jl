@@ -24,7 +24,7 @@ end
     @testset "FiniteDirichletProblem" begin
         # Reference: Philip (1960) Table 1, No. 13
         # https://doi.org/10.1071/PH600001
-        prob = FiniteDirichletProblem(θ -> 0.5 * (1 - NaNMath.log(θ)), 100, i = 0, b = 1)
+        prob = FiniteDirichletProblem(θ -> 0.5 * (1 - NaNMath.log(θ)), 100, i = 1e-3, b = 1)
 
         θ = solve(prob)
         @test θ.retcode == ReturnCode.Success
@@ -36,18 +36,12 @@ end
         @test θ.(r, 1)≈exp.(-r) atol=5e-2
         @test all(θ.(r, 1e6) .≈ 1)
 
-        prob2 = FiniteDirichletProblem(θ -> 0.5 * (1 - NaNMath.log(θ)),
-            100,
-            31400,
-            i = 1e-3 * ones(500),
-            b = 1)
+        θf = solve(prob, FiniteDifference())
+        @test θf.retcode == ReturnCode.Success
 
-        θ2 = solve(prob2)
-        @test θ2.retcode == ReturnCode.Success
-
-        @test θ2.(r, 314)≈θ.(r, 314) atol=5e-2
-        @test θ2.(r, 31400)≈θ.(r, 31400) atol=5e-2
-        @test flux.(θ2, r, 31.4)≈flux.(θ, r, 31.4) atol=5e-2
+        @test θf.(r, 314)≈θ.(r, 314) atol=5e-2
+        @test θf.(r, 31400)≈θ.(r, 31400) atol=5e-2
+        @test flux.(θf, r, 31.4)≈flux.(θ, r, 31.4) atol=5e-2
     end
 
     @testset "FiniteReservoirProblem" begin
@@ -69,7 +63,7 @@ end
 
         prob = FiniteReservoirProblem(pm, r[end], i = θi, b = θs - ϵ, capacity = 1e-2)
 
-        θ = solve(prob, FiniteDifference(length(r)))
+        θ = solve(prob, FiniteDifference(length(r), BoltzmannODE()))
         @test θ.retcode == ReturnCode.Success
 
         for t in [100, 150, 200, Inf]
