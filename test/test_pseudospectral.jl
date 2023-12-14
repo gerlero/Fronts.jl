@@ -2,7 +2,7 @@
     @testset "exact" begin
         # Reference: Philip (1960) Table 1, No. 13
         # https://doi.org/10.1071/PH600001
-        prob = DirichletProblem(θ -> 0.5 * (1 - log(θ)), i = eps(), b = 1)
+        prob = DirichletProblem(θ -> 0.5 * (1 - NaNMath.log(θ)), i = eps(), b = 1)
 
         θ = solve(prob, MathiasAndSander())
         @test θ.retcode == ReturnCode.Success

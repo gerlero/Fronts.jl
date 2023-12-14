@@ -5,6 +5,7 @@ using Fronts.ParamEstim
 using Test
 
 import ForwardDiff
+import NaNMath
 using NumericalIntegration
 using OrdinaryDiffEq: ODEFunction, ODEProblem
 using OrdinaryDiffEq.DiffEqBase: NullParameters
