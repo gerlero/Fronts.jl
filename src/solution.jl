@@ -83,6 +83,8 @@ function Base.show(io::IO, sol::Solution)
     print(io, "$(sol.prob.eq.sym)i = $(sol.i)")
 end
 
+SciMLBase.successful_retcode(sol::Solution) = SciMLBase.successful_retcode(sol.retcode)
+
 """
     d_do(::Solution, r, t)
     d_do(::Solution, o)

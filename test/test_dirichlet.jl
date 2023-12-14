@@ -22,6 +22,9 @@
         prob = DirichletProblem(θ -> 0.5 * (1 - log(θ)), i = 0, b = 1)
 
         θ = solve(prob)
+        @test θ.retcode == ReturnCode.Success
+        @test SciMLBase.successful_retcode(θ.retcode)
+        @test SciMLBase.successful_retcode(θ)
 
         o = range(0, 20, length = 100)
 
@@ -70,6 +73,9 @@
         prob = DirichletProblem(model, i = θi, b = θb)
 
         θ = solve(prob, abstol = 1e-7)
+        @test θ.retcode == ReturnCode.Success
+        @test SciMLBase.successful_retcode(θ.retcode)
+        @test SciMLBase.successful_retcode(θ)
 
         @test all(@. isapprox(θ(r, t), θ_pmf, atol = 1e-3))
         @test all(@. isapprox(flux(θ, r, t), U_pmf, atol = 1e-6))

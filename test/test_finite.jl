@@ -28,6 +28,8 @@ end
 
         θ = solve(prob)
         @test θ.retcode == ReturnCode.Success
+        @test SciMLBase.successful_retcode(θ.retcode)
+        @test SciMLBase.successful_retcode(θ)
 
         r = range(0, 100, length = 314)
 

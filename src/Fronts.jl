@@ -20,13 +20,14 @@ using PCHIPInterpolation: Interpolator, integrate
 import NumericalIntegration
 using RecipesBase
 
-using OrdinaryDiffEq.DiffEqBase: NullParameters
+using OrdinaryDiffEq.SciMLBase: NullParameters
 using OrdinaryDiffEq: ODEFunction, ODEProblem, ODESolution
 using OrdinaryDiffEq: init, solve!, reinit!
 using OrdinaryDiffEq: DiscreteCallback, terminate!
 using OrdinaryDiffEq: RadauIIA5
 
 using Reexport: @reexport
+@reexport import OrdinaryDiffEq: SciMLBase
 @reexport using OrdinaryDiffEq: ReturnCode
 @reexport import OrdinaryDiffEq: solve
 
