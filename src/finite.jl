@@ -166,7 +166,7 @@ Uses backward Euler time discretization and a second-order central difference sc
 
 ---
 
-solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::FiniteDifference[; abstol]) -> Solution
+    solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::FiniteDifference[; abstol]) -> Solution
 
 Solve the `DirichletProblem` `prob` with a finite-difference scheme.
 
