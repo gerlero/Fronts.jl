@@ -251,7 +251,7 @@ function solve(prob::Union{
 
         change = eltype(θ)(Inf)
         sweeps = 0
-        while change > abstol
+        while !(change <= abstol)
             if sweeps >= 7
                 Δt /= 3
                 if prob isa FiniteProblem
