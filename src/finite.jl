@@ -1,26 +1,24 @@
 """
-    FiniteDifference([N, ialg])
-    FiniteDifference(ialg)
+    FiniteDifference([N; pre])
 
 Finite difference–based algorithm.
 
 # Arguments
-- `N::Int=500`: number of points in the spatial grid.
-- `ialg::Union{BoltzmannODE, Nothing}=nothing`: optional semi-infinite solver algorithm to speed up the solution of compatible `FiniteProblem`s.
+- `N=500`: number of points in the spatial grid.
+
+# Keyword arguments
+- `pre=nothing`: set to `BoltzmannODE()` to speed up the solution of compatible `FiniteProblem`s.
 
 See also: [`solve`](@ref), [`FiniteProblem`](@ref), [`BoltzmannODE`](@ref)
 """
-struct FiniteDifference{_Tialg}
+struct FiniteDifference{_Tpre}
     _N::Int
-    _ialg::_Tialg
+    _pre::_Tpre
 
-    function FiniteDifference(N::Int, ialg::Union{BoltzmannODE, Nothing} = nothing)
+    function FiniteDifference(N = 500; pre = nothing)
         @argcheck N ≥ 2
-        new{typeof(ialg)}(N, ialg)
-    end
-
-    function FiniteDifference(ialg::Union{BoltzmannODE, Nothing} = nothing)
-        FiniteDifference(500, ialg)
+        @argcheck !(pre isa FiniteDifference)
+        new{typeof(pre)}(N, pre)
     end
 end
 
@@ -159,7 +157,7 @@ Uses backward Euler time discretization and a second-order central difference sc
 
 # Arguments
 - `prob`: problem to solve.
-- `alg=FiniteDifference(BoltzmannODE())`: algorithm to use.
+- `alg=FiniteDifference(pre=BoltzmannODE())`: algorithm to use.
 
 # Keyword arguments
 - `abstol=1e-3`: nonlinear solver tolerance.
@@ -185,7 +183,7 @@ function solve(prob::Union{
         abstol = 1e-3)
     if prob isa DirichletProblem
         @argcheck iszero(prob.ob) "FiniteDifference only supports fixed boundaries"
-        @argcheck isnothing(alg._ialg) "ialg not valid for a DirichletProblem (use BoltzmannODE directly instead)"
+        @argcheck isnothing(alg._pre) "pre not valid for a DirichletProblem (use BoltzmannODE directly instead)"
     end
 
     r = range(0, prob isa FiniteProblem ? prob._rstop : 1, length = alg._N)
@@ -200,14 +198,14 @@ function solve(prob::Union{
     t = 0.0
     Δt = 1.0
 
-    isol = nothing
-    if !isnothing(alg._ialg) &&
+    presol = nothing
+    if !isnothing(alg._pre) &&
        (prob isa FiniteDirichletProblem || prob isa FiniteReservoirProblem) &&
        prob.i isa Number
-        isol = solve(DirichletProblem(prob.eq, i = prob.i, b = prob.b),
-            alg._ialg,
+        presol = solve(DirichletProblem(prob.eq, i = prob.i, b = prob.b),
+            alg._pre,
             abstol = abstol)
-        if isol.retcode != ReturnCode.Success
+        if presol.retcode != ReturnCode.Success
             θ .= prob.i
             return FiniteSolution(r,
                 [t],
@@ -215,14 +213,14 @@ function solve(prob::Union{
                 prob,
                 alg,
                 _retcode = ReturnCode.InitialFailure,
-                _original = isol)
+                _original = presol)
         end
-        t = min((prob._rstop / isol.oi)^2, prob._tstop)
+        t = min((prob._rstop / presol.oi)^2, prob._tstop)
         if prob isa FiniteReservoirProblem
-            t = min(t, (prob.capacity / sorptivity(isol))^2)
-            used = sorptivity(isol) * √t
+            t = min(t, (prob.capacity / sorptivity(presol))^2)
+            used = sorptivity(presol) * √t
         end
-        θ .= isol.(r, t)
+        θ .= presol.(r, t)
     else
         θ .= prob.i
     end
@@ -337,9 +335,9 @@ function solve(prob::Union{
             prob,
             alg,
             _retcode = ReturnCode.Success,
-            _original = isol)
+            _original = presol)
     else
-        @assert isnothing(isol)
+        @assert isnothing(presol)
         return Solution(Interpolator(boltzmann.(r, t), θ),
             prob,
             alg,
@@ -351,7 +349,7 @@ function solve(prob::Union{
 end
 
 function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; abstol = 1e-3)
-    solve(prob, FiniteDifference(BoltzmannODE()), abstol = abstol)
+    solve(prob, FiniteDifference(pre = BoltzmannODE()), abstol = abstol)
 end
 
 """
