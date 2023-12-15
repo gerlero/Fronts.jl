@@ -1,38 +1,25 @@
 """
-    BoltzmannODE(odealg::DifferentialEquations.ODEAlgorithm[; b_hint, d_dob_hint, kwargs...])
+    BoltzmannODE([; b_hint, d_dob_hint])
 
 Default algorithm for solving semi-infinite problems.
 
-Uses the Boltzmann transformation and repeated ODE integration via `DifferentialEquations.jl`.
-
-# Arguments
-- `odealg=DifferentialEquations.RadauIIA5()`: ODE algorithm for solving the transformed problem.
+Uses the Boltzmann transformation and (possibly repeated) ODE integration.
 
 # Keyword arguments
 - `b_hint`: optional hint for the boundary value.
 - `d_dob_hint`: optional hint for the boundary `o`-derivative.
-- `kwargs...`: additional keyword arguments are passed to the `DifferentialEquations` solver.
 
 # References
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
 Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 """
-struct BoltzmannODE{_Todealg, _Tθ, _Td_do, _Tode_kwargs}
-    _odealg::_Todealg
+struct BoltzmannODE{_Tθ, _Td_do}
     b_hint::_Tθ
     d_dob_hint::_Td_do
-    _ode_kwargs::_Tode_kwargs
 
-    function BoltzmannODE(odealg = RadauIIA5();
-            b_hint = nothing,
-            d_dob_hint = nothing,
-            maxiters = 1000,
-            kwargs...)
-        ode_kwargs = (maxiters = maxiters, kwargs...)
-        new{typeof(odealg), typeof(b_hint), typeof(d_dob_hint), typeof(ode_kwargs)}(odealg,
-            b_hint,
-            d_dob_hint,
-            ode_kwargs)
+    function BoltzmannODE(; b_hint = nothing,
+            d_dob_hint = nothing)
+        new{typeof(b_hint), typeof(d_dob_hint)}(b_hint, d_dob_hint)
     end
 end
 
@@ -58,6 +45,9 @@ end
 
 monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
 
+const _ODE_ALG = RadauIIA5()
+const _ODE_MAXITERS = 1000
+
 function _init(odeprob::ODEProblem, alg::BoltzmannODE; i = nothing, abstol)
     if !isnothing(i)
         direction = monotonicity(odeprob)
@@ -70,13 +60,13 @@ function _init(odeprob::ODEProblem, alg::BoltzmannODE; i = nothing, abstol)
             terminate!,
             save_positions = (false, false))
         return init(odeprob,
-            alg._odealg;
+            _ODE_ALG,
+            maxiters = _ODE_MAXITERS,
             callback = past_limit,
-            verbose = false,
-            alg._ode_kwargs...)
+            verbose = false)
     end
 
-    return init(odeprob, alg._odealg; verbose = false, alg._ode_kwargs...)
+    return init(odeprob, _ODE_ALG, maxiters = _ODE_MAXITERS, verbose = false)
 end
 
 function _init(prob::CauchyProblem, alg::BoltzmannODE; i = nothing, abstol = 0)
