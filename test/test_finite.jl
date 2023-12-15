@@ -63,7 +63,7 @@ end
 
         prob = FiniteReservoirProblem(pm, r[end], i = θi, b = θs - ϵ, capacity = 1e-2)
 
-        θ = solve(prob, FiniteDifference(length(r), BoltzmannODE()))
+        θ = solve(prob, FiniteDifference(length(r), pre = BoltzmannODE()))
         @test θ.retcode == ReturnCode.Success
 
         for t in [100, 150, 200, Inf]
