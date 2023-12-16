@@ -106,6 +106,29 @@ function solve(prob::CauchyProblem, alg::BoltzmannODE = BoltzmannODE(); abstol =
     return Solution(odesol, prob, alg, _retcode = ReturnCode.Success, _niter = 1)
 end
 
+"""
+    solve(prob::SorptivityProblem[, alg::BoltzmannODE]) -> Solution
+
+Solve the problem `prob`.
+
+# Arguments
+- `prob`: problem to solve.
+- `alg=BoltzmannODE()`: algorithm to use.
+
+# References
+GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
+Capillarity, 2023, vol. 6, no. 2, p. 31-40.
+
+See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
+"""
+function solve(prob::SorptivityProblem, alg::BoltzmannODE = BoltzmannODE())
+    solve(CauchyProblem(prob.eq,
+            b = prob.b,
+            d_dob = d_do(prob.eq, prob.b, prob.S),
+            ob = prob.ob),
+        alg)
+end
+
 function Solution(_odesol::ODESolution, _prob, _alg::BoltzmannODE; _retcode, _niter)
     return Solution(o -> _odesol(o, idxs = 1),
         _prob,
