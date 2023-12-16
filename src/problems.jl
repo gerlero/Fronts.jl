@@ -219,3 +219,68 @@ function Base.show(io::IO, prob::CauchyProblem)
 end
 
 monotonicity(prob::CauchyProblem)::Int = sign(prob.d_dob)
+
+sorptivity(prob::CauchyProblem) = sorptivity(prob.eq, prob.b, prob.d_dob)
+
+"""
+    SorptivityProblem(eq; b, S[, ob]) <: Problem{typeof(eq)}
+    SorptivityProblem(D; b, S[, ob]) <: Problem{DiffusionEquation{1}}
+
+Semi-infinite problem with a known boundary value and soprtivity (and unknown initial condition).
+
+# Arguments
+- `eq::Equation`: governing equation.
+- `D`: diffusivity function. Shortcut for `SorptivityProblem(DiffusionEquation(D), ...)`.
+
+# Keyword arguments
+- `b`: imposed boundary value.
+- `S`: prescribed sorptivity.
+- `ob=0`: boundary constant for an optional moving boundary. At time `t`, the boundary is located at `ob*√t`. Must be positive if `eq` is radial.
+
+# Examples
+```jldoctest; setup = :(using Fronts)
+julia> D(θ) = θ^4
+D (generic function with 1 method)
+
+julia> prob = Fronts.SorptivityProblem(D, b=2, S=1)
+⎧ ∂θ/∂t = ∂(D(θ)*∂θ/∂r)/∂r, r>0,t>0
+⎨ θ(0,t) = 2, t>0
+⎩ S = 1
+```
+
+See also: [`Equation`](@ref), [`sorptivity`](@ref)
+"""
+struct SorptivityProblem{Teq, _T, _To, _TS} <: Problem{Teq}
+    eq::Teq
+    b::_T
+    S::_TS
+    ob::_To
+    function SorptivityProblem(eq::Equation{1}; b, S, ob = 0)
+        new{typeof(eq), typeof(b), typeof(ob), typeof(S)}(eq, b, S, ob)
+    end
+    function SorptivityProblem(eq::Equation; b, S, ob)
+        @argcheck ob > zero(ob)
+        new{typeof(eq), typeof(b), typeof(ob), typeof(S)}(eq, b, S, ob)
+    end
+end
+
+function SorptivityProblem(D; b, S, ob = 0)
+    SorptivityProblem(DiffusionEquation(D), b = b, S = S, ob = ob)
+end
+
+function Base.show(io::IO, prob::SorptivityProblem)
+    if iszero(prob.ob)
+        println(io, "⎧ ", prob.eq, ", r>0,t>0")
+        println(io, "⎨ ", prob.eq.sym, "(0,t) = ", prob.b, ", t>0")
+        print(io, "⎩ S = ", prob.S)
+    else
+        println(io, "⎧ ", prob.eq, ",r>rb(t),t>0")
+        println(io, "⎨ ", prob.eq.sym, "(rb(t),t) = ", prob.b, ", t>0")
+        println(io, "⎩ S = ", prob.S)
+        print(io, "with rb(t) = ", prob.ob, "*√t")
+    end
+end
+
+monotonicity(prob::SorptivityProblem)::Int = -sign(prob.S)
+
+sorptivity(prob::SorptivityProblem) = prob.S

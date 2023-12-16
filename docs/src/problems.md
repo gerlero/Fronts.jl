@@ -9,6 +9,7 @@ Problem
 DirichletProblem
 FlowrateProblem
 CauchyProblem
+SorptivityProblem
 FiniteProblem
 FiniteDirichletProblem
 FiniteReservoirProblem

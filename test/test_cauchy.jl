@@ -26,6 +26,7 @@
         @test θ1.retcode == ReturnCode.Success
 
         prob2 = CauchyProblem(D, b = θ1.b, d_dob = θ1.d_dob)
+
         θ2 = solve(prob2)
         @test θ2.retcode == ReturnCode.Success
 
@@ -37,6 +38,27 @@
 
         @test θ2._niter == 1
 
+        @test sorptivity(θ2) == sorptivity(prob2)
+
         @test isnan(@inferred θ2(-1))
+    end
+end
+
+@testset "SorptivityProblem" begin
+    @testset "exact" begin
+        # Reference: Philip (1960) Table 1, No. 13
+        # https://doi.org/10.1071/PH600001
+        D = θ -> 0.5 * (1 - NaNMath.log(θ))
+
+        prob = SorptivityProblem(D, b = 1, S = 1)
+        @test sorptivity(prob) == 1
+
+        θ = solve(prob)
+        @test θ.retcode == ReturnCode.Success
+
+        @test sorptivity(θ) == sorptivity(prob)
+        @test θ.d_dob == -1
+        @test θ.i≈0 atol=1e-5
+        @test θ._niter == 1
     end
 end
