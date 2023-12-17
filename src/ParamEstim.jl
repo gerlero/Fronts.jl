@@ -5,7 +5,7 @@ using ..Fronts: InverseProblem, Problem, Solution, ReturnCode, solve
 import ..Fronts: sorptivity
 
 using LsqFit: curve_fit
-import OrdinaryDiffEq.SciMLBase: successful_retcode
+import OrdinaryDiffEq.SciMLBase: successful_retcode, NullParameters
 
 """
     ScaledSolution
@@ -135,7 +135,9 @@ function (cf::RSSCostFunction)(sol::Union{Solution, ScaledSolution})
     end
 end
 
-(cf::RSSCostFunction)(params::AbstractVector) = cf(candidate(cf, params))
+function (cf::RSSCostFunction)(params::AbstractVector, ::NullParameters = NullParameters())
+    cf(candidate(cf, params))
+end
 
 _solve(cf::RSSCostFunction, params::AbstractVector) = _solve(cf, cf._func(params))
 _solve(::RSSCostFunction, prob::Problem) = solve(prob, verbose = false)
