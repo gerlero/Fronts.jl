@@ -21,13 +21,13 @@ end
 function _init(prob::DirichletProblem, alg::BoltzmannODE; d_dob, abstol)
     return _init(CauchyProblem(prob.eq, b = prob.b, d_dob = d_dob, ob = prob.ob),
         alg,
-        i = prob.i, abstol = abstol)
+        i = prob.i, abstol = abstol, verbose = false)
 end
 
 function _shoot!(integrator, prob::DirichletProblem; d_dob, abstol)
     return _shoot!(integrator,
-        CauchyProblem(prob.eq, b = prob.b, d_dob = d_dob, ob = prob.ob),
-        i = prob.i, abstol = abstol)
+        CauchyProblem(prob.eq, b = prob.b, d_dob = d_dob, ob = prob.ob), i = prob.i,
+        abstol = abstol)
 end
 
 """
@@ -42,6 +42,7 @@ Solve the problem `prob`.
 # Keyword arguments
 - `abstol=1e-3`: absolute tolerance for the initial condition.
 - `maxiters=100`: maximum number of iterations.
+- `verbose=true`: whether warnings are emitted if solving is unsuccessful.
 
 # References
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
@@ -51,7 +52,8 @@ See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
 """
 function solve(prob::DirichletProblem, alg::BoltzmannODE = BoltzmannODE();
         abstol = 1e-3,
-        maxiters = 100)
+        maxiters = 100,
+        verbose = true)
     @argcheck abstol ≥ zero(abstol)
     @argcheck maxiters ≥ 0
 
@@ -71,6 +73,9 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE = BoltzmannODE();
         @assert integrator.sol.retcode != ReturnCode.Success
         retcode = integrator.sol.retcode == ReturnCode.Terminated ? ReturnCode.Success :
                   integrator.sol.retcode
+        if verbose && !SciMLBase.successful_retcode(integrator.sol)
+            @warn "Problem has a trivial solution but failed to obtain it"
+        end
         return Solution(integrator.sol, prob, alg, _retcode = retcode, _niter = 0)
     end
 
@@ -90,6 +95,9 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE = BoltzmannODE();
         end
     end
 
+    if verbose
+        @warn "Maximum number of iterations reached without convergence"
+    end
     return Solution(integrator.sol,
         prob,
         alg,
@@ -103,7 +111,8 @@ function _init(prob::FlowrateProblem, alg::BoltzmannODE; b, abstol)
     return _init(SorptivityProblem(prob.eq, b = b, S = 2prob.Qb / prob._αh / ob, ob = ob),
         alg,
         i = prob.i,
-        abstol = abstol)
+        abstol = abstol,
+        verbose = false)
 end
 
 function _shoot!(integrator, prob::FlowrateProblem; b, abstol)
@@ -126,6 +135,7 @@ Solve the problem `prob`.
 # Keyword arguments
 - `abstol=1e-3`: absolute tolerance for the initial condition.
 - `maxiters=100`: maximum number of iterations.
+- `verbose=true`: whether warnings are emitted if solving is unsuccessful.
 
 # References
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
@@ -135,7 +145,8 @@ See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
 """
 function solve(prob::FlowrateProblem; alg::BoltzmannODE = BoltzmannODE(),
         abstol = 1e-3,
-        maxiters = 100)
+        maxiters = 100,
+        verbose = true)
     @argcheck abstol ≥ zero(abstol)
     @argcheck maxiters ≥ 0
 
@@ -153,10 +164,16 @@ function solve(prob::FlowrateProblem; alg::BoltzmannODE = BoltzmannODE(),
     if monotonicity(prob) == 0
         integrator, resid = _shoot!(integrator, prob, b = prob.i, abstol = abstol)
         @assert iszero(resid)
+        @assert integrator.sol.retcode != ReturnCode.Success
+        retcode = integrator.sol.retcode == ReturnCode.Terminated ? ReturnCode.Success :
+                  integrator.sol.retcode
+        if verbose && !SciMLBase.successful_retcode(integrator.sol)
+            @warn "Problem has a trivial solution but failed to obtain it"
+        end
         return Solution(integrator.sol,
             prob,
             alg,
-            _retcode = ReturnCode.Success,
+            _retcode = retcode,
             _niter = 0)
     end
 
@@ -174,6 +191,9 @@ function solve(prob::FlowrateProblem; alg::BoltzmannODE = BoltzmannODE(),
         end
     end
 
+    if verbose
+        @warn "Maximum number of iterations reached without convergence"
+    end
     return Solution(integrator.sol,
         prob,
         alg,
