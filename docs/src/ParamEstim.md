@@ -7,6 +7,7 @@ CurrentModule = Fronts.ParamEstim
 The `ParamEstim` submodule provides support for optimization-based parameter estimation runs using `Fronts`.
 
 ```@docs
+ScaledSolution
 RSSCostFunction
 candidate
 ```

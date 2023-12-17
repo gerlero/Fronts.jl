@@ -24,14 +24,14 @@
 
         cand = candidate(cf, [2])
         @test isapprox(cand.D0, 1, atol = 1e-3)
-        @test isapprox(cand.cost, 0, atol = 1e-7)
+        @test isapprox(cf(cand), 0, atol = 1e-7)
 
         cand = candidate(cf, [1])
         @test isapprox(cand.D0, 2, atol = 1e-3)
-        @test isapprox(cand.cost, 0, atol = 1e-7)
+        @test isapprox(cf(cand), 0, atol = 1e-7)
 
         cand = candidate(cf, [3])
         @test isapprox(cand.D0, 2 / 3, atol = 1e-3)
-        @test isapprox(cand.cost, 0, atol = 1e-7)
+        @test isapprox(cf(cand), 0, atol = 1e-7)
     end
 end
