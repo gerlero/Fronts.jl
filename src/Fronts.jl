@@ -11,7 +11,7 @@ using ._Chebyshev: chebdif
 
 include("PorousModels/PorousModels.jl")
 
-using LinearAlgebra: Diagonal, Tridiagonal
+using LinearAlgebra: Diagonal, Tridiagonal, SingularException
 
 using ArgCheck: @argcheck
 using StaticArrays: @SVector, @SMatrix
