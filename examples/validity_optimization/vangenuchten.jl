@@ -32,10 +32,11 @@ function unpack(cand::Vector)
     return NamedTuple(zip(keys(search_range), map(x -> round(x, sigdigits = 4), cand)))
 end
 
-cost = RSSCostFunction{true}(InverseProblem(oref,
-        Measurements.value.(θref),
-        inv.(Measurements.uncertainty.(θref) .^ 2)),
-    D0tol = 1e-6) do params
+invprob = InverseProblem(oref,
+    Measurements.value.(θref),
+    inv.(Measurements.uncertainty.(θref) .^ 2))
+
+cost = RSSCostFunction{true}(invprob, D0tol = 1e-6) do params
     model = VanGenuchten(; θs = θs, unpack(params)...)
 
     prob = DirichletProblem(model, i = θi.val, b = θs - ϵ)
@@ -80,10 +81,11 @@ plot!(oplot, θ.(oplot), label = "Optimization (Van Genuchten model)")
 display(plt)
 
 θplot = range(θi.val, θs, length = 1000)
-D = inverse(oref[2:end][diff(Measurements.value.(θref)) .≤ 0],
-    Measurements.value.(θref)[2:end][diff(Measurements.value.(θref)) .≤ 0])
+D = diffusivity(invprob).(θplot)
+θplot = θplot[D .> 0]
+D = D[D .> 0]
 plt = plot(θplot,
-    D.(θplot),
+    D,
     label = "Inverse",
     yaxis = :log,
     xlabel = "θ",
