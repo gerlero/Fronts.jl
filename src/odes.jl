@@ -103,10 +103,8 @@ function boltzmann(eq::RichardsEquation{m}) where {m}
     end
 end
 
-sorptivity(eq::Equation, val::Number, d_do) = -2flow_diffusivity(eq, val) * d_do
+sorptivity(_eq::Equation, _val::Number, _d_do) = -2flow_diffusivity(_eq, _val) * _d_do
 
-sorptivity(eq::Equation, sol, o) = sorptivity(eq, sol(o), d_do(sol, o))
+sorptivity(_eq::Equation, _sol, _o) = sorptivity(_eq, _sol(_o), d_do(_sol, _o))
 
-d_do(eq::Equation, val, sorptivity) = -sorptivity / 2flow_diffusivity(eq, val)
-
-d_do(eq::Equation{2}, val, o, _flux_mul_r) = d_do(eq, val, 2_flux_mul_r / o)
+d_do(_eq::Equation, _val, _sorptivity) = -_sorptivity / 2flow_diffusivity(_eq, _val)

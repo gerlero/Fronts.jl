@@ -1,12 +1,8 @@
-function _shoot!(integrator, prob::CauchyProblem; i, abstol)
+function _shoot!(integrator, prob::Union{CauchyProblem, SorptivityProblem}; i, abstol)
     direction = monotonicity(prob)
     limit = i + direction * abstol
 
     integrator = _reinit!(integrator, prob)
-
-    @assert integrator.t == prob.ob
-    @assert integrator.u[1] == prob.b
-    @assert integrator.u[2] == prob.d_dob
 
     solve!(integrator)
 
@@ -103,7 +99,8 @@ end
 
 function _init(prob::FlowrateProblem, alg::BoltzmannODE; b, abstol)
     ob = !iszero(prob.ob) ? prob.ob : 1e-6
-    return _init(CauchyProblem(prob.eq, b = b, d_dob = monotonicity(prob), ob = ob),
+
+    return _init(SorptivityProblem(prob.eq, b = b, S = 2prob.Qb / prob._αh / ob, ob = ob),
         alg,
         i = prob.i,
         abstol = abstol)
@@ -112,9 +109,8 @@ end
 function _shoot!(integrator, prob::FlowrateProblem; b, abstol)
     ob = !iszero(prob.ob) ? prob.ob : 1e-6
 
-    d_dob = d_do(prob, :b, b = b, ob = ob)
     return _shoot!(integrator,
-        CauchyProblem(prob.eq, b = b, d_dob = d_dob, ob = ob),
+        SorptivityProblem(prob.eq, b = b, S = 2prob.Qb / prob._αh / ob, ob = ob),
         i = prob.i, abstol = abstol)
 end
 
