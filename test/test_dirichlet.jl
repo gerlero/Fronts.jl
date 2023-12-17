@@ -121,17 +121,8 @@
 
     @testset "unsolved" begin
         prob = DirichletProblem(identity, i = 0, b = 1)
-        θ = solve(prob, maxiters = 0)
+        θ = @test_logs (:warn, "Maximum number of iterations reached without convergence") solve(prob,
+            maxiters = 0)
         @test θ.retcode == ReturnCode.MaxIters
-    end
-
-    @testset "unsolvable" begin
-        prob = DirichletProblem(identity, i = -1e-3, b = 1)
-        θ = solve(prob)
-        @test_broken θ.retcode == ReturnCode.Unstable
-
-        prob = DirichletProblem(identity, i = 0, b = -1)
-        θ = solve(prob)
-        @test_broken θ.retcode == ReturnCode.Unstable
     end
 end

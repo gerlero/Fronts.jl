@@ -161,6 +161,7 @@ Uses backward Euler time discretization and a second-order central difference sc
 
 # Keyword arguments
 - `abstol=1e-3`: nonlinear solver tolerance.
+- `verbose=true`: whether warnings are emitted if solving is unsuccessful.
 
 ---
 
@@ -174,13 +175,15 @@ Solve the `DirichletProblem` `prob` with a finite-difference scheme.
 
 # Keyword arguments
 - `abstol=1e-3`: nonlinear solver tolerance.
+- `verbose=true`: whether warnings are emitted if solving is unsuccessful.
 """
 function solve(prob::Union{
             DirichletProblem{<:DiffusionEquation{1}},
             FiniteProblem{<:DiffusionEquation{1}},
         },
         alg::FiniteDifference;
-        abstol = 1e-3)
+        abstol = 1e-3,
+        verbose = true)
     if prob isa DirichletProblem
         @argcheck iszero(prob.ob) "FiniteDifference only supports fixed boundaries"
         @argcheck isnothing(alg._pre) "pre not valid for a DirichletProblem (use BoltzmannODE directly instead)"
@@ -204,7 +207,8 @@ function solve(prob::Union{
        prob.i isa Number
         presol = solve(DirichletProblem(prob.eq, i = prob.i, b = prob.b),
             alg._pre,
-            abstol = abstol)
+            abstol = abstol,
+            verbose = verbose)
         if presol.retcode != ReturnCode.Success
             θ .= prob.i
             return FiniteSolution(r,
@@ -348,8 +352,8 @@ function solve(prob::Union{
     end
 end
 
-function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; abstol = 1e-3)
-    solve(prob, FiniteDifference(pre = BoltzmannODE()), abstol = abstol)
+function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; abstol = 1e-3, verbose = true)
+    solve(prob, FiniteDifference(pre = BoltzmannODE()), abstol = abstol, verbose = verbose)
 end
 
 """

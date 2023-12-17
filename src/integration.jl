@@ -55,7 +55,11 @@ monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
 const _ODE_ALG = RadauIIA5()
 const _ODE_MAXITERS = 1000
 
-function _init(odeprob::ODEProblem, alg::BoltzmannODE; i = nothing, abstol = 0)
+function _init(odeprob::ODEProblem,
+        ::BoltzmannODE;
+        i = nothing,
+        abstol = 0,
+        verbose = true)
     if !isnothing(i)
         direction = monotonicity(odeprob)
 
@@ -70,17 +74,18 @@ function _init(odeprob::ODEProblem, alg::BoltzmannODE; i = nothing, abstol = 0)
             _ODE_ALG,
             maxiters = _ODE_MAXITERS,
             callback = past_limit,
-            verbose = false)
+            verbose = verbose)
     end
 
-    return init(odeprob, _ODE_ALG, maxiters = _ODE_MAXITERS, verbose = false)
+    return init(odeprob, _ODE_ALG, maxiters = _ODE_MAXITERS, verbose = verbose)
 end
 
 function _init(prob::Union{CauchyProblem, SorptivityProblem},
         alg::BoltzmannODE;
         i = nothing,
-        abstol = 0)
-    _init(boltzmann(prob), alg, i = i, abstol = abstol)
+        abstol = 0,
+        verbose = true)
+    _init(boltzmann(prob), alg, i = i, abstol = abstol, verbose = verbose)
 end
 
 function _reinit!(integrator, prob::CauchyProblem)
@@ -96,14 +101,17 @@ function _reinit!(integrator, prob::SorptivityProblem)
 end
 
 """
-    solve(prob::CauchyProblem[, alg::BoltzmannODE]) -> Solution
-    solve(prob::SorptivityProblem[, alg::BoltzmannODE]) -> Solution
+    solve(prob::CauchyProblem[, alg::BoltzmannODE; verbose]) -> Solution
+    solve(prob::SorptivityProblem[, alg::BoltzmannODE; verbose]) -> Solution
 
 Solve the problem `prob`.
 
 # Arguments
 - `prob`: problem to solve.
 - `alg=BoltzmannODE()`: algorithm to use.
+
+# Keyword arguments
+- `verbose=true`: whether warnings are emitted if solving is unsuccessful.
 
 # References
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
@@ -113,8 +121,8 @@ See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
 """
 function solve(prob::Union{CauchyProblem, SorptivityProblem},
         alg::BoltzmannODE = BoltzmannODE();
-        abstol = 1e-3)
-    odesol = solve!(_init(prob, alg, abstol = abstol))
+        verbose = true)
+    odesol = solve!(_init(prob, alg, verbose = verbose))
 
     @assert odesol.retcode != ReturnCode.Success
 

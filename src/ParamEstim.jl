@@ -138,7 +138,7 @@ end
 (cf::RSSCostFunction)(params::AbstractVector) = cf(candidate(cf, params))
 
 _solve(cf::RSSCostFunction, params::AbstractVector) = _solve(cf, cf._func(params))
-_solve(::RSSCostFunction, prob::Problem) = solve(prob)
+_solve(::RSSCostFunction, prob::Problem) = solve(prob, verbose = false)
 _solve(::RSSCostFunction, sol::Solution) = sol
 
 """
