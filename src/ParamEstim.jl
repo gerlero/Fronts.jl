@@ -1,10 +1,59 @@
 module ParamEstim
 
 import ..Fronts
-using ..Fronts: InverseProblem, Problem, Solution, sorptivity, ReturnCode
-import ..Fronts: solve
+using ..Fronts: InverseProblem, Problem, Solution, ReturnCode, solve
+import ..Fronts: sorptivity
 
 using LsqFit: curve_fit
+import OrdinaryDiffEq.SciMLBase: successful_retcode
+
+"""
+    ScaledSolution
+
+Wrapper for a solution scaled in `o` as if affecting the diffusivity by a constant factor `D0`.
+
+# Extra fields
+- `original`: original unscaled solution.
+- `D0`: scaling factor.
+"""
+struct ScaledSolution{_Toriginal}
+    original::_Toriginal
+    D0::Float64
+end
+
+function Base.getproperty(sol::ScaledSolution, sym::Symbol)
+    if sym == :oi
+        return sol.original.oi * √sol.D0
+    elseif sym == :ob
+        return sol.original.ob * √sol.D0
+    elseif sym == :i
+        return sol.original.i
+    elseif sym == :b
+        return sol.original.b
+    elseif sym == :d_dob
+        return sol.original.d_dob / √sol.D0
+    elseif sym == :retcode
+        return sol.original.retcode
+    else
+        return getfield(sol, sym)
+    end
+end
+
+successful_retcode(sol::ScaledSolution) = successful_retcode(sol.original)
+(sol::ScaledSolution)(o) = sol.original(o / √sol.D0)
+(sol::ScaledSolution)(r, t) = sol(o(r, t))
+sorptivity(sol::ScaledSolution, o = sol.ob) = sorptivity(sol.original, o) * √sol.D0
+
+function Base.show(io::IO, sol::ScaledSolution)
+    println(io, "Scaled solution (D0 = $(sol.D0))")
+    println(io, "retcode: $(sol.retcode)")
+    println(io, "$(sol.prob.eq.sym)b = $(sol.b)")
+    println(io, "d$(sol.prob.eq.sym)/do|b = $(sol.d_dob)")
+    if !iszero(sol.ob)
+        println(io, "ob = $(sol.ob)")
+    end
+    print(io, "$(sol.prob.eq.sym)i = $(sol.i)")
+end
 
 """
     RSSCostFunction{fit_D0}(func, prob::InverseProblem[; D0tol, oi_hint])
@@ -15,8 +64,8 @@ Residual sum of squares cost function for parameter estimation.
 - `fit_D0::Bool`: whether to fit an additional constant factor `D0` that affects the diffusivity. Values 
 of `D0` can be found with relative efficiency without additional solver calls; so if any such constant
 factors affecting the diffusivity are unknown, it is recommended not to fit those factors directly but set
-`fit_D0` to `true` instead. Values of `D0` are found internally by local optimization, and they can be
-retrieved by calling the `candidate` function.
+`fit_D0` to `true` instead. Values of `D0` are found internally by local optimization. If `true`, the
+`candidate` function will return a `ScaledSolution` that includes the found value of `D0`.
 
 # Arguments
 - `func`: function that takes a vector of parameter values and returns either a `Fronts.Solution` or a
@@ -35,6 +84,8 @@ GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance softwa
 inverse solving of horizontal capillary flow.
 Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 
+See also: [`candidate`](@ref), [`ScaledSolution`](@ref), [`Fronts.Solution`](@ref), [`Fronts.Problem`](@ref)
+
 ---
 
     (::RSSCostFunction)(p::AbstractVector)
@@ -45,8 +96,6 @@ The `RSSCostFunction` object is meant to be passed to your optimizer of choice f
 objective function.
 
 If you need to know more than just the cost, call the `candidate` function instead.
-
-See also: [`candidate`](@ref), [`Fronts.Solution`](@ref), [`Fronts.Problem`](@ref)
 """
 struct RSSCostFunction{fit_D0, _Tfunc, _Tprob, _TD0tol, _Toi_hint, _Tsorptivity}
     _func::_Tfunc
@@ -74,50 +123,38 @@ struct RSSCostFunction{fit_D0, _Tfunc, _Tprob, _TD0tol, _Toi_hint, _Tsorptivity}
     end
 end
 
-(cf::RSSCostFunction)(arg) = candidate(cf, arg).cost
+function (cf::RSSCostFunction)(sol::Union{Solution, ScaledSolution})
+    if !successful_retcode(sol)
+        return Inf
+    end
 
-solve(cf::RSSCostFunction, params::AbstractVector) = solve(cf._func(params))
-
-struct _Candidate
-    sol::Solution
-    D0::Float64
-    cost::Float64
+    if !isnothing(cf._prob._weights)
+        return sum(cf._prob._weights .* (sol.(cf._prob._o) .- cf._prob._θ) .^ 2)
+    else
+        return sum((sol.(cf._prob._o) .- cf._prob._θ) .^ 2)
+    end
 end
+
+(cf::RSSCostFunction)(params::AbstractVector) = cf(candidate(cf, params))
+
+_solve(cf::RSSCostFunction, params::AbstractVector) = _solve(cf, cf._func(params))
+_solve(::RSSCostFunction, prob::Problem) = solve(prob)
+_solve(::RSSCostFunction, sol::Solution) = sol
 
 """
     candidate(cf::RSSCostFunction, ::AbstractVector)
     candidate(cf::RSSCostFunction, ::Fronts.Problem)
     candidate(cf::RSSCostFunction, ::Fronts.Solution)
 
-Return the candidate solution (including the cost) for a given cost function and parameter values,
-problem, or solution.
-
-The return of this function has the following fields:
-- `sol`: the solution.
-- `D0`: if `cf` has `fit_D0` set to `true` and `sol` is succesful, the found value of `D0`.
-- `cost`: the cost of the solution; infinite if `sol` is `nothing`.
+Return the candidate solution for a given cost function and parameter values, problem, or solution.
 """
-candidate(cf::RSSCostFunction, params::AbstractVector) = candidate(cf, solve(cf, params))
-
-candidate(cf::RSSCostFunction, prob::Problem) = candidate(cf, solve(cf, prob))
-
-function candidate(cf::RSSCostFunction{false}, sol::Solution)
-    if sol.retcode != ReturnCode.Success
-        return _Candidate(sol, 1, Inf)
-    end
-
-    if !isnothing(cf._prob._weights)
-        return _Candidate(sol,
-            1,
-            sum(cf._prob._weights .* (sol.(cf._prob._o) .- cf._prob._θ) .^ 2))
-    else
-        return _Candidate(sol, 1, sum((sol.(cf._prob._o) .- cf._prob._θ) .^ 2))
-    end
-end
+candidate(cf::RSSCostFunction, params::AbstractVector) = candidate(cf, _solve(cf, params))
+candidate(cf::RSSCostFunction, prob::Problem) = candidate(cf, _solve(cf, prob))
+candidate(::RSSCostFunction{false}, sol::Solution) = sol
 
 function candidate(cf::RSSCostFunction{true}, sol::Solution)
-    if sol.retcode != ReturnCode.Success
-        return _Candidate(sol, NaN, Inf)
+    if !successful_retcode(sol)
+        return ScaledSolution(sol, NaN)
     end
 
     scaled!(ret, o, (D0,)) = (ret .= sol.(o ./ √D0))
@@ -142,7 +179,7 @@ function candidate(cf::RSSCostFunction{true}, sol::Solution)
         @warn "Attempt to fit D0 did not converge"
     end
 
-    return _Candidate(sol, only(scaling.param), sum(scaling.resid .^ 2))
+    return ScaledSolution(sol, scaling.param[1])
 end
 
 export RSSCostFunction, candidate
