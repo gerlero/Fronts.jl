@@ -297,7 +297,12 @@ function solve(prob::Union{
             end
 
             θ_prev_sweep .= θ
-            θ .= A \ B
+            try
+                θ .= A \ B
+            catch e
+                e isa SingularException || rethrow()
+                θ .= NaN
+            end
             sweeps += 1
             change = maximum(abs.(θ .- θ_prev_sweep))
         end
