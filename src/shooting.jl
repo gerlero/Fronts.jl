@@ -1,35 +1,3 @@
-function _shoot!(integrator, prob::Union{CauchyProblem, SorptivityProblem}; i, abstol)
-    direction = monotonicity(prob)
-    limit = i + direction * abstol
-
-    integrator = _reinit!(integrator, prob)
-
-    solve!(integrator)
-
-    @assert integrator.sol.retcode != ReturnCode.Success
-
-    resid = direction * typemax(i)
-
-    if integrator.sol.retcode == ReturnCode.Terminated &&
-       direction * integrator.sol.u[end][1] <= direction * limit
-        resid = integrator.sol.u[end][1] - i
-    end
-
-    return integrator, resid
-end
-
-function _init(prob::DirichletProblem, alg::BoltzmannODE; d_dob, abstol)
-    return _init(CauchyProblem(prob.eq, b = prob.b, d_dob = d_dob, ob = prob.ob),
-        alg,
-        i = prob.i, abstol = abstol, verbose = false)
-end
-
-function _shoot!(integrator, prob::DirichletProblem; d_dob, abstol)
-    return _shoot!(integrator,
-        CauchyProblem(prob.eq, b = prob.b, d_dob = d_dob, ob = prob.ob), i = prob.i,
-        abstol = abstol)
-end
-
 """
     solve(prob::DirichletProblem[, alg::BoltzmannODE; abstol, maxiters, d_dob_hint]) -> Solution
 
@@ -64,28 +32,45 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE = BoltzmannODE();
         d_dob_hint = d_do(prob, :b_hint)
     end
 
+    direction = monotonicity(prob)
+    limit = prob.i + direction * abstol
     resid = prob.b - prob.i
 
-    integrator = _init(prob, alg, d_dob = d_dob_hint, abstol = abstol)
+    integrator = _init(CauchyProblem(prob.eq, b = prob.b, d_dob = d_dob_hint, ob = prob.ob),
+        alg,
+        limit = limit,
+        verbose = false)
 
     if abs(resid) ≤ abstol
+        _reinit!(integrator,
+            CauchyProblem(prob.eq, b = prob.b, d_dob = zero(d_dob_hint), ob = prob.ob))
         solve!(integrator)
+
         @assert integrator.sol.retcode != ReturnCode.Success
         retcode = integrator.sol.retcode == ReturnCode.Terminated ? ReturnCode.Success :
                   integrator.sol.retcode
         if verbose && !SciMLBase.successful_retcode(integrator.sol)
             @warn "Problem has a trivial solution but failed to obtain it"
         end
+
         return Solution(integrator.sol, prob, alg, _retcode = retcode, _niter = 0)
     end
 
     d_dob_trial = bracket_bisect(zero(d_dob_hint), d_dob_hint, resid)
 
     for niter in 1:maxiters
-        integrator, resid = _shoot!(integrator,
-            prob,
-            d_dob = d_dob_trial(resid),
-            abstol = abstol)
+        _reinit!(integrator,
+            CauchyProblem(prob.eq, b = prob.b, d_dob = d_dob_trial(resid), ob = prob.ob))
+        solve!(integrator)
+
+        @assert integrator.sol.retcode != ReturnCode.Success
+        if integrator.sol.retcode == ReturnCode.Terminated &&
+           direction * integrator.sol.u[end][1] ≤ direction * limit
+            resid = integrator.sol.u[end][1] - prob.i
+        else
+            resid = direction * typemax(prob.i)
+        end
+
         if abs(resid) ≤ abstol
             return Solution(integrator.sol,
                 prob,
@@ -103,24 +88,6 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE = BoltzmannODE();
         alg,
         _retcode = ReturnCode.MaxIters,
         _niter = maxiters)
-end
-
-function _init(prob::FlowrateProblem, alg::BoltzmannODE; b, abstol)
-    ob = !iszero(prob.ob) ? prob.ob : 1e-6
-
-    return _init(SorptivityProblem(prob.eq, b = b, S = 2prob.Qb / prob._αh / ob, ob = ob),
-        alg,
-        i = prob.i,
-        abstol = abstol,
-        verbose = false)
-end
-
-function _shoot!(integrator, prob::FlowrateProblem; b, abstol)
-    ob = !iszero(prob.ob) ? prob.ob : 1e-6
-
-    return _shoot!(integrator,
-        SorptivityProblem(prob.eq, b = b, S = 2prob.Qb / prob._αh / ob, ob = ob),
-        i = prob.i, abstol = abstol)
 end
 
 """
@@ -157,19 +124,29 @@ function solve(prob::FlowrateProblem; alg::BoltzmannODE = BoltzmannODE(),
         b_hint = prob.i - oneunit(prob.i) * monotonicity(prob)
     end
 
+    ob = iszero(prob.ob) ? 1e-6 : prob.ob
+
+    direction = monotonicity(prob)
+    limit = prob.i + direction * abstol
     resid = prob.i - oneunit(prob.i) * monotonicity(prob)
+    S = 2prob.Qb / prob._αh / ob
 
-    integrator = _init(prob, alg, b = b_hint, abstol = abstol)
+    integrator = _init(SorptivityProblem(prob.eq, b = b_hint, S = S, ob = ob),
+        alg,
+        limit = limit,
+        verbose = false)
 
-    if monotonicity(prob) == 0
-        integrator, resid = _shoot!(integrator, prob, b = prob.i, abstol = abstol)
-        @assert iszero(resid)
+    if iszero(direction)
+        _reinit!(integrator, SorptivityProblem(prob.eq, b = prob.i, S = zero(S), ob = ob))
+        solve!(integrator)
+
         @assert integrator.sol.retcode != ReturnCode.Success
         retcode = integrator.sol.retcode == ReturnCode.Terminated ? ReturnCode.Success :
                   integrator.sol.retcode
         if verbose && !SciMLBase.successful_retcode(integrator.sol)
             @warn "Problem has a trivial solution but failed to obtain it"
         end
+
         return Solution(integrator.sol,
             prob,
             alg,
@@ -180,7 +157,18 @@ function solve(prob::FlowrateProblem; alg::BoltzmannODE = BoltzmannODE(),
     b_trial = bracket_bisect(prob.i, b_hint)
 
     for niter in 1:maxiters
-        integrator, resid = _shoot!(integrator, prob, b = b_trial(resid), abstol = abstol)
+        _reinit!(integrator, SorptivityProblem(prob.eq, b = b_trial(resid), S = S, ob = ob))
+        solve!(integrator)
+
+        @assert integrator.sol.retcode != ReturnCode.Success
+        if integrator.sol.retcode == ReturnCode.Terminated &&
+           direction * integrator.sol.u[end][1] ≤ direction * limit
+            resid = integrator.sol.u[end][1] - prob.i
+        elseif integrator.sol.retcode != ReturnCode.Terminated && integrator.t == ob
+            resid = -direction * typemax(prob.i)
+        else
+            resid = direction * typemax(prob.i)
+        end
 
         if abs(resid) ≤ abstol
             return Solution(integrator.sol,

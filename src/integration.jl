@@ -25,6 +25,7 @@ end
 
 """
     boltzmann(prob::CauchyProblem) -> DifferentialEquations.ODEProblem
+    boltzmann(prob::SorptivityProblem) -> DifferentialEquations.ODEProblem
 
 Transform `prob` into an ODE problem in terms of the Boltzmann variable `o`.
 
@@ -32,40 +33,35 @@ The ODE problem is set up to terminate automatically (`ReturnCode.Terminated`) w
 
 See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/)
 """
-function boltzmann(prob::CauchyProblem)
-    u0 = @SVector [prob.b, prob.d_dob]
+function boltzmann(prob::Union{CauchyProblem, SorptivityProblem})
+    if prob isa CauchyProblem
+        u0 = @SVector [prob.b, prob.d_dob]
+    elseif prob isa SorptivityProblem
+        u0 = @SVector [prob.b, d_do(prob.eq, prob.b, prob.S)]
+    end
+
     ob = float(prob.ob)
+
     settled = DiscreteCallback(let direction = monotonicity(prob)
             (u, t, integrator) -> direction * u[2] ≤ zero(u[2])
         end,
         terminate!,
         save_positions = (false, false))
+
     ODEProblem(boltzmann(prob.eq), u0, (ob, typemax(ob)), callback = settled)
 end
-
-function boltzmann(prob::SorptivityProblem)
-    boltzmann(CauchyProblem(prob.eq,
-        b = prob.b,
-        d_dob = d_do(prob.eq, prob.b, prob.S),
-        ob = prob.ob))
-end
-
-monotonicity(odeprob::ODEProblem)::Int = sign(odeprob.u0[2])
 
 const _ODE_ALG = RadauIIA5()
 const _ODE_MAXITERS = 1000
 
-function _init(odeprob::ODEProblem,
+function _init(prob::Union{CauchyProblem, SorptivityProblem},
         ::BoltzmannODE;
-        i = nothing,
-        abstol = 0,
+        limit = nothing,
         verbose = true)
-    if !isnothing(i)
-        direction = monotonicity(odeprob)
+    odeprob = boltzmann(prob)
 
-        past_limit = DiscreteCallback(let direction = direction,
-                limit = i + direction * abstol
-
+    if !isnothing(limit)
+        past_limit = DiscreteCallback(let direction = monotonicity(prob), limit = limit
                 (u, t, integrator) -> direction * u[1] > direction * limit
             end,
             terminate!,
@@ -78,14 +74,6 @@ function _init(odeprob::ODEProblem,
     end
 
     return init(odeprob, _ODE_ALG, maxiters = _ODE_MAXITERS, verbose = verbose)
-end
-
-function _init(prob::Union{CauchyProblem, SorptivityProblem},
-        alg::BoltzmannODE;
-        i = nothing,
-        abstol = 0,
-        verbose = true)
-    _init(boltzmann(prob), alg, i = i, abstol = abstol, verbose = verbose)
 end
 
 function _reinit!(integrator, prob::CauchyProblem)
