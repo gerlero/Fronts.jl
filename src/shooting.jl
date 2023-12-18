@@ -131,13 +131,14 @@ function solve(prob::FlowrateProblem; alg::BoltzmannODE = BoltzmannODE(),
     resid = prob.i - oneunit(prob.i) * monotonicity(prob)
     S = 2prob.Qb / prob._αh / ob
 
-    integrator = _init(SorptivityProblem(prob.eq, b = b_hint, S = S, ob = ob),
+    integrator = _init(SorptivityCauchyProblem(prob.eq, b = b_hint, S = S, ob = ob),
         alg,
         limit = limit,
         verbose = false)
 
     if iszero(direction)
-        _reinit!(integrator, SorptivityProblem(prob.eq, b = prob.i, S = zero(S), ob = ob))
+        _reinit!(integrator,
+            SorptivityCauchyProblem(prob.eq, b = prob.i, S = zero(S), ob = ob))
         solve!(integrator)
 
         @assert integrator.sol.retcode != ReturnCode.Success
@@ -157,7 +158,8 @@ function solve(prob::FlowrateProblem; alg::BoltzmannODE = BoltzmannODE(),
     b_trial = bracket_bisect(prob.i, b_hint)
 
     for niter in 1:maxiters
-        _reinit!(integrator, SorptivityProblem(prob.eq, b = b_trial(resid), S = S, ob = ob))
+        _reinit!(integrator,
+            SorptivityCauchyProblem(prob.eq, b = b_trial(resid), S = S, ob = ob))
         solve!(integrator)
 
         @assert integrator.sol.retcode != ReturnCode.Success
