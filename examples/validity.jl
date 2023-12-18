@@ -29,7 +29,7 @@ d = LETd(L = 0.004569, E = 12930, T = 1.505, Dwt = 4.660e-4, θr = 0.019852, θs
 θbc = solve(DirichletProblem(bc, i = θi, b = θs - ϵ))
 θvg = solve(DirichletProblem(vg, i = θi, b = θs - ϵ))
 θxs = solve(DirichletProblem(xs, i = θi, b = θs - ϵ))
-@time θd = solve(DirichletProblem(d, i = θi, b = θs - ϵ), FiniteDifference())
+θd = solve(DirichletProblem(d, i = θi, b = θs - ϵ))
 
 o = range(0, 0.0025, length = 500)
 
