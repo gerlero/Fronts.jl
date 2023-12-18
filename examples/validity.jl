@@ -4,7 +4,6 @@ module ExampleValidity
 using Fronts
 using Fronts.PorousModels
 using Plots
-using BenchmarkTools
 
 # Wetting of a Whatman No. 1 paper strip
 # Reference: Gerlero et al. (2022)
