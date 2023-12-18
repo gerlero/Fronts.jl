@@ -44,13 +44,13 @@
     end
 end
 
-@testset "SorptivityProblem" begin
+@testset "SorptivityCauchyProblem" begin
     @testset "exact" begin
         # Reference: Philip (1960) Table 1, No. 13
         # https://doi.org/10.1071/PH600001
         D = θ -> 0.5 * (1 - NaNMath.log(θ))
 
-        prob = SorptivityProblem(D, b = 1, S = 1)
+        prob = SorptivityCauchyProblem(D, b = 1, S = 1)
         @test sorptivity(prob) == 1
 
         θ = solve(prob)

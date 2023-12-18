@@ -25,7 +25,7 @@ end
 
 """
     boltzmann(prob::CauchyProblem) -> DifferentialEquations.ODEProblem
-    boltzmann(prob::SorptivityProblem) -> DifferentialEquations.ODEProblem
+    boltzmann(prob::SorptivityCauchyProblem) -> DifferentialEquations.ODEProblem
 
 Transform `prob` into an ODE problem in terms of the Boltzmann variable `o`.
 
@@ -33,10 +33,10 @@ The ODE problem is set up to terminate automatically (`ReturnCode.Terminated`) w
 
 See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/)
 """
-function boltzmann(prob::Union{CauchyProblem, SorptivityProblem})
+function boltzmann(prob::Union{CauchyProblem, SorptivityCauchyProblem})
     if prob isa CauchyProblem
         u0 = @SVector [prob.b, prob.d_dob]
-    elseif prob isa SorptivityProblem
+    elseif prob isa SorptivityCauchyProblem
         u0 = @SVector [prob.b, d_do(prob.eq, prob.b, prob.S)]
     end
 
@@ -54,7 +54,7 @@ end
 const _ODE_ALG = RadauIIA5()
 const _ODE_MAXITERS = 1000
 
-function _init(prob::Union{CauchyProblem, SorptivityProblem},
+function _init(prob::Union{CauchyProblem, SorptivityCauchyProblem},
         ::BoltzmannODE;
         limit = nothing,
         verbose = true)
@@ -82,7 +82,7 @@ function _reinit!(integrator, prob::CauchyProblem)
     return integrator
 end
 
-function _reinit!(integrator, prob::SorptivityProblem)
+function _reinit!(integrator, prob::SorptivityCauchyProblem)
     @assert -sign(prob.S) == sign(integrator.sol.u[1][2])
     reinit!(integrator, @SVector [prob.b, d_do(prob.eq, prob.b, prob.S)])
     return integrator
@@ -90,7 +90,7 @@ end
 
 """
     solve(prob::CauchyProblem[, alg::BoltzmannODE; verbose]) -> Solution
-    solve(prob::SorptivityProblem[, alg::BoltzmannODE; verbose]) -> Solution
+    solve(prob::SorptivityCauchyProblem[, alg::BoltzmannODE; verbose]) -> Solution
 
 Solve the problem `prob`.
 
@@ -107,7 +107,7 @@ Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 
 See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
 """
-function solve(prob::Union{CauchyProblem, SorptivityProblem},
+function solve(prob::Union{CauchyProblem, SorptivityCauchyProblem},
         alg::BoltzmannODE = BoltzmannODE();
         verbose = true)
     odesol = solve!(_init(prob, alg, verbose = verbose))
