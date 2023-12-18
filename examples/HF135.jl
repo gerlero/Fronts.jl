@@ -3,7 +3,7 @@ module ExampleHF135
 
 using Fronts
 using Fronts.PorousModels
-using BenchmarkTools
+using Plots
 
 ϵ = 1e-7
 
@@ -22,6 +22,14 @@ model = VanGenuchten(n = n, α = α, k = k, θr = θr, θs = θs)
 
 prob = DirichletProblem(model, i = θi, b = θs - ϵ)
 
-@btime θ = solve(prob)
+θ = solve(prob)
+
+r = range(0, 0.05, length = 500)
+
+plt = plot(r, r -> θ(r, 60), label = "t=60 s", xguide = "r [m]", yguide = "θ")
+display(plt)
+
+plt = plot(r, r -> flux(θ, r, 60), label = "t=60 s", xguide = "r [m]", yguide = "U [m/s]")
+display(plt)
 
 end
