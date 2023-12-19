@@ -18,13 +18,13 @@ Whether the solution to `prob` must be decreasing (`-1`), constant (`0`) or incr
 function monotonicity end
 
 """
-    DirichletProblem(eq; i, b[, ob]) <: Problem{typeof(eq)}
+    DirichletProblem(eq::Equation; i, b[, ob]) <: Problem{typeof(eq)}
     DirichletProblem(D; i, b[, ob]) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Dirichlet boundary condition.
 
 # Arguments
-- `eq::Equation`: governing equation.
+- `eq`: governing equation.
 - `D`: diffusivity function. Shortcut for `DirichletProblem(DiffusionEquation(D), ...)`.
 
 # Keyword arguments
@@ -90,12 +90,12 @@ function d_do(prob::DirichletProblem, symbol::Symbol)
 end
 
 """
-    FlowrateProblem(eq; i, Qb[, angle, height, ob]) <: Problem{typeof(eq)}
+    FlowrateProblem(eq::Equation{2}; i, Qb[, angle, height, ob]) <: Problem{typeof(eq)}
 
 Semi-infinite radial (polar/cylindrical) problem with an imposed-flowrate boundary condition.
 
 # Arguments
-- `eq::Equation{2}`: governing equation.
+- `eq`: governing equation.
 
 # Keyword arguments
 - `i`: initial value.
@@ -159,13 +159,13 @@ end
 monotonicity(prob::FlowrateProblem)::Int = -sign(prob.Qb)
 
 """
-    SorptivityProblem(eq; i, S[, ob]) <: Problem{typeof(eq)}
+    SorptivityProblem(eq::Equation; i, S[, ob]) <: Problem{typeof(eq)}
     SorptivityProblem(D; i, S[, ob]) <: Problem{typeof(eq)}
 
 Semi-infinite problem with a known initial condition and soprtivity.
 
 # Arguments
-- `eq::Equation`: governing equation.
+- `eq`: governing equation.
 - `D`: diffusivity function. Shortcut for `SorptivityProblem(DiffusionEquation(D), ...)`.
 
 # Keyword arguments
@@ -220,13 +220,13 @@ monotonicity(prob::SorptivityProblem)::Int = -sign(prob.S)
 sorptivity(prob::SorptivityProblem) = prob.S
 
 """
-    CauchyProblem(eq; b, d_dob[, ob]) <: Problem{typeof(eq)}
+    CauchyProblem(eq::Equation; b, d_dob[, ob]) <: Problem{typeof(eq)}
     CauchyProblem(D; b, d_dob[, ob]) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Cauchy boundary condition (and unknown initial condition).
 
 # Arguments
-- `eq::Equation`: governing equation.
+- `eq`: governing equation.
 - `D`: diffusivity function. Shortcut for `CauchyProblem(DiffusionEquation(D), ...)`.
 
 # Keyword arguments
@@ -284,13 +284,13 @@ monotonicity(prob::CauchyProblem)::Int = sign(prob.d_dob)
 sorptivity(prob::CauchyProblem) = sorptivity(prob.eq, prob.b, prob.d_dob)
 
 """
-    SorptivityCauchyProblem(eq; b, S[, ob]) <: Problem{typeof(eq)}
+    SorptivityCauchyProblem(eq::Equation; b, S[, ob]) <: Problem{typeof(eq)}
     SorptivityCauchyProblem(D; b, S[, ob]) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a known boundary value and soprtivity (and unknown initial condition).
 
 # Arguments
-- `eq::Equation`: governing equation.
+- `eq`: governing equation.
 - `D`: diffusivity function. Shortcut for `SorptivityCauchyProblem(DiffusionEquation(D), ...)`.
 
 # Keyword arguments

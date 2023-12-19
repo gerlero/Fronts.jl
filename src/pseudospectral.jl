@@ -4,7 +4,7 @@
 Pseudospectral method of Mathias and Sander (2021).
 
 # Arguments
-- `N::Int=100`: number of Chebyshev nodes.
+- `N=100`: number of Chebyshev nodes.
 
 # References
 MATHIAS, S. A.; SANDER, G. C. Pseudospectral methods provide fast and accurate solutions for the horizontal infiltration equation.
