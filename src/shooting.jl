@@ -130,7 +130,7 @@ function solve(prob::Union{FlowrateProblem, SorptivityProblem},
 
     direction = monotonicity(prob)
     limit = prob.i + direction * abstol
-    resid = prob.i - oneunit(prob.i) * monotonicity(prob)
+    resid = nothing
 
     S = prob isa FlowrateProblem ? 2prob.Qb / prob._αh / ob : prob.S
 
@@ -140,6 +140,7 @@ function solve(prob::Union{FlowrateProblem, SorptivityProblem},
         verbose = false)
 
     if iszero(direction)
+        @assert iszero(S)
         _reinit!(integrator,
             SorptivityCauchyProblem(prob.eq, b = prob.i, S = zero(S), ob = ob))
         solve!(integrator)
