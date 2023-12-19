@@ -91,7 +91,8 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE = BoltzmannODE();
 end
 
 """
-    solve(prob::FlowrateProblem[, BoltzmannODE; abstol, maxiters, b_hint]) -> Solution
+    solve(prob::FlowrateProblem[, alg::BoltzmannODE; abstol, maxiters, b_hint]) -> Solution
+    solve(prob::SorptivityProblem[, alg::BoltzmannODE; abstol, maxiters, b_hint, verbose]) -> Solution
 
 Solve the problem `prob`.
 
@@ -108,9 +109,10 @@ Solve the problem `prob`.
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
 Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 
-See also: [`Solution`](@ref), [`BoltzmannODE`](@ref)
+See also: [`Solution`](@ref), [`BoltzmannODE`](@ref), [`sorptivity`](@ref)
 """
-function solve(prob::FlowrateProblem; alg::BoltzmannODE = BoltzmannODE(),
+function solve(prob::Union{FlowrateProblem, SorptivityProblem},
+        alg::BoltzmannODE = BoltzmannODE();
         abstol = 1e-3,
         maxiters = 100,
         verbose = true)
@@ -124,12 +126,13 @@ function solve(prob::FlowrateProblem; alg::BoltzmannODE = BoltzmannODE(),
         b_hint = prob.i - oneunit(prob.i) * monotonicity(prob)
     end
 
-    ob = iszero(prob.ob) ? 1e-6 : prob.ob
+    ob = prob isa FlowrateProblem && iszero(prob.ob) ? 1e-6 : prob.ob
 
     direction = monotonicity(prob)
     limit = prob.i + direction * abstol
     resid = prob.i - oneunit(prob.i) * monotonicity(prob)
-    S = 2prob.Qb / prob._αh / ob
+
+    S = prob isa FlowrateProblem ? 2prob.Qb / prob._αh / ob : prob.S
 
     integrator = _init(SorptivityCauchyProblem(prob.eq, b = b_hint, S = S, ob = ob),
         alg,

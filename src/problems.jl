@@ -159,6 +159,67 @@ end
 monotonicity(prob::FlowrateProblem)::Int = -sign(prob.Qb)
 
 """
+    SorptivityProblem(eq; i, S[, ob]) <: Problem{typeof(eq)}
+    SorptivityProblem(D; i, S[, ob]) <: Problem{typeof(eq)}
+
+Semi-infinite problem with a known initial condition and soprtivity.
+
+# Arguments
+- `eq::Equation`: governing equation.
+- `D`: diffusivity function. Shortcut for `SorptivityProblem(DiffusionEquation(D), ...)`.
+
+# Keyword arguments
+- `i`: initial value.
+- `S`: prescribed sorptivity.
+- `ob=0`: boundary constant for an optional moving boundary. At time `t`, the boundary is located at `ob*√t`. Must be positive if `eq` is radial.
+
+# Examples
+```jldoctest; setup = :(using Fronts)
+julia> D(θ) = θ^4
+D (generic function with 1 method)
+
+julia> prob = Fronts.SorptivityProblem(D, i=0, S=1)
+⎧ ∂θ/∂t = ∂(D(θ)*∂θ/∂r)/∂r, r>0,t>0
+⎨ θ(r,0) = 0, r>0
+⎩ S = 1
+```
+"""
+struct SorptivityProblem{Teq, _T, _To, _TS} <: Problem{Teq}
+    eq::Teq
+    i::_T
+    S::_TS
+    ob::_To
+    function SorptivityProblem(eq::Equation{1}; i, S, ob = 0)
+        new{typeof(eq), typeof(i), typeof(ob), typeof(S)}(eq, i, S, ob)
+    end
+    function SorptivityProblem(eq::Equation; i, S, ob)
+        @argcheck ob > zero(ob)
+        new{typeof(eq), typeof(i), typeof(ob), typeof(S)}(eq, i, S, ob)
+    end
+end
+
+function SorptivityProblem(D; i, S, ob = 0)
+    SorptivityProblem(DiffusionEquation(D), i = i, S = S, ob = ob)
+end
+
+function Base.show(io::IO, prob::SorptivityProblem)
+    if iszero(prob.ob)
+        println(io, "⎧ ", prob.eq, ", r>0,t>0")
+    else
+        println(io, "⎧ ", prob.eq, ", r>rb(t),t>0")
+    end
+    println(io, "⎨ ", prob.eq.sym, "(r,0) = ", prob.i, ", r>0")
+    println(io, "⎩ S = ", prob.S)
+    if !iszero(prob.ob)
+        print(io, "with rb(t) = ", prob.ob, "*√t")
+    end
+end
+
+monotonicity(prob::SorptivityProblem)::Int = -sign(prob.S)
+
+sorptivity(prob::SorptivityProblem) = prob.S
+
+"""
     CauchyProblem(eq; b, d_dob[, ob]) <: Problem{typeof(eq)}
     CauchyProblem(D; b, d_dob[, ob]) <: Problem{DiffusionEquation{1}}
 

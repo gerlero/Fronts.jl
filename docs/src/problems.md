@@ -8,6 +8,7 @@ CurrentModule = Fronts
 Problem
 DirichletProblem
 FlowrateProblem
+SorptivityProblem
 CauchyProblem
 SorptivityCauchyProblem
 FiniteProblem
