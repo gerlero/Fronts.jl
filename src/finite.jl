@@ -199,7 +199,6 @@ function solve(prob::Union{
 
     θ = similar(r)
     t = 0.0
-    Δt = 1.0
 
     presol = nothing
     if !isnothing(alg._pre) &&
@@ -243,8 +242,11 @@ function solve(prob::Union{
     Au = similar(Ad, length(Ad) - 1)
     B = similar(Ad)
 
-    D = similar(Ad, length(r))
-    Df = similar(D, length(D) - 1)
+    D = prob.eq.D.(θ)
+    Df = 2D[begin:(end - 1)] .* D[(begin + 1):end] ./
+         (D[begin:(end - 1)] + D[(begin + 1):end])
+
+    Δt = Δr² / 2maximum(Df)
 
     while !(prob isa FiniteProblem) || t < prob._tstop
         if prob isa FiniteProblem && t + Δt > prob._tstop
@@ -268,20 +270,20 @@ function solve(prob::Union{
             Df .= 2D[begin:(end - 1)] .* D[(begin + 1):end] ./
                   (D[begin:(end - 1)] + D[(begin + 1):end])
 
-            Ad[begin] = 1 + Df[begin] / Δr² * Δt
+            Ad[begin] = 1 + Df[begin] * Δt / Δr²
             Ad[(begin + 1):(end - 1)] .= 1 .+
-                                         (Df[begin:(end - 1)] .+ Df[(begin + 1):end]) ./
-                                         Δr² .* Δt
-            Ad[end] = 1 + Df[end] / Δr² * Δt
+                                         (Df[begin:(end - 1)] .+ Df[(begin + 1):end]) .*
+                                         Δt ./ Δr²
+            Ad[end] = 1 + Df[end] * Δt / Δr²
 
-            Al .= -Df ./ Δr² .* Δt
-            Au .= -Df ./ Δr² .* Δt
+            Al .= -Df .* Δt ./ Δr²
+            Au .= -Df .* Δt ./ Δr²
 
             A = Tridiagonal(Al, Ad, Au)
             B .= θ
 
             if prob isa FiniteReservoirProblem
-                influx = min(-Df[begin] * (θ[begin + 1] - prob.b) / Δr * Δt,
+                influx = min(-Df[begin] * (θ[begin + 1] - prob.b) * Δt / Δr,
                     prob.capacity - used)
             end
 
@@ -291,8 +293,8 @@ function solve(prob::Union{
                 A[begin, begin + 1] = 0
                 B[begin] = prob.b
             elseif prob isa FiniteReservoirProblem && influx > zero(influx)
-                A[begin, begin] = Df[begin] / Δr * Δt
-                A[begin, begin + 1] = -Df[begin] / Δr * Δt
+                A[begin, begin] = Df[begin] * Δt / Δr
+                A[begin, begin + 1] = -Df[begin] * Δt / Δr
                 B[begin] = influx
             end
 
@@ -308,7 +310,7 @@ function solve(prob::Union{
         end
 
         if prob isa FiniteReservoirProblem
-            influx = -Df[begin] * (θ[begin + 1] - θ[begin]) / Δr * Δt
+            influx = -Df[begin] * (θ[begin + 1] - θ[begin]) * Δt / Δr
             used += influx
         end
 

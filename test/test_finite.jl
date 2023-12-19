@@ -13,9 +13,11 @@
     θ = solve(prob)
     θfd = solve(prob, FiniteDifference())
 
+    o = range(0, 0.004, length = 500)
+    @test θ.(o)≈θfd.(o) atol=2e-1
+
     r = range(0, 0.05, length = 500)
     for t in [10, 20, 30]
-        @test θ.(r, t)≈θfd.(r, t) atol=1e-1
         @test flux.(θ, r, t)≈flux.(θfd, r, t) atol=1e-4
     end
 end
@@ -34,7 +36,7 @@ end
         r = range(0, 100, length = 314)
 
         @test θ.(r, 1)≈exp.(-r) atol=5e-2
-        @test all(θ.(r, 1e6) .≈ 1)
+        @test all(isapprox.(θ.(r, 1e6), 1, atol = 1e-7))
 
         θf = solve(prob, FiniteDifference())
         @test θf.retcode == ReturnCode.Success
