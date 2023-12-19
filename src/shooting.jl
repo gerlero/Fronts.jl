@@ -1,5 +1,5 @@
 """
-    solve(prob::DirichletProblem[, alg::BoltzmannODE; abstol, maxiters, d_dob_hint]) -> Solution
+    solve(prob::DirichletProblem[, alg::BoltzmannODE; abstol, maxiters, d_dob_hint, verbose]) -> Solution
 
 Solve the problem `prob`.
 
@@ -91,7 +91,7 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE = BoltzmannODE();
 end
 
 """
-    solve(prob::FlowrateProblem[, alg::BoltzmannODE; abstol, maxiters, b_hint]) -> Solution
+    solve(prob::FlowrateProblem[, alg::BoltzmannODE; abstol, maxiters, b_hint, verbose]) -> Solution
     solve(prob::SorptivityProblem[, alg::BoltzmannODE; abstol, maxiters, b_hint, verbose]) -> Solution
 
 Solve the problem `prob`.
