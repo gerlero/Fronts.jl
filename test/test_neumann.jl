@@ -36,3 +36,21 @@
         @test all(isnan.(θ.(0, t)))
     end
 end
+
+@testset "SorptivityProblem" begin
+    @testset "exact" begin
+        # Reference: Philip (1960) Table 1, No. 13
+        # https://doi.org/10.1071/PH600001
+        D = θ -> 0.5 * (1 - NaNMath.log(θ))
+
+        prob = SorptivityProblem(D, i = 0, S = 1)
+        @test sorptivity(prob) == 1
+
+        θ = solve(prob)
+        @test θ.retcode == ReturnCode.Success
+
+        @test sorptivity(θ) == sorptivity(prob)
+        @test θ.d_dob == -1
+        @test θ.i≈0 atol=1e-5
+    end
+end

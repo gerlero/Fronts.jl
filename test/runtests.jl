@@ -18,7 +18,7 @@ using Plots: plot
     include("test_PorousModels.jl")
     include("test_boltzmann.jl")
     include("test_dirichlet.jl")
-    include("test_flowrate.jl")
+    include("test_neumann.jl")
     include("test_cauchy.jl")
     include("test_richards.jl")
     include("test_pseudospectral.jl")

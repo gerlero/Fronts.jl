@@ -83,7 +83,7 @@ function _reinit!(integrator, prob::CauchyProblem)
 end
 
 function _reinit!(integrator, prob::SorptivityCauchyProblem)
-    @assert -sign(prob.S) == sign(integrator.sol.u[1][2])
+    @assert sign(prob.S) * sign(integrator.sol.u[1][2]) ≤ 0
     reinit!(integrator, @SVector [prob.b, d_do(prob.eq, prob.b, prob.S)])
     return integrator
 end
