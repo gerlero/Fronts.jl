@@ -80,15 +80,6 @@ end
 
 monotonicity(prob::DirichletProblem)::Int = sign(prob.i - prob.b)
 
-function d_do(prob::DirichletProblem, symbol::Symbol)
-    @argcheck symbol === :b_hint
-    Db = diffusivity(prob.eq, prob.b)
-    if !isfinite(Db) || Db ≤ zero(Db)
-        return (prob.i - prob.b) / √oneunit(Db)
-    end
-    return (prob.i - prob.b) / (2 * √Db)
-end
-
 """
     FlowrateProblem(eq::Equation{2}; i, Qb[, angle, height, ob]) <: Problem{typeof(eq)}
 
