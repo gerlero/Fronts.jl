@@ -1,18 +1,26 @@
 module _Diff
 
-using ForwardDiff: derivative
-using ForwardDiff: Dual, Tag, value, extract_derivative
+import AbstractDifferentiation
+import ForwardDiff
+
+@inline function derivative(f, x::Real)
+    return only(AbstractDifferentiation.derivative(AbstractDifferentiation.ForwardDiffBackend(),
+        f,
+        x))
+end
 
 @inline function value_and_derivative(f, x::Real)
-    T = typeof(Tag(f, typeof(x)))
-    ydual = f(Dual{T}(x, oneunit(x)))
-    return value(T, ydual), extract_derivative(T, ydual)
+    a, b = AbstractDifferentiation.value_and_derivative(AbstractDifferentiation.ForwardDiffBackend(),
+        f,
+        x)
+    return a, only(b)
 end
 
 @inline function value_and_derivatives(f, x::Real)
-    T = typeof(Tag(f, typeof(x)))
-    ydual, ddual = value_and_derivative(f, Dual{T}(x, oneunit(x)))
-    return value(T, ydual), value(T, ddual), extract_derivative(T, ddual)
+    a, b, c = AbstractDifferentiation.value_derivative_and_second_derivative(AbstractDifferentiation.ForwardDiffBackend(),
+        f,
+        x)
+    return a, only(b), only(c)
 end
 
 export derivative, value_and_derivative, value_and_derivatives
