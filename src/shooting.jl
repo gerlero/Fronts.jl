@@ -29,7 +29,12 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE = BoltzmannODE();
         @argcheck sign(alg.d_dob_hint)==monotonicity(prob) "sign of d_dob_hint must be consistent with initial and boundary conditions"
         d_dob_hint = alg.d_dob_hint
     else
-        d_dob_hint = d_do(prob, :b_hint)
+        Db = diffusivity(prob.eq, prob.b)
+        if !isfinite(Db) || Db <= zero(Db)
+            d_dob_hint = (prob.i - prob.b) / √oneunit(Db)
+        else
+            d_dob_hint = (prob.i - prob.b) / (2 * √Db)
+        end
     end
 
     direction = monotonicity(prob)
