@@ -73,14 +73,14 @@ end
 Base.broadcastable(sol::Solution) = Ref(sol)
 
 function Base.show(io::IO, sol::Solution)
-    println(io, "Solution $(sol.prob.eq.sym) after $(sol._niter) iterations")
+    println(io, "Solution $(sol.prob.eq._sym) after $(sol._niter) iterations")
     println(io, "retcode: $(sol.retcode)")
-    println(io, "$(sol.prob.eq.sym)b = $(sol.b)")
-    println(io, "d$(sol.prob.eq.sym)/do|b = $(sol.d_dob)")
+    println(io, "$(sol.prob.eq._sym)b = $(sol.b)")
+    println(io, "d$(sol.prob.eq._sym)/do|b = $(sol.d_dob)")
     if !iszero(sol.ob)
         println(io, "ob = $(sol.ob)")
     end
-    print(io, "$(sol.prob.eq.sym)i = $(sol.i)")
+    print(io, "$(sol.prob.eq._sym)i = $(sol.i)")
 end
 
 SciMLBase.successful_retcode(sol::Solution) = SciMLBase.successful_retcode(sol.retcode)
@@ -180,9 +180,9 @@ sorptivity(sol::Solution, o = sol.ob) = sorptivity(sol.prob.eq, sol, o)
 # Plot recipe
 @recipe function _(sol::Solution)
     \
-    label --> string(sol.prob.eq.sym)
+    label --> string(sol.prob.eq._sym)
     xguide --> "o=r/√t"
-    yguide --> string(sol.prob.eq.sym)
+    yguide --> string(sol.prob.eq._sym)
 
     o = range(sol.ob, stop = sol.oi * 1.1, length = 1000)
     return o, sol.(o)

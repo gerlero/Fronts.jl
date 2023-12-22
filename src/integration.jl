@@ -13,8 +13,8 @@ Uses the Boltzmann transformation and (possibly repeated) ODE integration.
 GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance software packages for direct and inverse solving of horizontal capillary flow.
 Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 """
-struct BoltzmannODE{_Tθ, _Td_do}
-    b_hint::_Tθ
+struct BoltzmannODE{_T, _Td_do}
+    b_hint::_T
     d_dob_hint::_Td_do
 
     function BoltzmannODE(; b_hint = nothing,

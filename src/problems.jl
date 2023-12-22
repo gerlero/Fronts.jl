@@ -1,14 +1,14 @@
 """
-    abstract type Problem{Eq<:Equation} end
+    abstract type Problem{Eq <: DiffusionEquation} end
 
 Abstract supertype for problems that can be solved with this package.
 
 # Type parameters
 - `Eq`: type of the governing equation
 
-See also: [`Equation`](@ref)
+See also: [`DiffusionEquation`](@ref)
 """
-abstract type Problem{Eq <: Equation} end
+abstract type Problem{Eq <: DiffusionEquation} end
 
 """
     monotonicity(prob) -> Int
@@ -18,7 +18,7 @@ Whether the solution to `prob` must be decreasing (`-1`), constant (`0`) or incr
 function monotonicity end
 
 """
-    DirichletProblem(eq::Equation; i, b[, ob]) <: Problem{typeof(eq)}
+    DirichletProblem(eq::DiffusionEquation; i, b[, ob]) <: Problem{typeof(eq)}
     DirichletProblem(D; i, b[, ob]) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Dirichlet boundary condition.
@@ -34,26 +34,26 @@ Semi-infinite problem with a Dirichlet boundary condition.
 
 # Examples
 ```jldoctest; setup = :(using Fronts)
-julia> D(θ) = θ^4
+julia> D(u) = u^4
 D (generic function with 1 method)
 
 julia> prob = Fronts.DirichletProblem(D, i=1, b=2)
-⎧ ∂θ/∂t = ∂(D(θ)*∂θ/∂r)/∂r, r>0,t>0
-⎨ θ(r,0) = 1, r>0
-⎩ θ(0,t) = 2, t>0
+⎧ ∂u/∂t = ∂(D(u)*∂u/∂r)/∂r, r>0,t>0
+⎨ u(r,0) = 1, r>0
+⎩ u(0,t) = 2, t>0
 ```
 
-See also: [`Equation`](@ref)
+See also: [`DiffusionEquation`](@ref)
 """
 struct DirichletProblem{Teq, _T, _To} <: Problem{Teq}
     eq::Teq
     i::_T
     b::_T
     ob::_To
-    function DirichletProblem(eq::Equation{1}; i, b, ob = 0)
+    function DirichletProblem(eq::DiffusionEquation{1}; i, b, ob = 0)
         new{typeof(eq), promote_type(typeof(i), typeof(b)), typeof(ob)}(eq, i, b, ob)
     end
-    function DirichletProblem(eq::Equation; i, b, ob)
+    function DirichletProblem(eq::DiffusionEquation; i, b, ob)
         @argcheck ob > 0
         new{typeof(eq), promote_type(typeof(i), typeof(b)), typeof(ob)}(eq, i, b, ob)
     end
@@ -69,11 +69,11 @@ function Base.show(io::IO, prob::DirichletProblem)
     else
         println(io, "⎧ ", prob.eq, ", r>rb(t),t>0")
     end
-    println(io, "⎨ ", prob.eq.sym, "(r,0) = ", prob.i, ", r>0")
+    println(io, "⎨ ", prob.eq._sym, "(r,0) = ", prob.i, ", r>0")
     if iszero(prob.ob)
-        print(io, "⎩ ", prob.eq.sym, "(0,t) = ", prob.b, ", t>0")
+        print(io, "⎩ ", prob.eq._sym, "(0,t) = ", prob.b, ", t>0")
     else
-        println(io, "⎩ ", prob.eq.sym, "(rb(t),t) = ", prob.b, ", t>0")
+        println(io, "⎩ ", prob.eq._sym, "(rb(t),t) = ", prob.b, ", t>0")
         print(io, "with rb(t) = ", prob.ob, "*√t")
     end
 end
@@ -81,7 +81,7 @@ end
 monotonicity(prob::DirichletProblem)::Int = sign(prob.i - prob.b)
 
 """
-    FlowrateProblem(eq::Equation{2}; i, Qb[, angle, height, ob]) <: Problem{typeof(eq)}
+    FlowrateProblem(eq::DiffusionEquation{2}; i, Qb[, angle, height, ob]) <: Problem{typeof(eq)}
 
 Semi-infinite radial (polar/cylindrical) problem with an imposed-flowrate boundary condition.
 
@@ -97,28 +97,33 @@ Semi-infinite radial (polar/cylindrical) problem with an imposed-flowrate bounda
 
 # Examples
 ```jldoctest; setup = :(using Fronts)
-julia> D(θ) = θ^4
+julia> D(u) = u^4
 D (generic function with 1 method)
 
 julia> eq = Fronts.DiffusionEquation{2}(D)
-∂θ/∂t = 1/r*∂(r*D(θ)*∂θ/∂r)/∂r
+∂u/∂t = 1/r*∂(r*D(u)*∂u/∂r)/∂r
 
 julia> prob = Fronts.FlowrateProblem(eq, i=1, Qb=1)
-⎧ ∂θ/∂t = 1/r*∂(r*D(θ)*∂θ/∂r)/∂r, r>0,t>0
-⎨ θ(r,0) = 1, r>0
+⎧ ∂u/∂t = 1/r*∂(r*D(u)*∂u/∂r)/∂r, r>0,t>0
+⎨ u(r,0) = 1, r>0
 ⎩ Qb(0,t) = 1, t>0
 ```
 
-See also: [`Equation`](@ref)
+See also: [`DiffusionEquation`](@ref)
 """
-struct FlowrateProblem{Teq, _Tθ, _To, _TQ, _Th} <: Problem{Teq}
+struct FlowrateProblem{Teq, _T, _To, _TQ, _Th} <: Problem{Teq}
     eq::Teq
-    i::_Tθ
+    i::_T
     Qb::_TQ
     _αh::_Th
     ob::_To
 
-    function FlowrateProblem(eq::Equation{2}; i, Qb, angle = 2π, height = 1, ob = 0)
+    function FlowrateProblem(eq::DiffusionEquation{2};
+            i,
+            Qb,
+            angle = 2π,
+            height = 1,
+            ob = 0)
         @argcheck 0 < angle ≤ 2π
         @argcheck height > zero(height)
         @argcheck ob ≥ zero(ob)
@@ -133,7 +138,7 @@ function Base.show(io::IO, prob::FlowrateProblem)
     else
         println(io, "⎧ ", prob.eq, ", r>rb(t),t>0")
     end
-    println(io, "⎨ ", prob.eq.sym, "(r,0) = ", prob.i, ", r>0")
+    println(io, "⎨ ", prob.eq._sym, "(r,0) = ", prob.i, ", r>0")
     if iszero(prob.ob)
         print(io, "⎩ Qb(0,t) = ", prob.Qb, ", t>0")
     else
@@ -150,7 +155,7 @@ end
 monotonicity(prob::FlowrateProblem)::Int = -sign(prob.Qb)
 
 """
-    SorptivityProblem(eq::Equation; i, S[, ob]) <: Problem{typeof(eq)}
+    SorptivityProblem(eq::DiffusionEquation; i, S[, ob]) <: Problem{typeof(eq)}
     SorptivityProblem(D; i, S[, ob]) <: Problem{typeof(eq)}
 
 Semi-infinite problem with a known initial condition and soprtivity.
@@ -166,24 +171,26 @@ Semi-infinite problem with a known initial condition and soprtivity.
 
 # Examples
 ```jldoctest; setup = :(using Fronts)
-julia> D(θ) = θ^4
+julia> D(u) = u^4
 D (generic function with 1 method)
 
 julia> prob = Fronts.SorptivityProblem(D, i=0, S=1)
-⎧ ∂θ/∂t = ∂(D(θ)*∂θ/∂r)/∂r, r>0,t>0
-⎨ θ(r,0) = 0, r>0
+⎧ ∂u/∂t = ∂(D(u)*∂u/∂r)/∂r, r>0,t>0
+⎨ u(r,0) = 0, r>0
 ⎩ S = 1
 ```
+
+See also: [`DiffusionEquation`](@ref), [`sorptivity`](@ref)
 """
 struct SorptivityProblem{Teq, _T, _To, _TS} <: Problem{Teq}
     eq::Teq
     i::_T
     S::_TS
     ob::_To
-    function SorptivityProblem(eq::Equation{1}; i, S, ob = 0)
+    function SorptivityProblem(eq::DiffusionEquation{1}; i, S, ob = 0)
         new{typeof(eq), typeof(i), typeof(ob), typeof(S)}(eq, i, S, ob)
     end
-    function SorptivityProblem(eq::Equation; i, S, ob)
+    function SorptivityProblem(eq::DiffusionEquation; i, S, ob)
         @argcheck ob > zero(ob)
         new{typeof(eq), typeof(i), typeof(ob), typeof(S)}(eq, i, S, ob)
     end
@@ -199,7 +206,7 @@ function Base.show(io::IO, prob::SorptivityProblem)
     else
         println(io, "⎧ ", prob.eq, ", r>rb(t),t>0")
     end
-    println(io, "⎨ ", prob.eq.sym, "(r,0) = ", prob.i, ", r>0")
+    println(io, "⎨ ", prob.eq._sym, "(r,0) = ", prob.i, ", r>0")
     println(io, "⎩ S = ", prob.S)
     if !iszero(prob.ob)
         print(io, "with rb(t) = ", prob.ob, "*√t")
@@ -211,7 +218,7 @@ monotonicity(prob::SorptivityProblem)::Int = -sign(prob.S)
 sorptivity(prob::SorptivityProblem) = prob.S
 
 """
-    CauchyProblem(eq::Equation; b, d_dob[, ob]) <: Problem{typeof(eq)}
+    CauchyProblem(eq::DiffusionEquation; b, d_dob[, ob]) <: Problem{typeof(eq)}
     CauchyProblem(D; b, d_dob[, ob]) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Cauchy boundary condition (and unknown initial condition).
@@ -228,26 +235,26 @@ This value is equivalent to `√t*d_dr(<solution>, :b, t)` at any time `t>0`.
 
 # Examples
 ```jldoctest; setup = :(using Fronts)
-julia> D(θ) = θ^4
+julia> D(u) = u^4
 D (generic function with 1 method)
 
 julia> prob = Fronts.CauchyProblem(D, b=2, d_dob=-0.1)
-⎧ ∂θ/∂t = ∂(D(θ)*∂θ/∂r)/∂r, r>0,t>0
-⎨ θ(0,t) = 2, t>0
-⎩ √t*∂θ/∂r(0,t) = -0.1, t>0
+⎧ ∂u/∂t = ∂(D(u)*∂u/∂r)/∂r, r>0,t>0
+⎨ u(0,t) = 2, t>0
+⎩ √t*∂u/∂r(0,t) = -0.1, t>0
 ```
 
-See also: [`Equation`](@ref)
+See also: [`DiffusionEquation`](@ref)
 """
 struct CauchyProblem{Teq, _T, _To, _Td_do} <: Problem{Teq}
     eq::Teq
     b::_T
     d_dob::_Td_do
     ob::_To
-    function CauchyProblem(eq::Equation{1}; b, d_dob, ob = 0)
+    function CauchyProblem(eq::DiffusionEquation{1}; b, d_dob, ob = 0)
         new{typeof(eq), typeof(b), typeof(ob), typeof(d_dob)}(eq, b, d_dob, ob)
     end
-    function CauchyProblem(eq::Equation; b, d_dob, ob)
+    function CauchyProblem(eq::DiffusionEquation; b, d_dob, ob)
         @argcheck ob > zero(ob)
         new{typeof(eq), typeof(b), typeof(ob), typeof(d_dob)}(eq, b, d_dob, ob)
     end
@@ -260,12 +267,12 @@ end
 function Base.show(io::IO, prob::CauchyProblem)
     if iszero(prob.ob)
         println(io, "⎧ ", prob.eq, ", r>0,t>0")
-        println(io, "⎨ ", prob.eq.sym, "(0,t) = ", prob.b, ", t>0")
-        print(io, "⎩ √t*∂", prob.eq.sym, "/∂r(0,t) = ", prob.d_dob, ", t>0")
+        println(io, "⎨ ", prob.eq._sym, "(0,t) = ", prob.b, ", t>0")
+        print(io, "⎩ √t*∂", prob.eq._sym, "/∂r(0,t) = ", prob.d_dob, ", t>0")
     else
         println(io, "⎧ ", prob.eq, ",r>rb(t),t>0")
-        println(io, "⎨ ", prob.eq.sym, "(rb(t),t) = ", prob.b, ", t>0")
-        println(io, "⎩ √t*∂", prob.eq.sym, "/∂r(rb(t),t) = ", prob.d_dob, ", t>0")
+        println(io, "⎨ ", prob.eq._sym, "(rb(t),t) = ", prob.b, ", t>0")
+        println(io, "⎩ √t*∂", prob.eq._sym, "/∂r(rb(t),t) = ", prob.d_dob, ", t>0")
         print(io, "with rb(t) = ", prob.ob, "*√t")
     end
 end
@@ -275,7 +282,7 @@ monotonicity(prob::CauchyProblem)::Int = sign(prob.d_dob)
 sorptivity(prob::CauchyProblem) = sorptivity(prob.eq, prob.b, prob.d_dob)
 
 """
-    SorptivityCauchyProblem(eq::Equation; b, S[, ob]) <: Problem{typeof(eq)}
+    SorptivityCauchyProblem(eq::DiffusionEquation; b, S[, ob]) <: Problem{typeof(eq)}
     SorptivityCauchyProblem(D; b, S[, ob]) <: Problem{DiffusionEquation{1}}
 
 Semi-infinite problem with a known boundary value and soprtivity (and unknown initial condition).
@@ -291,26 +298,26 @@ Semi-infinite problem with a known boundary value and soprtivity (and unknown in
 
 # Examples
 ```jldoctest; setup = :(using Fronts)
-julia> D(θ) = θ^4
+julia> D(u) = u^4
 D (generic function with 1 method)
 
 julia> prob = Fronts.SorptivityCauchyProblem(D, b=2, S=1)
-⎧ ∂θ/∂t = ∂(D(θ)*∂θ/∂r)/∂r, r>0,t>0
-⎨ θ(0,t) = 2, t>0
+⎧ ∂u/∂t = ∂(D(u)*∂u/∂r)/∂r, r>0,t>0
+⎨ u(0,t) = 2, t>0
 ⎩ S = 1
 ```
 
-See also: [`Equation`](@ref), [`sorptivity`](@ref)
+See also: [`DiffusionEquation`](@ref), [`sorptivity`](@ref)
 """
 struct SorptivityCauchyProblem{Teq, _T, _To, _TS} <: Problem{Teq}
     eq::Teq
     b::_T
     S::_TS
     ob::_To
-    function SorptivityCauchyProblem(eq::Equation{1}; b, S, ob = 0)
+    function SorptivityCauchyProblem(eq::DiffusionEquation{1}; b, S, ob = 0)
         new{typeof(eq), typeof(b), typeof(ob), typeof(S)}(eq, b, S, ob)
     end
-    function SorptivityCauchyProblem(eq::Equation; b, S, ob)
+    function SorptivityCauchyProblem(eq::DiffusionEquation; b, S, ob)
         @argcheck ob > zero(ob)
         new{typeof(eq), typeof(b), typeof(ob), typeof(S)}(eq, b, S, ob)
     end
@@ -323,11 +330,11 @@ end
 function Base.show(io::IO, prob::SorptivityCauchyProblem)
     if iszero(prob.ob)
         println(io, "⎧ ", prob.eq, ", r>0,t>0")
-        println(io, "⎨ ", prob.eq.sym, "(0,t) = ", prob.b, ", t>0")
+        println(io, "⎨ ", prob.eq._sym, "(0,t) = ", prob.b, ", t>0")
         print(io, "⎩ S = ", prob.S)
     else
         println(io, "⎧ ", prob.eq, ",r>rb(t),t>0")
-        println(io, "⎨ ", prob.eq.sym, "(rb(t),t) = ", prob.b, ", t>0")
+        println(io, "⎨ ", prob.eq._sym, "(rb(t),t) = ", prob.b, ", t>0")
         println(io, "⎩ S = ", prob.S)
         print(io, "with rb(t) = ", prob.ob, "*√t")
     end

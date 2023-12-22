@@ -15,31 +15,31 @@ This is the (fully native) Julia version of our numerical package for nonlinear 
 ```julia
 julia> using Fronts
 
-julia> D(c) = c^4
+julia> D(u) = u^4
 D (generic function with 1 method)
 
-julia> eq = DiffusionEquation(D, sym=:c)
-∂c/∂t = ∂(D(c)*∂c/∂r)/∂r
+julia> eq = DiffusionEquation(D)
+∂u/∂t = ∂(D(u)*∂u/∂r)/∂r
 
 julia> prob = DirichletProblem(eq, i=0.1, b=1)
-⎧ ∂c/∂t = ∂(D(c)*∂c/∂r)/∂r, r>0,t>0
-⎨ c(r,0) = 0.1, r>0
-⎩ c(0,t) = 1.0, t>0
+⎧ ∂u/∂t = ∂(D(u)*∂u/∂r)/∂r, r>0,t>0
+⎨ u(r,0) = 0.1, r>0
+⎩ u(0,t) = 1.0, t>0
 
-julia> c = solve(prob)
-Solution c after 10 iterations
+julia> u = solve(prob)
+Solution u after 10 iterations
 retcode: Success
-cb = 1.0
-dc/do|b = -0.28388671875000004
-ci = 0.10006060603081587
+ub = 1.0
+du/do|b = -0.28388671875000004
+ui = 0.10006060603081587
 
-julia> c(0.25, 2) # Evaluate the solution anywhere and at any time
+julia> u(0.25, 2) # Evaluate the solution anywhere and at any time
 0.9440546607878473
 
-julia> d_dr(c, 0.25, 2) # Obtain derivatives
+julia> d_dr(u, 0.25, 2) # Obtain derivatives
 -0.25038534184881966
 
-julia> flux(c, 0.25, 2) # Obtain the flux
+julia> flux(u, 0.25, 2) # Obtain the flux
 0.19888290889257723
 ```
 

@@ -23,11 +23,11 @@ struct FiniteDifference{_Tpre}
 end
 
 """
-    FiniteProblem{Eq<:Equation}
+    FiniteProblem{Eq<:DiffusionEquation{1}}
 
 Abstract type for problems defined in finite domains.
 """
-abstract type FiniteProblem{Eq <: Equation} end
+abstract type FiniteProblem{Eq <: DiffusionEquation} end
 
 """
     FiniteDirichletProblem(eq, rstop[, tstop]; i, b) <: FiniteProblem
@@ -184,6 +184,7 @@ function solve(prob::Union{
         alg::FiniteDifference;
         abstol = 1e-3,
         verbose = true)
+    @argcheck isone(prob.eq._C) "FiniteDifference only supports C = 1"
     if prob isa DirichletProblem
         @argcheck iszero(prob.ob) "FiniteDifference only supports fixed boundaries"
         @argcheck isnothing(alg._pre) "pre not valid for a DirichletProblem (use BoltzmannODE directly instead)"
@@ -197,7 +198,7 @@ function solve(prob::Union{
         used = zero(prob.capacity)
     end
 
-    θ = similar(r)
+    u = similar(r)
     t = 0.0
 
     presol = nothing
@@ -209,10 +210,10 @@ function solve(prob::Union{
             abstol = abstol,
             verbose = verbose)
         if presol.retcode != ReturnCode.Success
-            θ .= prob.i
+            u .= prob.i
             return FiniteSolution(r,
                 [t],
-                [θ],
+                [u],
                 prob,
                 alg,
                 _retcode = ReturnCode.InitialFailure,
@@ -223,26 +224,26 @@ function solve(prob::Union{
             t = min(t, (prob.capacity / sorptivity(presol))^2)
             used = sorptivity(presol) * √t
         end
-        θ .= presol.(r, t)
+        u .= presol.(r, t)
     else
-        θ .= prob.i
+        u .= prob.i
     end
 
     if prob isa FiniteProblem
         ts = [t]
-        θs = [copy(θ)]
+        us = [copy(u)]
     else
         timesteps = 0
-        θ_old = copy(θ)
+        u_old = copy(u)
     end
 
-    θ_prev_sweep = similar(θ)
+    u_prev_sweep = similar(u)
     Ad = Vector{Float64}(undef, length(r))
     Al = similar(Ad, length(Ad) - 1)
     Au = similar(Ad, length(Ad) - 1)
     B = similar(Ad)
 
-    D = prob.eq.D.(θ)
+    D = diffusivity.(prob.eq, u)
     Df = 2D[begin:(end - 1)] .* D[(begin + 1):end] ./
          (D[begin:(end - 1)] + D[(begin + 1):end])
 
@@ -253,20 +254,20 @@ function solve(prob::Union{
             Δt = prob._tstop - t
         end
 
-        change = eltype(θ)(Inf)
+        change = eltype(u)(Inf)
         sweeps = 0
         while !(change <= abstol)
             if sweeps >= 7
                 Δt /= 3
                 if prob isa FiniteProblem
-                    θ .= θs[end]
+                    u .= us[end]
                 else
-                    θ .= θ_old
+                    u .= u_old
                 end
                 sweeps = 0
             end
 
-            D .= prob.eq.D.(θ)
+            D .= diffusivity.(prob.eq, u)
             Df .= 2D[begin:(end - 1)] .* D[(begin + 1):end] ./
                   (D[begin:(end - 1)] + D[(begin + 1):end])
 
@@ -280,10 +281,10 @@ function solve(prob::Union{
             Au .= -Df .* Δt ./ Δr²
 
             A = Tridiagonal(Al, Ad, Au)
-            B .= θ
+            B .= u
 
             if prob isa FiniteReservoirProblem
-                influx = min(-Df[begin] * (θ[begin + 1] - prob.b) * Δt / Δr,
+                influx = min(-Df[begin] * (u[begin + 1] - prob.b) * Δt / Δr,
                     prob.capacity - used)
             end
 
@@ -298,40 +299,40 @@ function solve(prob::Union{
                 B[begin] = influx
             end
 
-            θ_prev_sweep .= θ
+            u_prev_sweep .= u
             try
-                θ .= A \ B
+                u .= A \ B
             catch e
                 e isa SingularException || rethrow()
-                θ .= NaN
+                u .= NaN
             end
             sweeps += 1
-            change = maximum(abs.(θ .- θ_prev_sweep))
+            change = maximum(abs.(u .- u_prev_sweep))
         end
 
         if prob isa FiniteReservoirProblem
-            influx = -Df[begin] * (θ[begin + 1] - θ[begin]) * Δt / Δr
+            influx = -Df[begin] * (u[begin + 1] - u[begin]) * Δt / Δr
             used += influx
         end
 
         if prob isa FiniteProblem
-            if θ ≈ θs[end]
+            if u ≈ us[end]
                 t = oftype(t, Inf)
             else
                 t += Δt
             end
 
             push!(ts, t)
-            push!(θs, copy(θ))
+            push!(us, copy(u))
         else
-            if abs(θ[end] - prob.i) > abstol
-                θ .= θ_old
+            if abs(u[end] - prob.i) > abstol
+                u .= u_old
                 break
             end
 
             t += Δt
             timesteps += 1
-            θ_old .= θ
+            u_old .= u
         end
 
         if sweeps < 3
@@ -342,14 +343,14 @@ function solve(prob::Union{
     if prob isa FiniteProblem
         return FiniteSolution(r,
             ts,
-            θs,
+            us,
             prob,
             alg,
             _retcode = ReturnCode.Success,
             _original = presol)
     else
         @assert isnothing(presol)
-        return Solution(Interpolator(boltzmann.(r, t), θ),
+        return Solution(Interpolator(boltzmann.(r, t), u),
             prob,
             alg,
             _ob = prob.ob,
@@ -370,26 +371,26 @@ Solution to a finite problem.
 
 Evaluate the solution at location `r` and time `t`.
 """
-struct FiniteSolution{_Tr, _Tt, _Tθ, _Toriginal, _Tprob, _Talg}
+struct FiniteSolution{_Tr, _Tt, _Tu, _Toriginal, _Tprob, _Talg}
     _r::_Tr
     _t::_Tt
-    _θ::_Tθ
+    _u::_Tu
     retcode::ReturnCode.T
     original::_Toriginal
     prob::_Tprob
     alg::_Talg
 
-    function FiniteSolution(_r, _t, _θ, _prob, _alg; _retcode, _original = nothing)
+    function FiniteSolution(_r, _t, _u, _prob, _alg; _retcode, _original = nothing)
         new{
             typeof(_r),
             typeof(_t),
-            typeof(_θ),
+            typeof(_u),
             typeof(_original),
             typeof(_prob),
             typeof(_alg),
         }(_r,
             _t,
-            _θ,
+            _u,
             _retcode,
             _original,
             _prob,
@@ -416,11 +417,11 @@ function (sol::FiniteSolution)(r, t)
         if !isnothing(sol.original) && r[begin] ≤ r ≤ r[end]
             return sol.original(r, t)
         else
-            return eltype(sol._θ[begin])(NaN)
+            return eltype(sol._u[begin])(NaN)
         end
     elseif i == lastindex(sol._t)
         if t > sol._t[end]
-            return eltype(sol._θ[begin])(NaN)
+            return eltype(sol._u[begin])(NaN)
         end
         i -= 1
     end
@@ -428,28 +429,27 @@ function (sol::FiniteSolution)(r, t)
     j = searchsortedlast(sol._r, r)
 
     if j == firstindex(sol._r) - 1
-        return eltype(sol._θ[begin])(NaN)
+        return eltype(sol._u[begin])(NaN)
     elseif j == lastindex(sol._r)
         if r > sol._r[end]
-            return eltype(sol._θ[begin])(NaN)
+            return eltype(sol._u[begin])(NaN)
         end
         j -= 1
     end
 
     if sol._t[i + 1] == Inf
-        return 1 / (sol._r[j + 1] - sol._r[j]) * (sol._θ[i][j] * (sol._r[j + 1] - r) +
-                sol._θ[i][j + 1] * (r - sol._r[j]))
+        return 1 / (sol._r[j + 1] - sol._r[j]) * (sol._u[i][j] * (sol._r[j + 1] - r) +
+                sol._u[i][j + 1] * (r - sol._r[j]))
     else
         return 1 / (sol._r[j + 1] - sol._r[j]) / (sol._t[i + 1] - sol._t[i]) *
-               (sol._θ[i][j] * (sol._r[j + 1] - r) * (sol._t[i + 1] - t) +
-                sol._θ[i][j + 1] * (r - sol._r[j]) * (sol._t[i + 1] - t) +
-                sol._θ[i + 1][j] * (sol._r[j + 1] - r) * (t - sol._t[i]) +
-                sol._θ[i + 1][j + 1] * (r - sol._r[j]) * (t - sol._t[i]))
+               (sol._u[i][j] * (sol._r[j + 1] - r) * (sol._t[i + 1] - t) +
+                sol._u[i][j + 1] * (r - sol._r[j]) * (sol._t[i + 1] - t) +
+                sol._u[i + 1][j] * (sol._r[j + 1] - r) * (t - sol._t[i]) +
+                sol._u[i + 1][j + 1] * (r - sol._r[j]) * (t - sol._t[i]))
     end
 end
 
 d_dr(sol::FiniteSolution, r, t) = derivative(r -> sol(r, t), r)
-
 d_dt(sol::FiniteSolution, r, t) = derivative(t -> sol(r, t), t)
 
 function flux(sol::FiniteSolution, r, t)

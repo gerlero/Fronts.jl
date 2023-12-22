@@ -129,9 +129,9 @@ function (cf::RSSCostFunction)(sol::Union{Solution, ScaledSolution})
     end
 
     if !isnothing(cf._prob._weights)
-        return sum(cf._prob._weights .* (sol.(cf._prob._o) .- cf._prob._θ) .^ 2)
+        return sum(cf._prob._weights .* (sol.(cf._prob._o) .- cf._prob._u) .^ 2)
     else
-        return sum((sol.(cf._prob._o) .- cf._prob._θ) .^ 2)
+        return sum((sol.(cf._prob._o) .- cf._prob._u) .^ 2)
     end
 end
 
@@ -169,7 +169,7 @@ function candidate(cf::RSSCostFunction{true}, sol::Solution)
 
     scaling = curve_fit(scaled!,
         cf._prob._o,
-        cf._prob._θ,
+        cf._prob._u,
         (!isnothing(cf._prob._weights) ? (cf._prob._weights,) : ())...,
         [D0_hint],
         inplace = true,
