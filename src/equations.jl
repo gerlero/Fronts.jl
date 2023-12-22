@@ -19,15 +19,15 @@ Diffusivity of the solution variable of `eq` with value `val`.
 function diffusivity end
 
 """
-    flow_diffusivity(eq::Equation, val)
+    conductivity(eq::Equation, val)
 
-Diffusivity of `eq` at `val`, as used to determine flow-related quantities (e.g. [`flux`](@ref) and [`sorptivity`](@ref)).
+Conductivity of `eq` at `val`.
 
 # Implementation
 
 Delegates to [`diffusivity`](@ref) by default.
 """
-flow_diffusivity(eq::Equation, val) = diffusivity(eq, val)
+conductivity(eq::Equation, val) = diffusivity(eq, val)
 
 """
     DiffusionEquation(D; sym=:θ) <: Equation{1}
@@ -222,5 +222,4 @@ function Base.show(io::IO, eq::RichardsEquation{3})
 end
 
 diffusivity(eq::RichardsEquation, h) = eq.K(h) / eq.C(h)
-
-flow_diffusivity(eq::RichardsEquation, h) = eq.K(h)
+conductivity(eq::RichardsEquation, h) = eq.K(h)
