@@ -9,5 +9,5 @@ Equation
 DiffusionEquation
 RichardsEquation
 diffusivity
-flow_diffusivity
+conductivity
 ```

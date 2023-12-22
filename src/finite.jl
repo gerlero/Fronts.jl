@@ -454,5 +454,5 @@ d_dt(sol::FiniteSolution, r, t) = derivative(t -> sol(r, t), t)
 
 function flux(sol::FiniteSolution, r, t)
     val, d_dr = value_and_derivative(r -> sol(r, t), r)
-    return -flow_diffusivity(sol.prob.eq, val) * d_dr
+    return -conductivity(sol.prob.eq, val) * d_dr
 end

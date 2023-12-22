@@ -42,7 +42,7 @@ include("pseudospectral.jl")
 include("inverse.jl")
 include("finite.jl")
 
-export Equation, DiffusionEquation, RichardsEquation, diffusivity, flow_diffusivity
+export Equation, DiffusionEquation, RichardsEquation, diffusivity, conductivity
 export d_do, d_dr, d_dt, boltzmann
 export sorptivity
 export Problem,
