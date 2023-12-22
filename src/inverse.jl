@@ -1,11 +1,11 @@
 """
-    InverseProblem(o, θ[, weights; i, b, ob])
+    InverseProblem(o, u[, weights; i, b, ob])
 
 Problem type for inverse functions and parameter estimation with experimental data.
 
 # Arguments
 - `o::AbstractVector`: values of the Boltzmann variable. See [`o`](@ref).
-- `θ::AbstractVector`: observed solution values at each point in `o`.
+- `u::AbstractVector`: observed solution values at each point in `o`.
 - `weights`: optional weights for the data.
 
 # Keyword arguments
@@ -16,27 +16,27 @@ Problem type for inverse functions and parameter estimation with experimental da
 # See also
 [`diffusivity`](@ref), [`sorptivity`](@ref), `Fronts.ParamEstim`
 """
-struct InverseProblem{_To, _Tθ, _Tweights, _Ti, _Tb, _Tob}
+struct InverseProblem{_To, _Tu, _Tweights, _Ti, _Tb, _Tob}
     _o::_To
-    _θ::_Tθ
+    _u::_Tu
     _weights::_Tweights
     _i::_Ti
     _b::_Tb
     _ob::_Tob
     function InverseProblem(o::AbstractVector,
-            θ::AbstractVector,
+            u::AbstractVector,
             weights = nothing;
             i = nothing,
             b = nothing,
             ob = zero(eltype(o)))
         @argcheck length(o) ≥ 2
         @argcheck all(o1 ≤ o2 for (o1, o2) in zip(o[begin:(end - 1)], o[(begin + 1):end])) "o must be monotonically increasing"
-        @argcheck length(o)==length(θ) DimensionMismatch
+        @argcheck length(o)==length(u) DimensionMismatch
         !isnothing(weights) && @argcheck length(weights)==length(o) DimensionMismatch
         @argcheck zero(ob) ≤ ob ≤ o[begin]
 
-        new{typeof(o), typeof(θ), typeof(weights), typeof(i), typeof(b), typeof(ob)}(o,
-            θ,
+        new{typeof(o), typeof(u), typeof(weights), typeof(i), typeof(b), typeof(ob)}(o,
+            u,
             weights,
             i,
             b,
@@ -66,24 +66,24 @@ Soil Science Society of America Journal, 1956, vol. 20, no. 4, p. 458-462.
 """
 function diffusivity(prob::InverseProblem)
     o = !isnothing(prob._b) ? ArrayPartition(prob._ob, prob._o) : prob._o
-    θ = !isnothing(prob._b) ? ArrayPartition(prob._b, prob._θ) : prob._θ
-    i = !isnothing(prob._i) ? prob._i : prob._θ[end]
+    u = !isnothing(prob._b) ? ArrayPartition(prob._b, prob._u) : prob._u
+    i = !isnothing(prob._i) ? prob._i : prob._u[end]
 
-    indices = sortperm(θ)
+    indices = sortperm(u)
     o = o[indices]
-    θ = θ[indices]
+    u = u[indices]
 
-    indices = unique(i -> θ[i], eachindex(θ))
+    indices = unique(i -> u[i], eachindex(u))
     o = o[indices]
-    θ = θ[indices]
+    u = u[indices]
 
-    o = Interpolator(θ, o)
+    o = Interpolator(u, o)
 
     let o = o, i = i
-        function D(θ)
-            do_dθ = derivative(o, θ)
-            ∫odθ = integrate(o, i, θ)
-            return -(do_dθ * ∫odθ) / 2
+        function D(u)
+            do_du = derivative(o, u)
+            ∫odu = integrate(o, i, u)
+            return -(do_du * ∫odu) / 2
         end
     end
 end
@@ -99,8 +99,8 @@ Uses numerical integration.
 - `prob::InverseProblem`: inverse problem. See [`InverseProblem`](@ref).
 
 # Keyword arguments
-- `i=nothing`: initial value. If `nothing`, the initial value is taken from `θ[end]`.
-- `b=nothing`: boundary value. If `nothing`, the boundary value is taken from `θ[begin]`.
+- `i=nothing`: initial value. If `nothing`, the initial value is taken from `u[end]`.
+- `b=nothing`: boundary value. If `nothing`, the boundary value is taken from `u[begin]`.
 - `ob=0`: value of `o` at the boundary.
 
 # References
@@ -109,8 +109,8 @@ Soil Science, 1957, vol. 83, no. 5, p. 345-357.
 """
 function sorptivity(prob::InverseProblem)
     o = ArrayPartition(prob._ob, prob._o)
-    θ = ArrayPartition(!isnothing(prob._b) ? prob._b : prob._θ[begin], prob._θ)
-    i = !isnothing(prob._i) ? prob._i : prob._θ[end]
+    u = ArrayPartition(!isnothing(prob._b) ? prob._b : prob._u[begin], prob._u)
+    i = !isnothing(prob._i) ? prob._i : prob._u[end]
 
-    return NumericalIntegration.integrate(o, θ .- i)
+    return NumericalIntegration.integrate(o, u .- i)
 end

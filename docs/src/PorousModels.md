@@ -12,6 +12,8 @@ BrooksAndCorey
 VanGenuchten
 LETxs
 LETd
+DiffusionEquation(::UnsaturatedFlowModel)
+RichardsEquation
 θh
 hθ
 Ch

@@ -35,7 +35,7 @@
             eq = DiffusionEquation(model)
             odefun = boltzmann(eq)
 
-            @testset "DiffusionEquation" begin
+            @testset "C = 1" begin
                 for m in 1:3
                     odefun = @inferred boltzmann(DiffusionEquation{m}(model))
                     for θ in range(0.05, θs - 1e-7, length = 5),
@@ -51,9 +51,9 @@
                 end
             end
 
-            @testset "RichardsEquation" begin
+            @testset "C != 1" begin
                 for m in 1:3
-                    odefun = boltzmann(RichardsEquation{m}(model))
+                    odefun = boltzmann(RichardsEquation(model))
                     for h in range(-50, 10, length = 5), dh_do in range(-1, 0, length = 5),
                         o in range(m == 1 ? 0 : 1e-6, 0.0025, length = 5)
 

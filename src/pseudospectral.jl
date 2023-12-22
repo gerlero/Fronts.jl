@@ -39,20 +39,21 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}},
         alg::MathiasAndSander;
         maxiters = 100)
     @argcheck iszero(prob.ob) "MathiasAndSander only supports fixed boundaries"
+    @argcheck isone(prob.eq._C) "MathiasAndSander only supports C = 1"
 
     z, diff = chebdif(alg._N, 2)
     d_dz = diff[:, :, 1]
     d²_dz² = diff[:, :, 2]
 
-    θ = (prob.b + prob.i) / 2 .+ (prob.b - prob.i) / 2 * z
-    dz_dθ = 2 / (prob.b - prob.i)
+    u = (prob.b + prob.i) / 2 .+ (prob.b - prob.i) / 2 * z
+    dz_du = 2 / (prob.b - prob.i)
 
-    D = prob.eq.D.(θ)
+    D = diffusivity.(prob.eq, u)
 
-    d_dθ = dz_dθ * d_dz
-    d²_dθ² = dz_dθ^2 * d²_dz²
+    d_du = dz_du * d_dz
+    d²_du² = dz_du^2 * d²_dz²
 
-    ∫ = π / (alg._N - 1) / dz_dθ * sqrt.(1 .- z .^ 2)'
+    ∫ = π / (alg._N - 1) / dz_du * sqrt.(1 .- z .^ 2)'
 
     F = ones(alg._N)
 
@@ -61,14 +62,14 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}},
     last = [i == alg._N for i in 1:(alg._N)]
 
     for niter in 1:maxiters
-        S² = ∫ * (2 * (θ .- prob.i) .* D ./ F)
-        d²F_dθ² = -2 * D ./ S² ./ F
+        S² = ∫ * (2 * (u .- prob.i) .* D ./ F)
+        d²F_du² = -2 * D ./ S² ./ F
 
-        R = [d²_dθ²[internal, :] * F - d²F_dθ²[internal]
+        R = [d²_du²[internal, :] * F - d²F_du²[internal]
             F[end] - 0
             F[begin] - 1]
 
-        ∂R_∂F = [d²_dθ²[internal, :] + Diagonal(d²F_dθ² ./ F)[internal, :]
+        ∂R_∂F = [d²_du²[internal, :] + Diagonal(d²F_du² ./ F)[internal, :]
             last'
             first']
 
@@ -78,14 +79,14 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}},
 
         if all(abs.(F .- F_prev) .≤ 1e-6)
             S = √S²
-            o = S .* d_dθ * F
-            dθ_do = -S .* F ./ 2D
-            itp = Interpolator(o, θ, dθ_do)
+            o = S .* d_du * F
+            du_do = -S .* F ./ 2D
+            itp = Interpolator(o, u, du_do)
             return Solution(itp,
                 prob,
                 alg,
-                _b = θ[begin],
-                _i = θ[end],
+                _b = u[begin],
+                _i = u[end],
                 _ob = o[begin],
                 _oi = o[end],
                 _retcode = ReturnCode.Success,
@@ -94,14 +95,14 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}},
     end
 
     S = √S²
-    o = S .* d_dθ * F
-    dθ_do = -S .* F ./ 2D
-    itp = Interpolator(o, θ, dθ_do)
+    o = S .* d_du * F
+    du_do = -S .* F ./ 2D
+    itp = Interpolator(o, u, du_do)
     return Solution(itp,
         prob,
         alg,
-        _b = θ[begin],
-        _i = θ[end],
+        _b = u[begin],
+        _i = u[end],
         _ob = o[begin],
         _oi = o[end],
         _retcode = ReturnCode.MaxIters,
