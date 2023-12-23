@@ -184,7 +184,6 @@ function solve(prob::Union{
         alg::FiniteDifference;
         abstol = 1e-3,
         verbose = true)
-    @argcheck isone(prob.eq._C) "FiniteDifference only supports C = 1"
     if prob isa DirichletProblem
         @argcheck iszero(prob.ob) "FiniteDifference only supports fixed boundaries"
         @argcheck isnothing(alg._pre) "pre not valid for a DirichletProblem (use BoltzmannODE directly instead)"
@@ -243,11 +242,12 @@ function solve(prob::Union{
     Au = similar(Ad, length(Ad) - 1)
     B = similar(Ad)
 
-    D = diffusivity.(prob.eq, u)
-    Df = 2D[begin:(end - 1)] .* D[(begin + 1):end] ./
-         (D[begin:(end - 1)] + D[(begin + 1):end])
+    K = conductivity.(prob.eq, u)
+    Kf = similar(K, length(K) - 1)
 
-    Δt = Δr² / 2maximum(Df)
+    C = capacity.(prob.eq, u)
+
+    Δt = Δr² / 2 * minimum(C ./ K)
 
     while !(prob isa FiniteProblem) || t < prob._tstop
         if prob isa FiniteProblem && t + Δt > prob._tstop
@@ -267,24 +267,26 @@ function solve(prob::Union{
                 sweeps = 0
             end
 
-            D .= diffusivity.(prob.eq, u)
-            Df .= 2D[begin:(end - 1)] .* D[(begin + 1):end] ./
-                  (D[begin:(end - 1)] + D[(begin + 1):end])
+            K .= conductivity.(prob.eq, u)
+            Kf .= 2K[begin:(end - 1)] .* K[(begin + 1):end] ./
+                  (K[begin:(end - 1)] + K[(begin + 1):end])
 
-            Ad[begin] = 1 + Df[begin] * Δt / Δr²
-            Ad[(begin + 1):(end - 1)] .= 1 .+
-                                         (Df[begin:(end - 1)] .+ Df[(begin + 1):end]) .*
+            C .= capacity.(prob.eq, u)
+
+            Ad[begin] = C[begin] + Kf[begin] * Δt / Δr²
+            Ad[(begin + 1):(end - 1)] .= C[(begin + 1):(end - 1)] .+
+                                         (Kf[begin:(end - 1)] .+ Kf[(begin + 1):end]) .*
                                          Δt ./ Δr²
-            Ad[end] = 1 + Df[end] * Δt / Δr²
+            Ad[end] = C[end] + Kf[end] * Δt / Δr²
 
-            Al .= -Df .* Δt ./ Δr²
-            Au .= -Df .* Δt ./ Δr²
+            Al .= -Kf .* Δt ./ Δr²
+            Au .= -Kf .* Δt ./ Δr²
 
             A = Tridiagonal(Al, Ad, Au)
-            B .= u
+            B .= C .* u
 
             if prob isa FiniteReservoirProblem
-                influx = min(-Df[begin] * (u[begin + 1] - prob.b) * Δt / Δr,
+                influx = min(-Kf[begin] * (u[begin + 1] - prob.b) * Δt / Δr,
                     prob.capacity - used)
             end
 
@@ -294,8 +296,8 @@ function solve(prob::Union{
                 A[begin, begin + 1] = 0
                 B[begin] = prob.b
             elseif prob isa FiniteReservoirProblem && influx > zero(influx)
-                A[begin, begin] = Df[begin] * Δt / Δr
-                A[begin, begin + 1] = -Df[begin] * Δt / Δr
+                A[begin, begin] = Kf[begin] * Δt / Δr
+                A[begin, begin + 1] = -Kf[begin] * Δt / Δr
                 B[begin] = influx
             end
 
@@ -311,7 +313,7 @@ function solve(prob::Union{
         end
 
         if prob isa FiniteReservoirProblem
-            influx = -Df[begin] * (u[begin + 1] - u[begin]) * Δt / Δr
+            influx = -Kf[begin] * (u[begin + 1] - u[begin]) * Δt / Δr
             used += influx
         end
 
