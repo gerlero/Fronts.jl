@@ -1,5 +1,5 @@
 """
-    abstract type Problem{Eq <: DiffusionEquation} end
+    abstract type AbstractProblem{Eq <: DiffusionEquation} end
 
 Abstract supertype for problems that can be solved with this package.
 
@@ -8,7 +8,7 @@ Abstract supertype for problems that can be solved with this package.
 
 See also: [`DiffusionEquation`](@ref)
 """
-abstract type Problem{Eq <: DiffusionEquation} end
+abstract type AbstractProblem{Eq <: DiffusionEquation} end
 
 """
     monotonicity(prob) -> Int
@@ -18,8 +18,8 @@ Whether the solution to `prob` must be decreasing (`-1`), constant (`0`) or incr
 function monotonicity end
 
 """
-    DirichletProblem(eq::DiffusionEquation; i, b[, ob]) <: Problem{typeof(eq)}
-    DirichletProblem(D; i, b[, ob]) <: Problem{DiffusionEquation{1}}
+    DirichletProblem(eq::DiffusionEquation; i, b[, ob]) <: AbstractProblem{typeof(eq)}
+    DirichletProblem(D; i, b[, ob]) <: AbstractProblem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Dirichlet boundary condition.
 
@@ -45,7 +45,7 @@ julia> prob = Fronts.DirichletProblem(D, i=1, b=2)
 
 See also: [`DiffusionEquation`](@ref)
 """
-struct DirichletProblem{Teq, _T, _To} <: Problem{Teq}
+struct DirichletProblem{Teq, _T, _To} <: AbstractProblem{Teq}
     eq::Teq
     i::_T
     b::_T
@@ -81,7 +81,7 @@ end
 monotonicity(prob::DirichletProblem)::Int = sign(prob.i - prob.b)
 
 """
-    FlowrateProblem(eq::DiffusionEquation{2}; i, Qb[, angle, height, ob]) <: Problem{typeof(eq)}
+    FlowrateProblem(eq::DiffusionEquation{2}; i, Qb[, angle, height, ob]) <: AbstractProblem{typeof(eq)}
 
 Semi-infinite radial (polar/cylindrical) problem with an imposed-flowrate boundary condition.
 
@@ -111,7 +111,7 @@ julia> prob = Fronts.FlowrateProblem(eq, i=1, Qb=1)
 
 See also: [`DiffusionEquation`](@ref)
 """
-struct FlowrateProblem{Teq, _T, _To, _TQ, _Th} <: Problem{Teq}
+struct FlowrateProblem{Teq, _T, _To, _TQ, _Th} <: AbstractProblem{Teq}
     eq::Teq
     i::_T
     Qb::_TQ
@@ -155,8 +155,8 @@ end
 monotonicity(prob::FlowrateProblem)::Int = -sign(prob.Qb)
 
 """
-    SorptivityProblem(eq::DiffusionEquation; i, S[, ob]) <: Problem{typeof(eq)}
-    SorptivityProblem(D; i, S[, ob]) <: Problem{typeof(eq)}
+    SorptivityProblem(eq::DiffusionEquation; i, S[, ob]) <: AbstractProblem{typeof(eq)}
+    SorptivityProblem(D; i, S[, ob]) <: AbstractProblem{typeof(eq)}
 
 Semi-infinite problem with a known initial condition and soprtivity.
 
@@ -182,7 +182,7 @@ julia> prob = Fronts.SorptivityProblem(D, i=0, S=1)
 
 See also: [`DiffusionEquation`](@ref), [`sorptivity`](@ref)
 """
-struct SorptivityProblem{Teq, _T, _To, _TS} <: Problem{Teq}
+struct SorptivityProblem{Teq, _T, _To, _TS} <: AbstractProblem{Teq}
     eq::Teq
     i::_T
     S::_TS
@@ -218,8 +218,8 @@ monotonicity(prob::SorptivityProblem)::Int = -sign(prob.S)
 sorptivity(prob::SorptivityProblem) = prob.S
 
 """
-    CauchyProblem(eq::DiffusionEquation; b, d_dob[, ob]) <: Problem{typeof(eq)}
-    CauchyProblem(D; b, d_dob[, ob]) <: Problem{DiffusionEquation{1}}
+    CauchyProblem(eq::DiffusionEquation; b, d_dob[, ob]) <: AbstractProblem{typeof(eq)}
+    CauchyProblem(D; b, d_dob[, ob]) <: AbstractProblem{DiffusionEquation{1}}
 
 Semi-infinite problem with a Cauchy boundary condition (and unknown initial condition).
 
@@ -246,7 +246,7 @@ julia> prob = Fronts.CauchyProblem(D, b=2, d_dob=-0.1)
 
 See also: [`DiffusionEquation`](@ref)
 """
-struct CauchyProblem{Teq, _T, _To, _Td_do} <: Problem{Teq}
+struct CauchyProblem{Teq, _T, _To, _Td_do} <: AbstractProblem{Teq}
     eq::Teq
     b::_T
     d_dob::_Td_do
@@ -282,8 +282,8 @@ monotonicity(prob::CauchyProblem)::Int = sign(prob.d_dob)
 sorptivity(prob::CauchyProblem) = sorptivity(prob.eq, prob.b, prob.d_dob)
 
 """
-    SorptivityCauchyProblem(eq::DiffusionEquation; b, S[, ob]) <: Problem{typeof(eq)}
-    SorptivityCauchyProblem(D; b, S[, ob]) <: Problem{DiffusionEquation{1}}
+    SorptivityCauchyProblem(eq::DiffusionEquation; b, S[, ob]) <: AbstractProblem{typeof(eq)}
+    SorptivityCauchyProblem(D; b, S[, ob]) <: AbstractProblem{DiffusionEquation{1}}
 
 Semi-infinite problem with a known boundary value and soprtivity (and unknown initial condition).
 
@@ -309,7 +309,7 @@ julia> prob = Fronts.SorptivityCauchyProblem(D, b=2, S=1)
 
 See also: [`DiffusionEquation`](@ref), [`sorptivity`](@ref)
 """
-struct SorptivityCauchyProblem{Teq, _T, _To, _TS} <: Problem{Teq}
+struct SorptivityCauchyProblem{Teq, _T, _To, _TS} <: AbstractProblem{Teq}
     eq::Teq
     b::_T
     S::_TS
