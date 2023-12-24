@@ -8,7 +8,7 @@ Nonlinear diffusion equation.
 - `K`: diffusivity function (if `C` is not given) or conductivity function, defined in terms of the unknown.
 
 # Keyword arguments
-- `C=1`: capacity function, defined in terms of the unknown.
+- `C=nothing`: optional capacity function, defined in terms of the unknown.
 - `sym=:u`: symbol used to represent the unknown function in the output.
 
 # Type parameters
@@ -37,21 +37,19 @@ struct DiffusionEquation{m, _TK, _TC}
     _C::_TC
     _sym::Symbol
 
-    function DiffusionEquation{m}(K; C = 1, sym = :u) where {m}
+    function DiffusionEquation{m}(K; C = nothing, sym = :u) where {m}
         @argcheck m isa Int TypeError(:m, Int, m)
         @argcheck m in 1:3
         new{m, typeof(K), typeof(C)}(K, C, sym)
     end
 end
 
-DiffusionEquation(K; C = 1, sym::Symbol = :u) = DiffusionEquation{1}(K, C = C, sym = sym)
+function DiffusionEquation(K; C = nothing, sym::Symbol = :u)
+    DiffusionEquation{1}(K, C = C, sym = sym)
+end
 
 function Base.show(io::IO, eq::DiffusionEquation{m}) where {m}
-    if eq._C isa Number
-        if !isone(eq._C)
-            print(io, eq._C, "*")
-        end
-    else
+    if !isnothing(eq._C)
         print(io, eq._C, "(", eq._sym, ")*")
     end
 
@@ -75,24 +73,30 @@ Base.broadcastable(eq::DiffusionEquation) = Ref(eq)
 
 Diffusivity of `eq` with value `u`.
 """
-diffusivity(eq::DiffusionEquation, u) = conductivity(eq, u) / capacity(eq, u)
+@inline function diffusivity(eq::DiffusionEquation, u)
+    if !isnothing(eq._C)
+        return eq._K(u) / eq._C(u)
+    else
+        return eq._K(u)
+    end
+end
 
 """
     conductivity(eq::DiffusionEquation, u)
 
 Conductivity of `eq` with value `u`.
 """
-conductivity(eq::DiffusionEquation, u) = eq._K(u)
+@inline conductivity(eq::DiffusionEquation, u) = eq._K(u)
 
 """
     capacity(eq::DiffusionEquation, u)
 
 Capacity of `eq` with value `u`.
 """
-function capacity(eq::DiffusionEquation, u)
-    if eq._C isa Number
-        return eq._C
-    else
+@inline function capacity(eq::DiffusionEquation, u)
+    if !isnothing(eq._C)
         return eq._C(u)
+    else
+        return 1
     end
 end

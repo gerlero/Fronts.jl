@@ -39,7 +39,7 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}},
         alg::MathiasAndSander;
         maxiters = 100)
     @argcheck iszero(prob.ob) "MathiasAndSander only supports fixed boundaries"
-    @argcheck prob.eq._C isa Number&&isone(prob.eq._C) "MathiasAndSander only supports C = 1"
+    @argcheck isnothing(prob.eq._C) "MathiasAndSander only supports equations without capacity"
 
     z, diff = chebdif(alg._N, 2)
     d_dz = diff[:, :, 1]
