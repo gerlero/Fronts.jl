@@ -43,9 +43,8 @@ include("finite.jl")
 export DiffusionEquation, diffusivity, conductivity, capacity
 export d_do, d_dr, d_dt, boltzmann
 export sorptivity
-export Problem,
-    DirichletProblem, FlowrateProblem, CauchyProblem, SorptivityProblem,
-    SorptivityCauchyProblem, monotonicity
+export AbstractProblem, Problem, DirichletProblem, FlowrateProblem, CauchyProblem,
+    SorptivityProblem, SorptivityCauchyProblem, monotonicity
 export BoltzmannODE
 export MathiasAndSander
 export solve

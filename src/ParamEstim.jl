@@ -1,7 +1,7 @@
 module ParamEstim
 
 import ..Fronts
-using ..Fronts: InverseProblem, Problem, Solution, ReturnCode, solve
+using ..Fronts: InverseProblem, AbstractProblem, Solution, ReturnCode, solve
 import ..Fronts: sorptivity
 
 using LsqFit: curve_fit
@@ -69,8 +69,8 @@ factors affecting the diffusivity are unknown, it is recommended not to fit thos
 
 # Arguments
 - `func`: function that takes a vector of parameter values and returns either a `Fronts.Solution` or a
-`Fronts.Problem`. If func returns a `Problem`, it is solved with `solve`. `Solution`s with a `ReturnCode`
-of `Success` are passed to the cost function; otherwise, the cost is set to `Inf`.
+`Fronts.AbstractProblem`. If func returns an `AbstractProblem`, it is solved with `solve`. `Solution`s
+with successful `ReturnCode` are passed to the cost function; otherwise, the cost is set to `Inf`.
 - `prob`: inverse problem. See [`InverseProblem`](@ref).
 
 # Keyword arguments
@@ -84,7 +84,7 @@ GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance softwa
 inverse solving of horizontal capillary flow.
 Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 
-See also: [`candidate`](@ref), [`ScaledSolution`](@ref), [`Fronts.Solution`](@ref), [`Fronts.Problem`](@ref)
+See also: [`candidate`](@ref), [`ScaledSolution`](@ref), [`Fronts.Solution`](@ref), [`Fronts.AbstractProblem`](@ref)
 
 ---
 
@@ -140,18 +140,18 @@ function (cf::RSSCostFunction)(params::AbstractVector, ::NullParameters = NullPa
 end
 
 _solve(cf::RSSCostFunction, params::AbstractVector) = _solve(cf, cf._func(params))
-_solve(::RSSCostFunction, prob::Problem) = solve(prob, verbose = false)
+_solve(::RSSCostFunction, prob::AbstractProblem) = solve(prob, verbose = false)
 _solve(::RSSCostFunction, sol::Solution) = sol
 
 """
     candidate(cf::RSSCostFunction, ::AbstractVector)
-    candidate(cf::RSSCostFunction, ::Fronts.Problem)
+    candidate(cf::RSSCostFunction, ::Fronts.AbstractProblem)
     candidate(cf::RSSCostFunction, ::Fronts.Solution)
 
 Return the candidate solution for a given cost function and parameter values, problem, or solution.
 """
 candidate(cf::RSSCostFunction, params::AbstractVector) = candidate(cf, _solve(cf, params))
-candidate(cf::RSSCostFunction, prob::Problem) = candidate(cf, _solve(cf, prob))
+candidate(cf::RSSCostFunction, prob::AbstractProblem) = candidate(cf, _solve(cf, prob))
 candidate(::RSSCostFunction{false}, sol::Solution) = sol
 
 function candidate(cf::RSSCostFunction{true}, sol::Solution)
