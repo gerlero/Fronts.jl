@@ -51,7 +51,7 @@ export solve
 export Solution, rb, flux, sorptivity
 export InverseProblem
 export FiniteDifference,
-    FiniteProblem, FiniteDirichletProblem, FiniteReservoirProblem, FiniteSolution
+    AbstractFiniteProblem, FiniteDirichletProblem, FiniteReservoirProblem, FiniteSolution
 
 include("ParamEstim.jl")
 include("PorousModels/PorousModels.jl")

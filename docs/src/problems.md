@@ -11,7 +11,7 @@ FlowrateProblem
 SorptivityProblem
 CauchyProblem
 SorptivityCauchyProblem
-FiniteProblem
+AbstractFiniteProblem
 FiniteDirichletProblem
 FiniteReservoirProblem
 monotonicity
