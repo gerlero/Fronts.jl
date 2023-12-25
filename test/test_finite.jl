@@ -22,7 +22,7 @@
     end
 end
 
-@testset "FiniteProblem" begin
+@testset "AbstractFiniteProblem" begin
     @testset "FiniteDirichletProblem" begin
         # Reference: Philip (1960) Table 1, No. 13
         # https://doi.org/10.1071/PH600001

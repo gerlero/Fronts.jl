@@ -7,9 +7,9 @@ Finite difference–based algorithm.
 - `N=500`: number of points in the spatial grid.
 
 # Keyword arguments
-- `pre=nothing`: set to `BoltzmannODE()` to speed up the solution of compatible `FiniteProblem`s.
+- `pre=nothing`: set to `BoltzmannODE()` to speed up the solution of compatible `AbstractFiniteProblem`s.
 
-See also: [`solve`](@ref), [`FiniteProblem`](@ref), [`BoltzmannODE`](@ref)
+See also: [`solve`](@ref), [`AbstractFiniteProblem`](@ref), [`BoltzmannODE`](@ref)
 """
 struct FiniteDifference{_Tpre}
     _N::Int
@@ -23,14 +23,14 @@ struct FiniteDifference{_Tpre}
 end
 
 """
-    FiniteProblem{Eq<:DiffusionEquation{1}}
+    AbstractFiniteProblem{Eq<:DiffusionEquation{1}}
 
 Abstract type for problems defined in finite domains.
 """
-abstract type FiniteProblem{Eq <: DiffusionEquation} end
+abstract type AbstractFiniteProblem{Eq <: DiffusionEquation} end
 
 """
-    FiniteDirichletProblem(eq, rstop[, tstop]; i, b) <: FiniteProblem
+    FiniteDirichletProblem(eq, rstop[, tstop]; i, b) <: AbstractFiniteProblem
 
 Models `eq` in the domain `0 ≤ r ≤ rstop` with initial condition `i` and boundary condition `b`.
 
@@ -43,7 +43,7 @@ Models `eq` in the domain `0 ≤ r ≤ rstop` with initial condition `i` and bou
 - `i`: initial value.
 - `b`: boundary value.
 """
-struct FiniteDirichletProblem{Teq, _Trstop, _Ttstop, _Ti, _Tb} <: FiniteProblem{Teq}
+struct FiniteDirichletProblem{Teq, _Trstop, _Ttstop, _Ti, _Tb} <: AbstractFiniteProblem{Teq}
     eq::Teq
     _rstop::_Trstop
     _tstop::_Ttstop
@@ -72,7 +72,7 @@ function Base.show(io::IO, prob::FiniteDirichletProblem)
 end
 
 """
-    FiniteDirichletProblem(D, rstop[, tstop]; i, b) <: FiniteProblem
+    FiniteDirichletProblem(D, rstop[, tstop]; i, b) <: AbstractFiniteProblem
 
 Shortcut for `FiniteDirichletProblem(DiffusionEquation(D), rstop, tstop, i=i, b=b)`.
 """
@@ -83,7 +83,7 @@ FiniteDirichletProblem(D, rstop, tstop = Inf; i, b) = FiniteDirichletProblem(Dif
     b = b)
 
 """
-    FiniteReservoirProblem(eq, rstop, tstop; i, b, capacity) <: FiniteProblem
+    FiniteReservoirProblem(eq, rstop, tstop; i, b, capacity) <: AbstractFiniteProblem
 
 Models `eq` in the domain `0 ≤ r ≤ rstop` with initial condition `i` and a reservoir boundary condition.
 
@@ -98,7 +98,7 @@ Models `eq` in the domain `0 ≤ r ≤ rstop` with initial condition `i` and a r
 - `capacity`: reservoir capacity.
 """
 struct FiniteReservoirProblem{Teq, _Trstop, _Ttstop, _Ti, _Tb, _Tcapacity} <:
-       FiniteProblem{Teq}
+       AbstractFiniteProblem{Teq}
     eq::Teq
     _rstop::_Trstop
     _tstop::_Ttstop
@@ -137,7 +137,7 @@ function Base.show(io::IO, prob::FiniteReservoirProblem)
 end
 
 """
-    FiniteReservoirProblem(D, rstop[, tstop]; i, b, capacity) <: FiniteProblem
+    FiniteReservoirProblem(D, rstop[, tstop]; i, b, capacity) <: AbstractFiniteProblem
 
 Shortcut for `FiniteReservoirProblem(DiffusionEquation(D), rstop, i=i, b=b, capacity=capacity)`.
 """
@@ -149,9 +149,9 @@ FiniteReservoirProblem(D, rstop, tstop = Inf; i, b, capacity) = FiniteReservoirP
     capacity = capacity)
 
 """
-    solve(prob::FiniteProblem{<:DiffusionEquation{1}}[, alg::FiniteDifference; abstol]) -> FiniteSolution
+    solve(prob::AbstractFiniteProblem{<:DiffusionEquation{1}}[, alg::FiniteDifference; abstol]) -> FiniteSolution
 
-Solve the `FiniteProblem` `prob` with a finite-difference scheme.
+Solve the finite problem `prob` with a finite-difference scheme.
 
 Uses backward Euler time discretization and a second-order central difference scheme for the fluxes.
 
@@ -179,7 +179,7 @@ Solve the `DirichletProblem` `prob` with a finite-difference scheme.
 """
 function solve(prob::Union{
             DirichletProblem{<:DiffusionEquation{1}},
-            FiniteProblem{<:DiffusionEquation{1}},
+            AbstractFiniteProblem{<:DiffusionEquation{1}},
         },
         alg::FiniteDifference;
         abstol = 1e-3,
@@ -189,7 +189,7 @@ function solve(prob::Union{
         @argcheck isnothing(alg._pre) "pre not valid for a DirichletProblem (use BoltzmannODE directly instead)"
     end
 
-    r = range(0, prob isa FiniteProblem ? prob._rstop : 1, length = alg._N)
+    r = range(0, prob isa AbstractFiniteProblem ? prob._rstop : 1, length = alg._N)
     Δr = step(r)
     Δr² = Δr^2
 
@@ -228,7 +228,7 @@ function solve(prob::Union{
         u .= prob.i
     end
 
-    if prob isa FiniteProblem
+    if prob isa AbstractFiniteProblem
         ts = [t]
         us = [copy(u)]
     else
@@ -249,8 +249,8 @@ function solve(prob::Union{
 
     Δt = Δr² / 2 * minimum(C ./ K)
 
-    while !(prob isa FiniteProblem) || t < prob._tstop
-        if prob isa FiniteProblem && t + Δt > prob._tstop
+    while !(prob isa AbstractFiniteProblem) || t < prob._tstop
+        if prob isa AbstractFiniteProblem && t + Δt > prob._tstop
             Δt = prob._tstop - t
         end
 
@@ -259,7 +259,7 @@ function solve(prob::Union{
         while !(change <= abstol)
             if sweeps >= 7
                 Δt /= 3
-                if prob isa FiniteProblem
+                if prob isa AbstractFiniteProblem
                     u .= us[end]
                 else
                     u .= u_old
@@ -317,7 +317,7 @@ function solve(prob::Union{
             used += influx
         end
 
-        if prob isa FiniteProblem
+        if prob isa AbstractFiniteProblem
             if u ≈ us[end]
                 t = oftype(t, Inf)
             else
@@ -342,7 +342,7 @@ function solve(prob::Union{
         end
     end
 
-    if prob isa FiniteProblem
+    if prob isa AbstractFiniteProblem
         return FiniteSolution(r,
             ts,
             us,
@@ -362,7 +362,9 @@ function solve(prob::Union{
     end
 end
 
-function solve(prob::FiniteProblem{<:DiffusionEquation{1}}; abstol = 1e-3, verbose = true)
+function solve(prob::AbstractFiniteProblem{<:DiffusionEquation{1}};
+        abstol = 1e-3,
+        verbose = true)
     solve(prob, FiniteDifference(pre = BoltzmannODE()), abstol = abstol, verbose = verbose)
 end
 
