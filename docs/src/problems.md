@@ -5,7 +5,7 @@ CurrentModule = Fronts
 # Problems
 
 ```@docs
-AbstractProblem
+AbstractSemiinfiniteProblem
 DirichletProblem
 FlowrateProblem
 SorptivityProblem

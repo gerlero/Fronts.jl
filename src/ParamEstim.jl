@@ -1,7 +1,7 @@
 module ParamEstim
 
 import ..Fronts
-using ..Fronts: InverseProblem, AbstractProblem, Solution, ReturnCode, solve
+using ..Fronts: InverseProblem, AbstractSemiinfiniteProblem, Solution, ReturnCode, solve
 import ..Fronts: sorptivity
 
 using LsqFit: curve_fit
@@ -75,19 +75,23 @@ function (cf::AbstractCostFunction)(params::AbstractVector,
 end
 
 _solve(cf::AbstractCostFunction, params::AbstractVector) = _solve(cf, cf._func(params))
-_solve(::AbstractCostFunction, prob::AbstractProblem) = solve(prob, verbose = false)
+function _solve(::AbstractCostFunction, prob::AbstractSemiinfiniteProblem)
+    solve(prob, verbose = false)
+end
 _solve(::AbstractCostFunction, sol::Solution) = sol
 
 """
     candidate(cf::AbstractCostFunction, ::AbstractVector)
-    candidate(cf::AbstractCostFunction, ::Fronts.AbstractProblem)
+    candidate(cf::AbstractCostFunction, ::Fronts.AbstractSemiinfiniteProblem)
     candidate(cf::AbstractCostFunction, ::Fronts.Solution)
 
 Return the candidate solution for a given cost function and parameter values, problem, or solution.
 """
 candidate(cf::AbstractCostFunction, params::AbstractVector) = candidate(cf,
     _solve(cf, params))
-candidate(cf::AbstractCostFunction, prob::AbstractProblem) = candidate(cf, _solve(cf, prob))
+function candidate(cf::AbstractCostFunction, prob::AbstractSemiinfiniteProblem)
+    candidate(cf, _solve(cf, prob))
+end
 candidate(::AbstractCostFunction{false}, sol::Solution) = sol
 
 """
@@ -104,8 +108,9 @@ factors affecting the diffusivity are unknown, it is recommended not to fit thos
 
 # Arguments
 - `func`: function that takes a vector of parameter values and returns either a `Fronts.Solution` or a
-`Fronts.AbstractProblem`. If func returns an `AbstractProblem`, it is solved with `solve`. `Solution`s
-with successful `ReturnCode` are passed to the cost function; otherwise, the cost is set to `Inf`.
+`Fronts.AbstractSemiinfiniteProblem`. If func returns an `AbstractSemiinfiniteProblem`, it is solved with
+`solve`. `Solution`s with successful `ReturnCode` are passed to the cost function; otherwise, the cost is
+set to `Inf`.
 - `prob`: inverse problem. See [`InverseProblem`](@ref).
 
 # Keyword arguments
@@ -119,7 +124,7 @@ GERLERO, G. S.; BERLI, C. L. A.; KLER, P. A. Open-source high-performance softwa
 inverse solving of horizontal capillary flow.
 Capillarity, 2023, vol. 6, no. 2, p. 31-40.
 
-See also: [`candidate`](@ref), [`ScaledSolution`](@ref), [`Fronts.Solution`](@ref), [`Fronts.AbstractProblem`](@ref)
+See also: [`candidate`](@ref), [`ScaledSolution`](@ref), [`Fronts.Solution`](@ref), [`Fronts.AbstractSemiinfiniteProblem`](@ref)
 
 ---
 
