@@ -18,7 +18,6 @@ using PCHIPInterpolation: Interpolator, integrate
 import NumericalIntegration
 using RecipesBase
 
-using OrdinaryDiffEq.SciMLBase: NullParameters
 using OrdinaryDiffEq: ODEFunction, ODEProblem, ODESolution
 using OrdinaryDiffEq: init, solve!, reinit!
 using OrdinaryDiffEq: DiscreteCallback, terminate!

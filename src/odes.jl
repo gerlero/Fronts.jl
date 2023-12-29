@@ -11,14 +11,14 @@ See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/), [`StaticAr
 """
 function boltzmann(eq::DiffusionEquation{1})
     let K = u -> conductivity(eq, u), C = u -> capacity(eq, u)
-        function f((u, du_do), ::NullParameters, o)
+        function f((u, du_do), ::SciMLBase.NullParameters, o)
             K_, dK_du = value_and_derivative(K, u)
 
             d²u_do² = -((C(u) * o / 2 + dK_du * du_do) / K_) * du_do
 
             return @SVector [du_do, d²u_do²]
         end
-        function jac((u, du_do), ::NullParameters, o)
+        function jac((u, du_do), ::SciMLBase.NullParameters, o)
             K_, dK_du, d²K_du² = value_and_derivatives(K, u)
             C_, dC_du = value_and_derivative(C, u)
 
@@ -36,14 +36,14 @@ end
 function boltzmann(eq::DiffusionEquation{m}) where {m}
     @assert m in 2:3
     let K = u -> conductivity(eq, u), C = u -> capacity(eq, u), k = m - 1
-        function f((u, du_do), ::NullParameters, o)
+        function f((u, du_do), ::SciMLBase.NullParameters, o)
             K_, dK_du = value_and_derivative(K, u)
 
             d²u_do² = -((C(u) * o / 2 + dK_du * du_do) / K_ + k / o) * du_do
 
             return @SVector [du_do, d²u_do²]
         end
-        function jac((u, du_do), ::NullParameters, o)
+        function jac((u, du_do), ::SciMLBase.NullParameters, o)
             K_, dK_du, d²K_du² = value_and_derivatives(K, u)
             C_, dC_du = value_and_derivative(C, u)
 
