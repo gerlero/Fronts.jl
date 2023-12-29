@@ -29,7 +29,7 @@ end
 
 Transform `prob` into an ODE problem in terms of the Boltzmann variable `o`.
 
-The ODE problem is set up to terminate automatically (`ReturnCode.Terminated`) when the steady state is reached.
+The ODE problem is set up to terminate automatically (with `.retcode == ReturnCode.Success`) when the steady state is reached.
 
 See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/)
 """
@@ -45,7 +45,11 @@ function boltzmann(prob::Union{CauchyProblem, SorptivityCauchyProblem})
     settled = DiscreteCallback(let direction = monotonicity(prob)
             (u, t, integrator) -> direction * u[2] ≤ zero(u[2])
         end,
-        terminate!,
+        function succeed!(integrator)
+            terminate!(integrator)
+            integrator.sol = SciMLBase.solution_new_retcode(integrator.sol,
+                ReturnCode.Success)
+        end,
         save_positions = (false, false))
 
     ODEProblem(boltzmann(prob.eq), u0, (ob, typemax(ob)), callback = settled)
@@ -112,16 +116,14 @@ function solve(prob::Union{CauchyProblem, SorptivityCauchyProblem},
         verbose = true)
     odesol = solve!(_init(prob, alg, verbose = verbose))
 
-    @assert odesol.retcode != ReturnCode.Success
-
-    if odesol.retcode != ReturnCode.Terminated
-        return Solution(odesol, prob, alg, _retcode = odesol.retcode, _niter = 1)
-    end
-
-    return Solution(odesol, prob, alg, _retcode = ReturnCode.Success, _niter = 1)
+    return Solution(odesol, prob, alg, _niter = 1)
 end
 
-function Solution(_odesol::ODESolution, _prob, _alg::BoltzmannODE; _retcode, _niter)
+function Solution(_odesol::ODESolution,
+        _prob,
+        _alg::BoltzmannODE;
+        _retcode = _odesol.retcode,
+        _niter)
     return Solution(o -> _odesol(o, idxs = 1),
         _prob,
         _alg,

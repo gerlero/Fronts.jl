@@ -2,13 +2,13 @@ using Fronts
 using Fronts._Diff
 using Fronts.PorousModels
 using Fronts.ParamEstim
+using Fronts.SciMLBase: NullParameters
 using Test
 
 import ForwardDiff
 import NaNMath
 using NumericalIntegration
 using OrdinaryDiffEq: ODEFunction, ODEProblem
-using OrdinaryDiffEq.DiffEqBase: NullParameters
 using StaticArrays: @SVector, SVector
 
 using Plots: plot

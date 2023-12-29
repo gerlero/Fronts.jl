@@ -3,9 +3,9 @@ module ParamEstim
 import ..Fronts
 using ..Fronts: InverseProblem, AbstractSemiinfiniteProblem, Solution, ReturnCode, solve
 import ..Fronts: sorptivity
+import ..Fronts.SciMLBase: successful_retcode, NullParameters
 
 using LsqFit: curve_fit
-import OrdinaryDiffEq.SciMLBase: successful_retcode, NullParameters
 
 """
     ScaledSolution

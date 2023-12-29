@@ -51,14 +51,11 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE = BoltzmannODE();
             CauchyProblem(prob.eq, b = prob.b, d_dob = zero(d_dob_hint), ob = prob.ob))
         solve!(integrator)
 
-        @assert integrator.sol.retcode != ReturnCode.Success
-        retcode = integrator.sol.retcode == ReturnCode.Terminated ? ReturnCode.Success :
-                  integrator.sol.retcode
-        if verbose && !SciMLBase.successful_retcode(integrator.sol)
+        if verbose && integrator.sol.retcode != ReturnCode.Success
             @warn "Problem has a trivial solution but failed to obtain it"
         end
 
-        return Solution(integrator.sol, prob, alg, _retcode = retcode, _niter = 0)
+        return Solution(integrator.sol, prob, alg, _niter = 0)
     end
 
     d_dob_trial = bracket_bisect(zero(d_dob_hint), d_dob_hint, resid)
@@ -68,20 +65,14 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE = BoltzmannODE();
             CauchyProblem(prob.eq, b = prob.b, d_dob = d_dob_trial(resid), ob = prob.ob))
         solve!(integrator)
 
-        @assert integrator.sol.retcode != ReturnCode.Success
-        if integrator.sol.retcode == ReturnCode.Terminated &&
-           direction * integrator.sol.u[end][1] ≤ direction * limit
+        if integrator.sol.retcode == ReturnCode.Success
             resid = integrator.sol.u[end][1] - prob.i
         else
             resid = direction * typemax(prob.i)
         end
 
         if abs(resid) ≤ abstol
-            return Solution(integrator.sol,
-                prob,
-                alg,
-                _retcode = ReturnCode.Success,
-                _niter = niter)
+            return Solution(integrator.sol, prob, alg, _niter = niter)
         end
     end
 
@@ -150,18 +141,11 @@ function solve(prob::Union{FlowrateProblem, SorptivityProblem},
             SorptivityCauchyProblem(prob.eq, b = prob.i, S = zero(S), ob = ob))
         solve!(integrator)
 
-        @assert integrator.sol.retcode != ReturnCode.Success
-        retcode = integrator.sol.retcode == ReturnCode.Terminated ? ReturnCode.Success :
-                  integrator.sol.retcode
-        if verbose && !SciMLBase.successful_retcode(integrator.sol)
+        if verbose && integrator.sol.retcode != ReturnCode.Success
             @warn "Problem has a trivial solution but failed to obtain it"
         end
 
-        return Solution(integrator.sol,
-            prob,
-            alg,
-            _retcode = retcode,
-            _niter = 0)
+        return Solution(integrator.sol, prob, alg, _niter = 0)
     end
 
     b_trial = bracket_bisect(prob.i, b_hint)
@@ -171,9 +155,7 @@ function solve(prob::Union{FlowrateProblem, SorptivityProblem},
             SorptivityCauchyProblem(prob.eq, b = b_trial(resid), S = S, ob = ob))
         solve!(integrator)
 
-        @assert integrator.sol.retcode != ReturnCode.Success
-        if integrator.sol.retcode == ReturnCode.Terminated &&
-           direction * integrator.sol.u[end][1] ≤ direction * limit
+        if integrator.sol.retcode == ReturnCode.Success
             resid = integrator.sol.u[end][1] - prob.i
         elseif integrator.sol.retcode != ReturnCode.Terminated && integrator.t == ob
             resid = -direction * typemax(prob.i)
@@ -182,11 +164,7 @@ function solve(prob::Union{FlowrateProblem, SorptivityProblem},
         end
 
         if abs(resid) ≤ abstol
-            return Solution(integrator.sol,
-                prob,
-                alg,
-                _retcode = ReturnCode.Success,
-                _niter = niter)
+            return Solution(integrator.sol, prob, alg, _niter = niter)
         end
     end
 
