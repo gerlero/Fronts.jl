@@ -45,11 +45,7 @@ function boltzmann(prob::Union{CauchyProblem, SorptivityCauchyProblem})
     settled = DiscreteCallback(let direction = monotonicity(prob)
             (u, t, integrator) -> direction * u[2] ≤ zero(u[2])
         end,
-        function succeed!(integrator)
-            terminate!(integrator)
-            integrator.sol = SciMLBase.solution_new_retcode(integrator.sol,
-                ReturnCode.Success)
-        end,
+        (integrator) -> terminate!(integrator, ReturnCode.Success),
         save_positions = (false, false))
 
     ODEProblem(boltzmann(prob.eq), u0, (ob, typemax(ob)), callback = settled)
@@ -116,6 +112,8 @@ function solve(prob::Union{CauchyProblem, SorptivityCauchyProblem},
         verbose = true)
     odesol = solve!(_init(prob, alg, verbose = verbose))
 
+    @assert odesol.retcode != ReturnCode.Terminated
+
     return Solution(odesol, prob, alg, _niter = 1)
 end
 
@@ -124,6 +122,8 @@ function Solution(_odesol::ODESolution,
         _alg::BoltzmannODE;
         _retcode = _odesol.retcode,
         _niter)
+    @assert _odesol.retcode != ReturnCode.Terminated
+
     return Solution(o -> _odesol(o, idxs = 1),
         _prob,
         _alg,
