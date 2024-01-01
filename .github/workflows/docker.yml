@@ -52,7 +52,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          platforms: ${{ inputs.arm64 && 'linux/amd64,linux/arm64' || '' }}
+          platforms: ${{ (github.event_name == 'push' || inputs.arm64) && 'linux/amd64,linux/arm64' || '' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: | # Julia's Pkg expects a Git repository
