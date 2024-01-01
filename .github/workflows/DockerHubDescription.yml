@@ -5,9 +5,8 @@ on:
       - main
     paths:
       - README.md
-      - .github/workflows/dockerhub-description.yml
+      - .github/workflows/DockerHubDescription.yml
   workflow_dispatch:
-
 jobs:
   dockerhub-description:
     if: vars.DOCKERHUB_REPOSITORY
