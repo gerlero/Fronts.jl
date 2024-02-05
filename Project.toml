@@ -1,7 +1,7 @@
 name = "Fronts"
 uuid = "45b28afb-7f9c-4d83-a9c8-739861dbc76b"
 authors = ["Gabriel S. Gerlero <ggerlero@cimec.unl.edu.ar>"]
-version = "2.5.2"
+version = "2.5.3"
 
 [deps]
 AbstractDifferentiation = "c29ec348-61ec-40c8-8164-b8c60e9d9f3d"
