@@ -29,7 +29,7 @@ function boltzmann(eq::DiffusionEquation{1})
             return @SMatrix [0 1
                 j21 j22]
         end
-        return ODEFunction{false}(f, jac = jac, syms = [eq._sym, :d_do], indepsym = :o)
+        return ODEFunction{false}(f, jac = jac)
     end
 end
 
@@ -54,7 +54,7 @@ function boltzmann(eq::DiffusionEquation{m}) where {m}
             return @SMatrix [0 1
                 j21 j22]
         end
-        return ODEFunction{false}(f, jac = jac, syms = [eq._sym, :d_do], indepsym = :o)
+        return ODEFunction{false}(f, jac = jac)
     end
 end
 
