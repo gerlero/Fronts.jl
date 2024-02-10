@@ -1,8 +1,5 @@
 module Fronts
 
-include("_Diff.jl")
-using ._Diff: derivative, value_and_derivative, value_and_derivatives
-
 include("_Rootfinding.jl")
 using ._Rootfinding: bracket_bisect
 
@@ -11,6 +8,9 @@ using ._Chebyshev: chebdif
 
 using LinearAlgebra: Diagonal, Tridiagonal, SingularException
 
+using ForwardDiff: derivative
+using AbstractDifferentiation: value_and_derivative,
+                               value_derivative_and_second_derivative, ForwardDiffBackend
 using ArgCheck: @argcheck
 using StaticArrays: @SVector, @SMatrix
 using RecursiveArrayTools: ArrayPartition
