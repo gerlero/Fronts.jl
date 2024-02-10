@@ -14,7 +14,7 @@
         htest = -10.0
 
         @test (@inferred hθ(bc, @inferred θh(bc, htest))) ≈ htest
-        @test (@inferred Ch(bc, htest)) ≈ derivative(h -> θh(bc, h), htest)
+        @test (@inferred Ch(bc, htest)) ≈ ForwardDiff.derivative(h -> θh(bc, h), htest)
         @test (@inferred Cθ(bc, @inferred θh(bc, htest))) ≈ @inferred Ch(bc, htest)
         @test (@inferred Kθ(bc, @inferred θh(bc, htest))) ≈ @inferred Kh(bc, htest)
 
@@ -47,7 +47,7 @@
         @test Kh(vg, htest) ≈ 9.430485870291618e-9
 
         @test (@inferred hθ(vg, @inferred θh(vg, htest))) ≈ htest
-        @test (@inferred Ch(vg, htest)) ≈ derivative(h -> θh(vg, h), htest)
+        @test (@inferred Ch(vg, htest)) ≈ ForwardDiff.derivative(h -> θh(vg, h), htest)
         @test (@inferred Cθ(vg, @inferred θh(vg, htest))) ≈ @inferred Ch(vg, htest)
         @test (@inferred Kθ(vg, @inferred θh(vg, htest))) ≈ @inferred Kh(vg, htest)
 

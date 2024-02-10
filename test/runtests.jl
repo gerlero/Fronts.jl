@@ -1,11 +1,12 @@
 using Fronts
-using Fronts._Diff
 using Fronts.PorousModels
 using Fronts.ParamEstim
 using Fronts.SciMLBase: NullParameters
 using Test
 
 import ForwardDiff
+using AbstractDifferentiation: derivative, second_derivative, value_and_derivative,
+                               value_derivative_and_second_derivative, ForwardDiffBackend
 import NaNMath
 using NumericalIntegration
 using OrdinaryDiffEq: ODEFunction, ODEProblem
@@ -14,8 +15,8 @@ using StaticArrays: @SVector, SVector
 using Plots: plot
 
 @testset "Fronts.jl" begin
-    include("test_Diff.jl")
     include("test_PorousModels.jl")
+    include("test_differentiation.jl")
     include("test_boltzmann.jl")
     include("test_dirichlet.jl")
     include("test_neumann.jl")

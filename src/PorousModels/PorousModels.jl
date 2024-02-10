@@ -1,8 +1,8 @@
 module PorousModels
 
-using .._Diff: derivative
 import ..Fronts: DiffusionEquation
 
+using ForwardDiff: derivative
 using NaNMath: pow
 using ArgCheck: @argcheck
 
