@@ -52,7 +52,7 @@ struct VanGenuchten{_Tml, _Tα, _TKs, _Tθ} <: UnsaturatedFlowModel
             promote_type(typeof(m), typeof(l)),
             typeof(α),
             typeof(Ks),
-            promote_type(typeof(θr), typeof(θs)),
+            promote_type(typeof(θr), typeof(θs))
         }(m,
             l,
             α,

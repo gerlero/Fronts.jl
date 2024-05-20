@@ -66,12 +66,12 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}},
         d²F_du² = -2 * D ./ S² ./ F
 
         R = [d²_du²[internal, :] * F - d²F_du²[internal]
-            F[end] - 0
-            F[begin] - 1]
+             F[end] - 0
+             F[begin] - 1]
 
         ∂R_∂F = [d²_du²[internal, :] + Diagonal(d²F_du² ./ F)[internal, :]
-            last'
-            first']
+                 last'
+                 first']
 
         F_prev = F
 

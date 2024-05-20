@@ -30,7 +30,7 @@ function boltzmann(eq::DiffusionEquation{1})
             j22 = -2 * dK_du * du_do / K_ - C_ * o / (2K_)
 
             return @SMatrix [0 1
-                j21 j22]
+                             j21 j22]
         end
         return ODEFunction{false}(f, jac = jac)
     end
@@ -58,7 +58,7 @@ function boltzmann(eq::DiffusionEquation{m}) where {m}
             j22 = -2 * dK_du * du_do / K_ - C_ * o / (2K_) - k / o
 
             return @SMatrix [0 1
-                j21 j22]
+                             j21 j22]
         end
         return ODEFunction{false}(f, jac = jac)
     end

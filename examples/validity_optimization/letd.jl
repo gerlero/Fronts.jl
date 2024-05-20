@@ -62,8 +62,9 @@ prob = DirichletProblem(model, i = θi.val, b = θs - ϵ)
 
 θ = solve(prob, abstol = θi.err)
 
-rchisq = round(sum(Measurements.stdscore.(θref, θ.(oref)) .^ 2) /
-               (length(oref) - length(search_range) - 1),
+rchisq = round(
+    sum(Measurements.stdscore.(θref, θ.(oref)) .^ 2) /
+    (length(oref) - length(search_range) - 1),
     sigdigits = 2)
 
 @show rchisq

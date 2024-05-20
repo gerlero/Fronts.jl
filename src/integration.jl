@@ -61,7 +61,8 @@ function _init(prob::Union{CauchyProblem, SorptivityCauchyProblem},
     odeprob = boltzmann(prob)
 
     if !isnothing(limit)
-        past_limit = DiscreteCallback(let direction = monotonicity(prob), limit = limit
+        past_limit = DiscreteCallback(
+            let direction = monotonicity(prob), limit = limit
                 (u, t, integrator) -> direction * u[1] > direction * limit
             end,
             terminate!,

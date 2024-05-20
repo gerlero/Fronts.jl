@@ -30,7 +30,7 @@ struct LETd{_TL, _TE, _TT, _TDwt, _Tθ} <: UnsaturatedFlowModel
             typeof(E),
             typeof(T),
             typeof(Dwt),
-            promote_type(typeof(θr), typeof(θs)),
+            promote_type(typeof(θr), typeof(θs))
         }(L,
             E,
             T,
