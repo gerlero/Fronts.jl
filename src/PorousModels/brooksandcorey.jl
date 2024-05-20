@@ -48,7 +48,7 @@ struct BrooksAndCorey{_Tnl, _Tα, _TKs, _Tθ} <: UnsaturatedFlowModel
             promote_type(typeof(n), typeof(l)),
             typeof(α),
             typeof(Ks),
-            promote_type(typeof(θr), typeof(θs)),
+            promote_type(typeof(θr), typeof(θs))
         }(n,
             l,
             α,

@@ -41,7 +41,8 @@ function solve(prob::DirichletProblem, alg::BoltzmannODE = BoltzmannODE();
     limit = prob.i + direction * abstol
     resid = prob.b - prob.i
 
-    integrator = _init(CauchyProblem(prob.eq, b = prob.b, d_dob = d_dob_hint, ob = prob.ob),
+    integrator = _init(
+        CauchyProblem(prob.eq, b = prob.b, d_dob = d_dob_hint, ob = prob.ob),
         alg,
         limit = limit,
         verbose = false)

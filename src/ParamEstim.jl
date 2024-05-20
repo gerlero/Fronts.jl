@@ -150,7 +150,8 @@ struct RSSCostFunction{fit_D0, _Tfunc, _Tprob, _TD0tol, _Toi_hint, _Tsorptivity}
             D0tol = 1e-3,
             oi_hint = nothing)
         S = isnothing(oi_hint) ? sorptivity(prob) : nothing
-        new{true, typeof(func), typeof(prob), typeof(D0tol), typeof(oi_hint), typeof(S)}(func,
+        new{true, typeof(func), typeof(prob), typeof(D0tol), typeof(oi_hint), typeof(S)}(
+            func,
             prob,
             D0tol,
             oi_hint,

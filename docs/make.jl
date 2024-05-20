@@ -10,7 +10,7 @@ makedocs(;
     format = Documenter.HTML(;
         canonical = "https://gerlero.github.io/Fronts.jl",
         edit_link = "main",
-        assets = String[],),
+        assets = String[]),
     pages = [
         "Home" => "index.md",
         "Equations" => "equations.md",
@@ -20,9 +20,9 @@ makedocs(;
         "Boltzmann transformation" => "boltzmann.md",
         "Inverse problems" => "inverse.md",
         "Parameter estimation" => "ParamEstim.md",
-        "Unsaturated flow models" => "PorousModels.md",
-    ],)
+        "Unsaturated flow models" => "PorousModels.md"
+    ])
 
 deploydocs(;
     repo = "github.com/gerlero/Fronts.jl",
-    devbranch = "main",)
+    devbranch = "main")

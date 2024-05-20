@@ -43,14 +43,14 @@ export DiffusionEquation, diffusivity, conductivity, capacity
 export d_do, d_dr, d_dt, boltzmann
 export sorptivity
 export AbstractSemiinfiniteProblem, Problem, DirichletProblem, FlowrateProblem,
-    CauchyProblem, SorptivityProblem, SorptivityCauchyProblem, monotonicity
+       CauchyProblem, SorptivityProblem, SorptivityCauchyProblem, monotonicity
 export BoltzmannODE
 export MathiasAndSander
 export solve
 export Solution, rb, flux, sorptivity
 export InverseProblem
 export FiniteDifference,
-    AbstractFiniteProblem, FiniteDirichletProblem, FiniteReservoirProblem, FiniteSolution
+       AbstractFiniteProblem, FiniteDirichletProblem, FiniteReservoirProblem, FiniteSolution
 
 include("ParamEstim.jl")
 include("PorousModels/PorousModels.jl")

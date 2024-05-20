@@ -76,7 +76,8 @@ end
 
 Shortcut for `FiniteDirichletProblem(DiffusionEquation(D), rstop, tstop, i=i, b=b)`.
 """
-FiniteDirichletProblem(D, rstop, tstop = Inf; i, b) = FiniteDirichletProblem(DiffusionEquation(D),
+FiniteDirichletProblem(D, rstop, tstop = Inf; i, b) = FiniteDirichletProblem(
+    DiffusionEquation(D),
     rstop,
     tstop,
     i = i,
@@ -116,7 +117,7 @@ struct FiniteReservoirProblem{Teq, _Trstop, _Ttstop, _Ti, _Tb, _Tcapacity} <:
             typeof(tstop),
             typeof(i),
             typeof(b),
-            typeof(capacity),
+            typeof(capacity)
         }(eq,
             rstop,
             tstop,
@@ -141,7 +142,8 @@ end
 
 Shortcut for `FiniteReservoirProblem(DiffusionEquation(D), rstop, i=i, b=b, capacity=capacity)`.
 """
-FiniteReservoirProblem(D, rstop, tstop = Inf; i, b, capacity) = FiniteReservoirProblem(DiffusionEquation(D),
+FiniteReservoirProblem(D, rstop, tstop = Inf; i, b, capacity) = FiniteReservoirProblem(
+    DiffusionEquation(D),
     rstop,
     tstop,
     i = i,
@@ -177,9 +179,10 @@ Solve the `DirichletProblem` `prob` with a finite-difference scheme.
 - `abstol=1e-3`: nonlinear solver tolerance.
 - `verbose=true`: whether warnings are emitted if solving is unsuccessful.
 """
-function solve(prob::Union{
+function solve(
+        prob::Union{
             DirichletProblem{<:DiffusionEquation{1}},
-            AbstractFiniteProblem{<:DiffusionEquation{1}},
+            AbstractFiniteProblem{<:DiffusionEquation{1}}
         },
         alg::FiniteDifference;
         abstol = 1e-3,
@@ -391,7 +394,7 @@ struct FiniteSolution{_Tr, _Tt, _Tu, _Toriginal, _Tprob, _Talg}
             typeof(_u),
             typeof(_original),
             typeof(_prob),
-            typeof(_alg),
+            typeof(_alg)
         }(_r,
             _t,
             _u,

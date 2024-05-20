@@ -51,7 +51,7 @@ struct LETxs{_TLw, _TEw, _TTw, _TLs, _TEs, _TTs, _Tα, _TKs, _Tθ} <: Unsaturate
             typeof(Ts),
             typeof(α),
             typeof(Ks),
-            promote_type(typeof(θr), typeof(θs)),
+            promote_type(typeof(θr), typeof(θs))
         }(Lw,
             Ew,
             Tw,

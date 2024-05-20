@@ -42,7 +42,7 @@ struct Solution{_T, _Td_do, _To, _Toriginal, _Tprob, _Talg, _Tsol, _Tderiv}
             typeof(_prob),
             typeof(_alg),
             typeof(_sol),
-            typeof(_deriv),
+            typeof(_deriv)
         }(_i,
             _b,
             _d_dob,
