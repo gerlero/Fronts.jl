@@ -271,8 +271,7 @@ function solve(
             end
 
             K .= conductivity.(prob.eq, u)
-            Kf .= 2K[begin:(end - 1)] .* K[(begin + 1):end] ./
-                  (K[begin:(end - 1)] + K[(begin + 1):end])
+            Kf .= (K[begin:(end - 1)] .+ K[(begin + 1):end]) / 2
 
             C .= capacity.(prob.eq, u)
 
