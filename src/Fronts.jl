@@ -9,8 +9,8 @@ using ._Chebyshev: chebdif
 using LinearAlgebra: Diagonal, Tridiagonal, SingularException
 
 using ForwardDiff: derivative
-using AbstractDifferentiation: value_and_derivative,
-                               value_derivative_and_second_derivative, ForwardDiffBackend
+using DifferentiationInterface: value_and_derivative,
+                                value_derivative_and_second_derivative, AutoForwardDiff
 using ArgCheck: @argcheck
 using StaticArrays: @SVector, @SMatrix
 using RecursiveArrayTools: ArrayPartition

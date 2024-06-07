@@ -13,19 +13,19 @@
     D(θ) = Dθ(model, θ)
 
     for θ in range(θr + eps(θr), θs - eps(θs), length = 10)
-        D_, (dD_dθ,) = value_and_derivative(ForwardDiffBackend(), D, θ)
+        D_, dD_dθ = value_and_derivative(D, AutoForwardDiff(), θ)
         @test D_ == D(θ)
-        @test dD_dθ == only(derivative(ForwardDiffBackend(), D, θ)) ==
+        @test dD_dθ == derivative(D, AutoForwardDiff(), θ) ==
               ForwardDiff.derivative(D, θ)
 
-        D_, (dD_dθ,), (d²D_dθ²,) = value_derivative_and_second_derivative(
-            ForwardDiffBackend(),
+        D_, dD_dθ, d²D_dθ² = value_derivative_and_second_derivative(
             D,
+            AutoForwardDiff(),
             θ)
         @test D_ == D(θ)
-        @test dD_dθ == only(derivative(ForwardDiffBackend(), D, θ)) ==
+        @test dD_dθ == derivative(D, AutoForwardDiff(), θ) ==
               ForwardDiff.derivative(D, θ)
-        @test d²D_dθ² == only(second_derivative(ForwardDiffBackend(), D, θ)) ==
+        @test d²D_dθ² == second_derivative(D, AutoForwardDiff(), θ) ==
               ForwardDiff.derivative(θ -> ForwardDiff.derivative(D, θ), θ)
     end
 end

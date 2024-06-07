@@ -4,8 +4,8 @@ authors = ["Gabriel S. Gerlero <ggerlero@cimec.unl.edu.ar>"]
 version = "2.5.4"
 
 [deps]
-AbstractDifferentiation = "c29ec348-61ec-40c8-8164-b8c60e9d9f3d"
 ArgCheck = "dce04be8-c92d-5529-be00-80e4d2c0e197"
+DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 LsqFit = "2fda8390-95c7-5789-9bda-21331edee243"
@@ -21,8 +21,8 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 
 [compat]
-AbstractDifferentiation = "0.6.2"
 ArgCheck = "2"
+DifferentiationInterface = "0.5.5"
 ForwardDiff = "0.10"
 LinearAlgebra = "1"
 LsqFit = "0.13, 0.14, 0.15"
