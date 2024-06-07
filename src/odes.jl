@@ -12,18 +12,18 @@ See also: [`DifferentialEquations`](https://diffeq.sciml.ai/stable/), [`StaticAr
 function boltzmann(eq::DiffusionEquation{1})
     let K = u -> conductivity(eq, u), C = u -> capacity(eq, u)
         function f((u, du_do), ::SciMLBase.NullParameters, o)
-            K_, (dK_du,) = value_and_derivative(ForwardDiffBackend(), K, u)
+            K_, dK_du = value_and_derivative(K, AutoForwardDiff(), u)
 
             d²u_do² = -((C(u) * o / 2 + dK_du * du_do) / K_) * du_do
 
             return @SVector [du_do, d²u_do²]
         end
         function jac((u, du_do), ::SciMLBase.NullParameters, o)
-            K_, (dK_du,), (d²K_du²,) = value_derivative_and_second_derivative(
-                ForwardDiffBackend(),
+            K_, dK_du, d²K_du² = value_derivative_and_second_derivative(
                 K,
+                AutoForwardDiff(),
                 u)
-            C_, (dC_du,) = value_and_derivative(ForwardDiffBackend(), C, u)
+            C_, dC_du = value_and_derivative(C, AutoForwardDiff(), u)
 
             j21 = -du_do * (K_ * (2 * d²K_du² * du_do + dC_du * o) -
                    dK_du * (C_ * o + 2 * dK_du * du_do)) / (2K_^2)
@@ -40,18 +40,18 @@ function boltzmann(eq::DiffusionEquation{m}) where {m}
     @assert m in 2:3
     let K = u -> conductivity(eq, u), C = u -> capacity(eq, u), k = m - 1
         function f((u, du_do), ::SciMLBase.NullParameters, o)
-            K_, (dK_du,) = value_and_derivative(ForwardDiffBackend(), K, u)
+            K_, dK_du = value_and_derivative(K, AutoForwardDiff(), u)
 
             d²u_do² = -((C(u) * o / 2 + dK_du * du_do) / K_ + k / o) * du_do
 
             return @SVector [du_do, d²u_do²]
         end
         function jac((u, du_do), ::SciMLBase.NullParameters, o)
-            K_, (dK_du,), (d²K_du²,) = value_derivative_and_second_derivative(
-                ForwardDiffBackend(),
+            K_, dK_du, d²K_du² = value_derivative_and_second_derivative(
                 K,
+                AutoForwardDiff(),
                 u)
-            C_, (dC_du,) = value_and_derivative(ForwardDiffBackend(), C, u)
+            C_, dC_du = value_and_derivative(C, AutoForwardDiff(), u)
 
             j21 = -du_do * (K_ * (2 * d²K_du² * du_do + dC_du * o) -
                    dK_du * (C_ * o + 2 * dK_du * du_do)) / (2K_^2)

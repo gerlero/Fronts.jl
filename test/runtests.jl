@@ -5,8 +5,8 @@ using Fronts.SciMLBase: NullParameters
 using Test
 
 import ForwardDiff
-using AbstractDifferentiation: derivative, second_derivative, value_and_derivative,
-                               value_derivative_and_second_derivative, ForwardDiffBackend
+using DifferentiationInterface: derivative, second_derivative, value_and_derivative,
+                                value_derivative_and_second_derivative, AutoForwardDiff
 import NaNMath
 using NumericalIntegration
 using OrdinaryDiffEq: ODEFunction, ODEProblem
