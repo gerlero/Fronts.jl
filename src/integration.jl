@@ -123,7 +123,7 @@ function Solution(_odesol::ODESolution,
         _alg::BoltzmannODE;
         _retcode = _odesol.retcode,
         _niter)
-    @assert _odesol.retcode != ReturnCode.Terminated
+    @assert _retcode != ReturnCode.Terminated
 
     return Solution(o -> _odesol(o, idxs = 1),
         _prob,
