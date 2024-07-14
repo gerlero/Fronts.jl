@@ -67,8 +67,8 @@ function Base.show(io::IO, prob::FiniteDirichletProblem)
     else
         println(io, "⎧ ", prob.eq, ", 0<r≤", prob._rstop, ",0<t≤", prob._tstop)
     end
-    println(io, "⎨ ", prob.eq.sym, "(r,0) = ", prob.i, ", r>0")
-    print(io, "⎩ ", prob.eq.sym, "(0,t) = ", prob.b, ", t>0")
+    println(io, "⎨ ", prob.eq._sym, "(r,0) = ", prob.i, ", r>0")
+    print(io, "⎩ ", prob.eq._sym, "(0,t) = ", prob.b, ", t>0")
 end
 
 """
@@ -133,7 +133,7 @@ function Base.show(io::IO, prob::FiniteReservoirProblem)
     else
         println(io, "⎧ ", prob.eq, ", 0<r≤", prob._rstop, ",0<t≤", prob._tstop)
     end
-    println(io, "⎨ ", prob.eq.sym, "(r,0) = ", prob.i, ", r>0")
+    println(io, "⎨ ", prob.eq._sym, "(r,0) = ", prob.i, ", r>0")
     print(io, "⎩ Finite reservoir with capacity ", prob.capacity)
 end
 
@@ -150,224 +150,245 @@ FiniteReservoirProblem(D, rstop, tstop = Inf; i, b, capacity) = FiniteReservoirP
     b = b,
     capacity = capacity)
 
-"""
-    solve(prob::AbstractFiniteProblem{<:DiffusionEquation{1}}[, alg::FiniteDifference; abstol]) -> FiniteSolution
+function solve(prob::DirichletProblem{<:DiffusionEquation{1}},
+        alg::FiniteDifference; abstol = 1e-3, verbose = true)
+    @argcheck iszero(prob.ob) "FiniteDifference only supports fixed boundaries"
+    @argcheck isnothing(alg._pre) "pre not valid for a DirichletProblem (use BoltzmannODE directly instead)"
 
-Solve the finite problem `prob` with a finite-difference scheme.
-
-Uses backward Euler time discretization and a second-order central difference scheme for the fluxes.
-
-# Arguments
-- `prob`: problem to solve.
-- `alg=FiniteDifference(pre=BoltzmannODE())`: algorithm to use.
-
-# Keyword arguments
-- `abstol=1e-3`: nonlinear solver tolerance.
-- `verbose=true`: whether warnings are emitted if solving is unsuccessful.
-
----
-
-    solve(prob::DirichletProblem{<:DiffusionEquation{1}}, alg::FiniteDifference[; abstol]) -> Solution
-
-Solve the `DirichletProblem` `prob` with a finite-difference scheme.
-
-# Arguments
-- `prob`: problem to solve.
-- `alg`: algorithm to use.
-
-# Keyword arguments
-- `abstol=1e-3`: nonlinear solver tolerance.
-- `verbose=true`: whether warnings are emitted if solving is unsuccessful.
-"""
-function solve(
-        prob::Union{
-            DirichletProblem{<:DiffusionEquation{1}},
-            AbstractFiniteProblem{<:DiffusionEquation{1}}
-        },
-        alg::FiniteDifference;
-        abstol = 1e-3,
-        verbose = true)
-    if prob isa DirichletProblem
-        @argcheck iszero(prob.ob) "FiniteDifference only supports fixed boundaries"
-        @argcheck isnothing(alg._pre) "pre not valid for a DirichletProblem (use BoltzmannODE directly instead)"
-    end
-
-    r = range(0, prob isa AbstractFiniteProblem ? prob._rstop : 1, length = alg._N)
+    r = range(0, 1, length = alg._N)
     Δr = step(r)
     Δr² = Δr^2
 
-    if prob isa FiniteReservoirProblem
-        used = zero(prob.capacity)
+    u = similar(r)
+    u .= prob.i
+    u[begin] = prob.b
+
+    let eq = prob.eq, Δr² = Δr²
+        function f!(∂u_∂t, u, ::SciMLBase.NullParameters, t)
+            K = conductivity.(eq, u)
+            Kf = (K[begin:(end - 1)] .+ K[(begin + 1):end]) / 2
+
+            ∂u_∂t[begin] = 0
+            ∂u_∂t[(begin + 1):(end - 1)] .= Kf[begin:(end - 1)] ./ Δr² .*
+                                            u[begin:(end - 2)] -
+                                            (Kf[begin:(end - 1)] + Kf[(begin + 1):end]) ./
+                                            Δr² .* u[(begin + 1):(end - 1)] +
+                                            Kf[(begin + 1):end] ./ Δr² .* u[(begin + 2):end]
+            ∂u_∂t[end] = Kf[end] / Δr² * u[end - 1] - Kf[end] / Δr² * u[end]
+
+            ∂u_∂t ./= capacity.(eq, u)
+
+            return ∂u_∂t
+        end
     end
 
-    u = similar(r)
-    t = 0.0
+    f! = ODEFunction(
+        f!, jac_prototype = Tridiagonal(r[begin:(end - 1)], r, r[begin:(end - 1)]))
 
-    presol = nothing
-    if !isnothing(alg._pre) &&
-       (prob isa FiniteDirichletProblem || prob isa FiniteReservoirProblem) &&
-       prob.i isa Number
+    reached_end = DiscreteCallback(
+        let i = prob.i
+            (u, t, integrator) -> u[end] != i
+        end,
+        (integrator) -> terminate!(integrator, ReturnCode.Success),
+        save_positions = (false, false))
+
+    odeprob = ODEProblem(f!, u, (0.0, Inf), callback = reached_end)
+
+    odesol = solve(odeprob, ImplicitEuler(), abstol = abstol, verbose = verbose)
+
+    return Solution(Interpolator(boltzmann.(r, odesol.t[end]), odesol.u[end]),
+        prob,
+        alg,
+        _ob = prob.ob,
+        _oi = boltzmann(r[end], odesol.t[end]),
+        _retcode = odesol.retcode,
+        _niter = odesol.stats.nsolve)
+end
+
+function solve(prob::FiniteDirichletProblem{<:DiffusionEquation{1}},
+        alg::FiniteDifference = FiniteDifference(pre = BoltzmannODE()); abstol = 1e-3, verbose = true)
+    r = range(0, prob._rstop, length = alg._N)
+    Δr = step(r)
+    Δr² = Δr^2
+
+    u = similar(r)
+
+    if !isnothing(alg._pre) && prob.i isa Number
         presol = solve(DirichletProblem(prob.eq, i = prob.i, b = prob.b),
             alg._pre,
             abstol = abstol,
-            verbose = verbose)
+            verbose = false)
         if presol.retcode != ReturnCode.Success
             u .= prob.i
-            return FiniteSolution(r,
-                [t],
-                [u],
-                prob,
-                alg,
-                _retcode = ReturnCode.InitialFailure,
-                _original = presol)
+            t = 0
+        else
+            t = min((prob._rstop / presol.oi)^2, prob._tstop)
+            u .= presol.(r, t)
         end
-        t = min((prob._rstop / presol.oi)^2, prob._tstop)
-        if prob isa FiniteReservoirProblem
-            t = min(t, (prob.capacity / sorptivity(presol))^2)
-            used = sorptivity(presol) * √t
-        end
-        u .= presol.(r, t)
     else
+        presol = nothing
+        t = 0
         u .= prob.i
     end
 
-    if prob isa AbstractFiniteProblem
-        ts = [t]
-        us = [copy(u)]
-    else
-        timesteps = 0
-        u_old = copy(u)
-    end
+    u[begin] = prob.b
 
-    u_prev_sweep = similar(u)
-    Ad = Vector{Float64}(undef, length(r))
-    Al = similar(Ad, length(Ad) - 1)
-    Au = similar(Ad, length(Ad) - 1)
-    B = similar(Ad)
+    let eq = prob.eq, Δr² = Δr²
+        function f!(∂u_∂t, u, ::SciMLBase.NullParameters, t)
+            K = conductivity.(eq, u)
+            Kf = (K[begin:(end - 1)] .+ K[(begin + 1):end]) / 2
 
-    K = conductivity.(prob.eq, u)
-    Kf = similar(K, length(K) - 1)
+            ∂u_∂t[begin] = 0
+            ∂u_∂t[(begin + 1):(end - 1)] .= Kf[begin:(end - 1)] ./ Δr² .*
+                                            u[begin:(end - 2)] -
+                                            (Kf[begin:(end - 1)] + Kf[(begin + 1):end]) ./
+                                            Δr² .* u[(begin + 1):(end - 1)] +
+                                            Kf[(begin + 1):end] ./ Δr² .* u[(begin + 2):end]
+            ∂u_∂t[end] = Kf[end] / Δr² * u[end - 1] - Kf[end] / Δr² * u[end]
 
-    C = capacity.(prob.eq, u)
+            ∂u_∂t ./= capacity.(eq, u)
 
-    Δt = Δr² / 2 * minimum(C ./ K)
-
-    while !(prob isa AbstractFiniteProblem) || t < prob._tstop
-        if prob isa AbstractFiniteProblem && t + Δt > prob._tstop
-            Δt = prob._tstop - t
-        end
-
-        change = eltype(u)(Inf)
-        sweeps = 0
-        while !(change <= abstol)
-            if sweeps >= 7
-                Δt /= 3
-                if prob isa AbstractFiniteProblem
-                    u .= us[end]
-                else
-                    u .= u_old
-                end
-                sweeps = 0
-            end
-
-            K .= conductivity.(prob.eq, u)
-            Kf .= (K[begin:(end - 1)] .+ K[(begin + 1):end]) / 2
-
-            C .= capacity.(prob.eq, u)
-
-            Ad[begin] = C[begin] + Kf[begin] * Δt / Δr²
-            Ad[(begin + 1):(end - 1)] .= C[(begin + 1):(end - 1)] .+
-                                         (Kf[begin:(end - 1)] .+ Kf[(begin + 1):end]) .*
-                                         Δt ./ Δr²
-            Ad[end] = C[end] + Kf[end] * Δt / Δr²
-
-            Al .= -Kf .* Δt ./ Δr²
-            Au .= -Kf .* Δt ./ Δr²
-
-            A = Tridiagonal(Al, Ad, Au)
-            B .= C .* u
-
-            if prob isa FiniteReservoirProblem
-                influx = min(-Kf[begin] * (u[begin + 1] - prob.b) * Δt / Δr,
-                    prob.capacity - used)
-            end
-
-            if prob isa DirichletProblem || prob isa FiniteDirichletProblem ||
-               (prob isa FiniteReservoirProblem && influx < prob.capacity - used)
-                A[begin, begin] = 1
-                A[begin, begin + 1] = 0
-                B[begin] = prob.b
-            elseif prob isa FiniteReservoirProblem && influx > zero(influx)
-                A[begin, begin] = Kf[begin] * Δt / Δr
-                A[begin, begin + 1] = -Kf[begin] * Δt / Δr
-                B[begin] = influx
-            end
-
-            u_prev_sweep .= u
-            try
-                u .= A \ B
-            catch e
-                e isa SingularException || rethrow()
-                u .= NaN
-            end
-            sweeps += 1
-            change = maximum(abs.(u .- u_prev_sweep))
-        end
-
-        if prob isa FiniteReservoirProblem
-            influx = -Kf[begin] * (u[begin + 1] - u[begin]) * Δt / Δr
-            used += influx
-        end
-
-        if prob isa AbstractFiniteProblem
-            if u ≈ us[end]
-                t = oftype(t, Inf)
-            else
-                t += Δt
-            end
-
-            push!(ts, t)
-            push!(us, copy(u))
-        else
-            if abs(u[end] - prob.i) > abstol
-                u .= u_old
-                break
-            end
-
-            t += Δt
-            timesteps += 1
-            u_old .= u
-        end
-
-        if sweeps < 3
-            Δt *= 1.3
+            return ∂u_∂t
         end
     end
 
-    if prob isa AbstractFiniteProblem
-        return FiniteSolution(r,
-            ts,
-            us,
-            prob,
-            alg,
-            _retcode = ReturnCode.Success,
-            _original = presol)
-    else
-        @assert isnothing(presol)
-        return Solution(Interpolator(boltzmann.(r, t), u),
-            prob,
-            alg,
-            _ob = prob.ob,
-            _oi = boltzmann(r[end], t),
-            _retcode = ReturnCode.Success,
-            _niter = timesteps)
+    f! = ODEFunction(
+        f!, jac_prototype = Tridiagonal(r[begin:(end - 1)], r, r[begin:(end - 1)]))
+
+    steady_state = DiscreteCallback(
+        (u, t, integrator) -> all(u .≈ u[end]),
+        (integrator) -> terminate!(integrator, ReturnCode.Success),
+        save_positions = (false, false))
+
+    odeprob = ODEProblem(f!, u, (t, prob._tstop), callback = steady_state)
+
+    odesol = solve(odeprob, ImplicitEuler(), abstol = abstol, verbose = false)
+
+    if odesol.retcode != ReturnCode.Success && !isnothing(presol) &&
+       presol.retcode == ReturnCode.Success
+        presol = nothing
+        t = 0
+        u .= prob.i
+        u[begin] = prob.b
+
+        odeprob = ODEProblem(f!, u, (t, prob._tstop), callback = steady_state)
+
+        odesol = solve(odeprob, ImplicitEuler(), abstol = abstol, verbose = false)
     end
+
+    if verbose && odesol.retcode != ReturnCode.Success
+        @warn "Solution failed with retcode $(odesol.retcode)"
+    end
+
+    return FiniteSolution(odesol,
+        prob,
+        alg,
+        _r = r,
+        _pre = presol,
+        _retcode = odesol.retcode)
 end
 
-function solve(prob::AbstractFiniteProblem{<:DiffusionEquation{1}};
-        abstol = 1e-3,
-        verbose = true)
-    solve(prob, FiniteDifference(pre = BoltzmannODE()), abstol = abstol, verbose = verbose)
+function solve(prob::FiniteReservoirProblem{<:DiffusionEquation{1}},
+        alg::FiniteDifference = FiniteDifference(); abstol = 1e-3, verbose = true)
+    r = range(0, prob._rstop, length = alg._N)
+    Δr = step(r)
+    Δr² = Δr^2
+
+    u = similar(r, length(r) + 1)
+
+    if !isnothing(alg._pre) && prob.i isa Number
+        presol = solve(DirichletProblem(prob.eq, i = prob.i, b = prob.b),
+            alg._pre,
+            abstol = abstol,
+            verbose = false)
+        if presol.retcode != ReturnCode.Success
+            t = 0
+            u[begin] = prob.capacity
+            u[(begin + 1):end] .= prob.i
+            u[begin + 1] = prob.b
+        else
+            t = min((prob._rstop / presol.oi)^2, prob._tstop,
+                (prob.capacity / sorptivity(presol))^2)
+            u[begin] -= sorptivity(presol) * √t
+            u[(begin + 1):end] .= presol.(r, t)
+            u[begin + 1] = prob.b
+        end
+    else
+        presol = nothing
+        t = 0
+        u[begin] = prob.capacity
+        u[(begin + 1):end] .= prob.i
+        u[begin + 1] = prob.b
+    end
+
+    let eq = prob.eq, Δr = Δr, Δr² = Δr²
+        function f!(∂u_∂t, u, ::SciMLBase.NullParameters, t)
+            K = conductivity.(eq, u[(begin + 1):end])
+            Kf = (K[begin:(end - 1)] .+ K[(begin + 1):end]) / 2
+
+            if u[begin] > zero(u[begin])
+                ∂u_∂t[begin] = -(Kf[begin] / Δr * u[begin + 1] -
+                                 Kf[begin] / Δr * u[begin + 2])
+                ∂u_∂t[begin + 1] = 0
+            else
+                ∂u_∂t[begin] = 0
+                ∂u_∂t[begin + 1] = Kf[begin] / Δr² * u[begin + 1] -
+                                   Kf[begin] / Δr² * u[begin + 2]
+            end
+
+            ∂u_∂t[(begin + 2):(end - 1)] .= Kf[begin:(end - 1)] ./ Δr² .*
+                                            u[(begin + 1):(end - 2)] -
+                                            (Kf[begin:(end - 1)] + Kf[(begin + 1):end]) ./
+                                            Δr² .* u[(begin + 2):(end - 1)] +
+                                            Kf[(begin + 1):end] ./ Δr² .* u[(begin + 3):end]
+            ∂u_∂t[end] = Kf[end] / Δr² * u[end - 1] - Kf[end] / Δr² * u[end]
+
+            ∂u_∂t[(begin + 1):end] ./= capacity.(prob.eq, u[(begin + 1):end])
+
+            return ∂u_∂t
+        end
+    end
+
+    f! = ODEFunction(f!)
+
+    steady_state = DiscreteCallback(
+        (u, t, integrator) -> all(u[(begin + 1):end] .≈ u[end]),
+        (integrator) -> terminate!(integrator, ReturnCode.Success),
+        save_positions = (false, false))
+
+    exhausted = ContinuousCallback(
+        (u, t, integrator) -> u[begin],
+        (integrator) -> nothing,
+        save_positions = (false, false))
+
+    odeprob = ODEProblem(
+        f!, u, (t, prob._tstop), callback = CallbackSet(steady_state, exhausted))
+
+    odesol = solve(odeprob, ImplicitEuler(), abstol = abstol, verbose = false)
+
+    if odesol.retcode != ReturnCode.Success && !isnothing(presol) &&
+       presol.retcode == ReturnCode.Success
+        presol = nothing
+        t = 0
+        u[begin] = prob.capacity
+        u[(begin + 1)] = prob.b
+        u[(begin + 2):end] .= prob.i
+
+        odeprob = ODEProblem(
+            f!, u, (t, prob._tstop), callback = CallbackSet(steady_state, exhausted))
+
+        odesol = solve(odeprob, ImplicitEuler(), abstol = abstol, verbose = false)
+    end
+
+    if verbose && odesol.retcode != ReturnCode.Success
+        @warn "Solution failed with retcode $(odesol.retcode)"
+    end
+
+    return FiniteSolution(odesol,
+        prob,
+        alg,
+        _r = r,
+        _retcode = odesol.retcode)
 end
 
 """
@@ -377,37 +398,35 @@ Solution to a finite problem.
 
 Evaluate the solution at location `r` and time `t`.
 """
-struct FiniteSolution{_Tr, _Tt, _Tu, _Toriginal, _Tprob, _Talg}
-    _r::_Tr
-    _t::_Tt
-    _u::_Tu
-    retcode::ReturnCode.T
+struct FiniteSolution{_Toriginal, _Tr, _Tpre, _Tprob, _Talg}
     original::_Toriginal
+    _r::_Tr
+    _pre::_Tpre
     prob::_Tprob
     alg::_Talg
+    retcode::ReturnCode.T
 
-    function FiniteSolution(_r, _t, _u, _prob, _alg; _retcode, _original = nothing)
+    function FiniteSolution(
+            _original, _prob, _alg; _r, _retcode = _original.retcode, _pre = nothing)
         new{
-            typeof(_r),
-            typeof(_t),
-            typeof(_u),
             typeof(_original),
+            typeof(_r),
+            typeof(_pre),
             typeof(_prob),
             typeof(_alg)
-        }(_r,
-            _t,
-            _u,
-            _retcode,
-            _original,
+        }(_original,
+            _r,
+            _pre,
             _prob,
-            _alg)
+            _alg,
+            _retcode)
     end
 end
 
 Base.broadcastable(sol::FiniteSolution) = Ref(sol)
 
 function Base.show(io::IO, sol::FiniteSolution)
-    println(io, "FiniteSolution with $(length(sol._t)) timesteps")
+    println(io, "FiniteSolution with $(length(sol.original.t)) timesteps")
     print(io, "retcode: $(sol.retcode)")
 end
 
@@ -416,43 +435,38 @@ function SciMLBase.successful_retcode(sol::FiniteSolution)
 end
 
 function (sol::FiniteSolution)(r, t)
-    i = searchsortedlast(sol._t, t)
+    if t ≤ sol.original.t[begin]
+        @assert !isnothing(sol._pre)
+        return sol._pre(r, t)
+    end
 
-    if i == firstindex(sol._t) - 1 ||
-       (!isnothing(sol.original) && i == firstindex(sol._t) && t == sol._t[begin])
-        if !isnothing(sol.original) && r[begin] ≤ r ≤ r[end]
-            return sol.original(r, t)
+    if t > sol.original.t[end]
+        if sol.prob._tstop == Inf
+            return sol(r, sol.original.t[end])
         else
-            return eltype(sol._u[begin])(NaN)
+            return eltype(sol.original[begin])(NaN)
         end
-    elseif i == lastindex(sol._t)
-        if t > sol._t[end]
-            return eltype(sol._u[begin])(NaN)
-        end
-        i -= 1
     end
 
     j = searchsortedlast(sol._r, r)
 
     if j == firstindex(sol._r) - 1
-        return eltype(sol._u[begin])(NaN)
+        return eltype(sol.original[begin])(NaN)
     elseif j == lastindex(sol._r)
         if r > sol._r[end]
-            return eltype(sol._u[begin])(NaN)
+            return eltype(sol.original[begin])(NaN)
         end
         j -= 1
     end
 
-    if sol._t[i + 1] == Inf
-        return 1 / (sol._r[j + 1] - sol._r[j]) * (sol._u[i][j] * (sol._r[j + 1] - r) +
-                sol._u[i][j + 1] * (r - sol._r[j]))
-    else
-        return 1 / (sol._r[j + 1] - sol._r[j]) / (sol._t[i + 1] - sol._t[i]) *
-               (sol._u[i][j] * (sol._r[j + 1] - r) * (sol._t[i + 1] - t) +
-                sol._u[i][j + 1] * (r - sol._r[j]) * (sol._t[i + 1] - t) +
-                sol._u[i + 1][j] * (sol._r[j + 1] - r) * (t - sol._t[i]) +
-                sol._u[i + 1][j + 1] * (r - sol._r[j]) * (t - sol._t[i]))
+    u = sol.original(t)
+
+    if sol.prob isa FiniteReservoirProblem
+        u = @view u[(begin + 1):end]
     end
+
+    return 1 / (sol._r[j + 1] - sol._r[j]) * (u[j + 1] * (sol._r[j + 1] - r) +
+            u[j] * (r - sol._r[j]))
 end
 
 d_dr(sol::FiniteSolution, r, t) = derivative(r -> sol(r, t), r)
@@ -460,5 +474,5 @@ d_dt(sol::FiniteSolution, r, t) = derivative(t -> sol(r, t), t)
 
 function flux(sol::FiniteSolution, r, t)
     val, d_dr = value_and_derivative(r -> sol(r, t), AutoForwardDiff(), r)
-    return -conductivity(sol.prob.eq, val) * d_dr
+    return conductivity(sol.prob.eq, val) * d_dr
 end
