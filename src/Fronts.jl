@@ -6,7 +6,7 @@ using ._Rootfinding: bracket_bisect
 include("_Chebyshev.jl")
 using ._Chebyshev: chebdif
 
-using LinearAlgebra: Diagonal, Tridiagonal, SingularException
+using LinearAlgebra: Diagonal, Tridiagonal
 
 using ForwardDiff: derivative
 using DifferentiationInterface: value_and_derivative,
@@ -20,8 +20,8 @@ using RecipesBase
 
 using OrdinaryDiffEq: ODEFunction, ODEProblem, ODESolution
 using OrdinaryDiffEq: init, solve!, reinit!
-using OrdinaryDiffEq: DiscreteCallback, terminate!
-using OrdinaryDiffEq: RadauIIA5
+using OrdinaryDiffEq: CallbackSet, ContinuousCallback, DiscreteCallback, terminate!
+using OrdinaryDiffEq: ImplicitEuler, RadauIIA5
 
 using Reexport: @reexport
 @reexport import OrdinaryDiffEq: SciMLBase
