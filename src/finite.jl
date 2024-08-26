@@ -320,7 +320,7 @@ function solve(
         end
 
         if prob isa AbstractFiniteProblem
-            if isapprox(u, us[end], atol=abstol*Δt)
+            if isapprox(u, us[end], atol = abstol * Δt)
                 t = oftype(t, Inf)
             else
                 t += Δt
