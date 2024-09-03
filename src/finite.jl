@@ -465,8 +465,7 @@ function (sol::FiniteSolution)(r, t)
         u = @view u[(begin + 1):end]
     end
 
-    return 1 / (sol._r[j + 1] - sol._r[j]) * (u[j + 1] * (sol._r[j + 1] - r) +
-            u[j] * (r - sol._r[j]))
+    return u[j] + (u[j + 1] - u[j]) / (sol._r[j + 1] - sol._r[j]) * (r - sol._r[j])
 end
 
 d_dr(sol::FiniteSolution, r, t) = derivative(r -> sol(r, t), r)
