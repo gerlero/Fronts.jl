@@ -309,7 +309,7 @@ function solve(prob::FiniteReservoirProblem{<:DiffusionEquation{1}},
         else
             t = min((prob._rstop / presol.oi)^2, prob._tstop,
                 (prob.capacity / sorptivity(presol))^2)
-            u[begin] -= sorptivity(presol) * √t
+            u[begin] = prob.capacity - sorptivity(presol) * √t
             u[(begin + 1):end] .= presol.(r, t)
             u[begin + 1] = prob.b
         end
