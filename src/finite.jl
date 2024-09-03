@@ -435,7 +435,7 @@ function SciMLBase.successful_retcode(sol::FiniteSolution)
 end
 
 function (sol::FiniteSolution)(r, t)
-    if t ≤ sol.original.t[begin]
+    if t < sol.original.t[begin]
         @assert !isnothing(sol._pre)
         return sol._pre(r, t)
     end
