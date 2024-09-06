@@ -349,7 +349,8 @@ function solve(prob::FiniteReservoirProblem{<:DiffusionEquation{1}},
         end
     end
 
-    f! = ODEFunction(f!)
+    f! = ODEFunction(f!,
+        jac_prototype = BandedMatrix{eltype(u)}(undef, (length(u), length(u)), (1, 2)))
 
     steady_state = DiscreteCallback(
         (u, t, integrator) -> all(u[(begin + 1):end] .≈ u[end]),
