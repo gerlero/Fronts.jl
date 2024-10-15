@@ -24,7 +24,7 @@ ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 [compat]
 ArgCheck = "2"
 BandedMatrices = "1"
-DifferentiationInterface = "=0.5.5"
+DifferentiationInterface = "0.6.4"
 ForwardDiff = "0.10"
 LinearAlgebra = "1"
 LsqFit = "0.13, 0.14, 0.15"
