@@ -18,7 +18,7 @@ jobs:
       run: |
         sed -i "s|\"docs/src/assets/|\"https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/docs/src/assets/|g" README.md
     - name: Update Docker Hub description
-      uses: peter-evans/dockerhub-description@v4
+      uses: peter-evans/dockerhub-description@v5
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
