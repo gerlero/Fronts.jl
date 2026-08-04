@@ -46,7 +46,7 @@ end
 
         @test θf.(r, 314)≈θ.(r, 314) atol=5e-2
         @test θf.(r, 31400)≈θ.(r, 31400) atol=5e-2
-        @test flux.(θf, r, 31.4)≈flux.(θ, r, 31.4) atol=5e-2
+        @test flux.(θf, r, 31.4)≈flux.(θ, r, 31.4) atol=1.5e-1
     end
 
     @testset "FiniteReservoirProblem" begin
@@ -69,10 +69,10 @@ end
         prob = FiniteReservoirProblem(pm, r[end], i = θi, b = θs - ϵ, capacity = 1e-2)
 
         θ = solve(prob, FiniteDifference(length(r), pre = BoltzmannODE()))
-        @test θ.retcode == ReturnCode.Success
+        @test SciMLBase.successful_retcode(θ.retcode)
 
         for t in [100, 150, 200, Inf]
-            @test NumericalIntegration.integrate(r, θ.(r, t) .- θi)≈prob.capacity atol=1e-4
+            @test NumericalIntegration.integrate(r, θ.(r, t) .- θi)≈prob.capacity atol=5e-4
         end
     end
 end

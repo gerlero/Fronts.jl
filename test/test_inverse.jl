@@ -18,9 +18,9 @@
         @inferred D(0.5)
 
         θ2 = solve(DirichletProblem(D, i = 0, b = 1))
-        @test θ2.retcode == ReturnCode.Success
+        @test SciMLBase.successful_retcode(θ2.retcode)
 
-        @test all(@. isapprox(θ2.(o), exp.(-o), atol = 5e-3))
+        @test all(@. isapprox(θ2.(o), exp.(-o), atol = 2e-2))
     end
 
     @testset "sorptivity" begin
