@@ -113,7 +113,8 @@ end
 
 function Dθ(pm::VanGenuchten, θ)
     Se = (θ - pm.θr) / (pm.θs - pm.θr)
+    # (1-x)^(-m) + (1-x)^m - 2 loses all precision near θr; expm1/log1p form is exact
+    u = pm.m * log1p(-pow(Se, 1 / pm.m))
     return (1 - pm.m) * pm.Ks / (pm.α * pm.m * (pm.θs - pm.θr)) * pow(Se, pm.l) *
-           pow(Se, -1 / pm.m) *
-           (pow(1 - pow(Se, 1 / pm.m), -pm.m) + pow(1 - pow(Se, 1 / pm.m), pm.m) - 2)
+           pow(Se, -1 / pm.m) * expm1(u)^2 * exp(-u)
 end

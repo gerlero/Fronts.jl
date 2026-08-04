@@ -60,5 +60,39 @@
         @test (@inferred Kh(vg, @inferred hθ(vg, θtest))) ≈ @inferred Kθ(vg, θtest)
         @test (@inferred Dθ(vg, θtest)) ≈
               (@inferred Kθ(vg, θtest)) / @inferred Cθ(vg, θtest)
+
+        @testset "Dθ near θr" begin
+            # BigFloat reference of Van Genuchten (1980) eq. 11
+            function Dref(pm, θ)
+                m = BigFloat(pm.m)
+                Se = (BigFloat(θ) - pm.θr) / (BigFloat(pm.θs) - pm.θr)
+                x = Se^(1 / m)
+                (1 - m) * pm.Ks / (pm.α * m * (BigFloat(pm.θs) - pm.θr)) * Se^pm.l *
+                Se^(-1 / m) * ((1 - x)^(-m) + (1 - x)^m - 2)
+            end
+
+            setprecision(BigFloat, 1200) do
+                for n in (1.1, 2.0, 5.0), l in (0.0, 0.5, 2.0),
+                    Se in (1e-1, 1e-3, 1e-6, 1e-9, 1e-12)
+                    vgn = VanGenuchten(n = n, l = l, α = α, k = k, θr = θr, θs = θs)
+                    θn = θr + Se * (θs - θr)
+                    @test (@inferred Dθ(vgn, θn))≈Float64(Dref(vgn, θn)) rtol=1e-12 atol=0
+                end
+
+                # solver differentiates D: first derivative must survive near θr too
+                θn = θr + 1e-6 * (θs - θr)
+                h = big"1e-30"
+                dref = Float64((Dref(vg, BigFloat(θn) + h) - Dref(vg, BigFloat(θn) - h)) /
+                               (2h))
+                @test ForwardDiff.derivative(θ -> Dθ(vg, θ), θn)≈dref rtol=1e-10 atol=0
+                @test isfinite(ForwardDiff.derivative(
+                    θ -> ForwardDiff.derivative(s -> Dθ(vg, s), θ), θn))
+            end
+
+            # out-of-range and saturation behavior is unchanged
+            @test isnan(@inferred Dθ(vg, θs + 0.01))
+            @test isnan(@inferred Dθ(vg, θr - 0.01))
+            @test isinf(@inferred Dθ(vg, θs))
+        end
     end
 end
