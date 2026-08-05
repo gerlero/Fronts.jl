@@ -84,6 +84,19 @@
         @test isnan(@inferred θ(-1, t))
     end
 
+    @testset "HF135 dry initial condition" begin
+        # near-θr initial condition; fails to converge if Dθ underflows there
+        θr = 0.0473
+        θs = 0.945
+
+        model = VanGenuchten(n = 1.5, α = 0.2555, k = 5.50e-13, θr = θr, θs = θs)
+
+        prob = DirichletProblem(model, i = θr + 1e-3 * (θs - θr), b = θs - 1e-7)
+
+        θ = solve(prob, abstol = 1e-7)
+        @test SciMLBase.successful_retcode(θ)
+    end
+
     @testset "validity LET" begin
         # Wetting of a Whatman No. 1 paper strip
         # Reference: Gerlero et al. (2022)

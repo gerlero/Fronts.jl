@@ -3,7 +3,7 @@ module PorousModels
 import ..Fronts: DiffusionEquation
 
 using ForwardDiff: derivative
-using NaNMath: pow
+using NaNMath: pow, log1p
 using ArgCheck: @argcheck
 
 include("base.jl")
