@@ -183,7 +183,8 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}},
     end
 
     f! = ODEFunction(
-        f!, jac_prototype = Tridiagonal(r[begin:(end - 1)], r, r[begin:(end - 1)]))
+        f!, jac_prototype = Tridiagonal(one.(r[begin:(end - 1)]), one.(r),
+            one.(r[begin:(end - 1)])))
 
     reached_end = DiscreteCallback(
         let i = prob.i
@@ -194,7 +195,8 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}},
 
     odeprob = ODEProblem(f!, u, (0.0, Inf), callback = reached_end)
 
-    odesol = solve(odeprob, ImplicitEuler(), abstol = abstol, verbose = verbose)
+    odesol = solve(odeprob, ImplicitEuler(linsolve = LUFactorization()),
+        abstol = abstol, verbose = verbose)
 
     return Solution(Interpolator(boltzmann.(r, odesol.t[end]), odesol.u[end]),
         prob,
@@ -253,7 +255,8 @@ function solve(prob::FiniteDirichletProblem{<:DiffusionEquation{1}},
     end
 
     f! = ODEFunction(
-        f!, jac_prototype = Tridiagonal(r[begin:(end - 1)], r, r[begin:(end - 1)]))
+        f!, jac_prototype = Tridiagonal(one.(r[begin:(end - 1)]), one.(r),
+            one.(r[begin:(end - 1)])))
 
     steady_state = DiscreteCallback(
         (u, t, integrator) -> all(u .≈ u[end]),
@@ -262,7 +265,8 @@ function solve(prob::FiniteDirichletProblem{<:DiffusionEquation{1}},
 
     odeprob = ODEProblem(f!, u, (t, prob._tstop), callback = steady_state)
 
-    odesol = solve(odeprob, ImplicitEuler(), abstol = abstol, verbose = false)
+    odesol = solve(odeprob, ImplicitEuler(linsolve = LUFactorization()),
+        abstol = abstol, verbose = false)
 
     if odesol.retcode != ReturnCode.Success && !isnothing(presol) &&
        presol.retcode == ReturnCode.Success
@@ -273,7 +277,8 @@ function solve(prob::FiniteDirichletProblem{<:DiffusionEquation{1}},
 
         odeprob = ODEProblem(f!, u, (t, prob._tstop), callback = steady_state)
 
-        odesol = solve(odeprob, ImplicitEuler(), abstol = abstol, verbose = false)
+        odesol = solve(odeprob, ImplicitEuler(linsolve = LUFactorization()),
+            abstol = abstol, verbose = false)
     end
 
     if verbose && odesol.retcode != ReturnCode.Success
@@ -326,14 +331,14 @@ function solve(prob::FiniteReservoirProblem{<:DiffusionEquation{1}},
             K = conductivity.(eq, u[(begin + 1):end])
             Kf = (K[begin:(end - 1)] .+ K[(begin + 1):end]) / 2
 
-            if u[begin] > zero(u[begin])
+            if _primal_value(u[begin]) > zero(_primal_value(u[begin]))
                 ∂u_∂t[begin] = -(Kf[begin] / Δr * u[begin + 1] -
                                  Kf[begin] / Δr * u[begin + 2])
                 ∂u_∂t[begin + 1] = 0
             else
                 ∂u_∂t[begin] = 0
-                ∂u_∂t[begin + 1] = Kf[begin] / Δr² * u[begin + 1] -
-                                   Kf[begin] / Δr² * u[begin + 2]
+                ∂u_∂t[begin + 1] = Kf[begin] / Δr² * u[begin + 2] -
+                                   Kf[begin] / Δr² * u[begin + 1]
             end
 
             ∂u_∂t[(begin + 2):(end - 1)] .= Kf[begin:(end - 1)] ./ Δr² .*
@@ -349,8 +354,10 @@ function solve(prob::FiniteReservoirProblem{<:DiffusionEquation{1}},
         end
     end
 
-    f! = ODEFunction(f!,
-        jac_prototype = BandedMatrix{eltype(u)}(undef, (length(u), length(u)), (1, 2)))
+    jac_prototype = BandedMatrix{eltype(u)}(undef, (length(u), length(u)), (1, 2))
+    # The automatic differentiation backend also uses the values as a sparsity pattern.
+    fill!(parent(jac_prototype), one(eltype(u)))
+    f! = ODEFunction(f!, jac_prototype = jac_prototype)
 
     steady_state = DiscreteCallback(
         (u, t, integrator) -> all(u[(begin + 1):end] .≈ u[end]),
@@ -365,7 +372,8 @@ function solve(prob::FiniteReservoirProblem{<:DiffusionEquation{1}},
     odeprob = ODEProblem(
         f!, u, (t, prob._tstop), callback = CallbackSet(steady_state, exhausted))
 
-    odesol = solve(odeprob, ImplicitEuler(), abstol = abstol, verbose = false)
+    odesol = solve(odeprob, ImplicitEuler(linsolve = LUFactorization()),
+        abstol = abstol, verbose = false)
 
     if odesol.retcode != ReturnCode.Success && !isnothing(presol) &&
        presol.retcode == ReturnCode.Success
@@ -378,7 +386,8 @@ function solve(prob::FiniteReservoirProblem{<:DiffusionEquation{1}},
         odeprob = ODEProblem(
             f!, u, (t, prob._tstop), callback = CallbackSet(steady_state, exhausted))
 
-        odesol = solve(odeprob, ImplicitEuler(), abstol = abstol, verbose = false)
+        odesol = solve(odeprob, ImplicitEuler(linsolve = LUFactorization()),
+            abstol = abstol, verbose = false)
     end
 
     if verbose && odesol.retcode != ReturnCode.Success
@@ -436,26 +445,26 @@ function SciMLBase.successful_retcode(sol::FiniteSolution)
 end
 
 function (sol::FiniteSolution)(r, t)
-    if t < sol.original.t[begin]
+    if _primal_value(t) < sol.original.t[begin]
         @assert !isnothing(sol._pre)
         return sol._pre(r, t)
     end
 
-    if t > sol.original.t[end]
+    if _primal_value(t) > sol.original.t[end]
         if sol.prob._tstop == Inf
             return sol(r, sol.original.t[end])
         else
-            return eltype(sol.original[begin])(NaN)
+            return eltype(sol.original.u[begin])(NaN)
         end
     end
 
-    j = searchsortedlast(sol._r, r)
+    j = searchsortedlast(sol._r, _primal_value(r))
 
     if j == firstindex(sol._r) - 1
-        return eltype(sol.original[begin])(NaN)
+        return eltype(sol.original.u[begin])(NaN)
     elseif j == lastindex(sol._r)
-        if r > sol._r[end]
-            return eltype(sol.original[begin])(NaN)
+        if _primal_value(r) > sol._r[end]
+            return eltype(sol.original.u[begin])(NaN)
         end
         j -= 1
     end

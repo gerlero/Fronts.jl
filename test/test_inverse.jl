@@ -17,6 +17,15 @@
 
         @inferred D(0.5)
 
+        @test (@inferred D(1.0)) ≈ D(prevfloat(1.0))
+        @test derivative(D, AutoForwardDiff(), 1.0) ≈
+              derivative(D, AutoForwardDiff(), prevfloat(1.0))
+        @test second_derivative(D, AutoForwardDiff(), 1.0) ≈
+              second_derivative(D, AutoForwardDiff(), prevfloat(1.0))
+
+        D_outside_initial = diffusivity(InverseProblem(o, exp.(-o), i = 0))
+        @test isnan(D_outside_initial(0.5))
+
         θ2 = solve(DirichletProblem(D, i = 0, b = 1))
         @test θ2.retcode == ReturnCode.Success
 
