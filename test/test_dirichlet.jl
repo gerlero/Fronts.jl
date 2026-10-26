@@ -16,6 +16,14 @@
         @test isnan(@inferred θ(-1))
     end
 
+    @testset "initial condition tolerance" begin
+        prob = DirichletProblem(θ -> 2 * θ, i = 0, b = 1)
+        θ = solve(prob, abstol = 1e-6)
+
+        @test θ.retcode == ReturnCode.Success
+        @test abs(θ.i - prob.i) ≤ 1e-6
+    end
+
     @testset "exact" begin
         # Reference: Philip (1960) Table 1, No. 13
         # https://doi.org/10.1071/PH600001

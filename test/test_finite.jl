@@ -50,6 +50,24 @@ end
     end
 
     @testset "FiniteReservoirProblem" begin
+        @testset "empty reservoir" begin
+            prob = FiniteReservoirProblem(_ -> 1.0, 1.0, 0.01,
+                i = 0.0, b = 1.0, capacity = 0.0)
+            θ = solve(prob, FiniteDifference(5), abstol = 1e-8)
+
+            @test θ.retcode == ReturnCode.Success
+            initial = θ.original.u[begin][2:end]
+            final = θ.original.u[end][2:end]
+            @test all(u -> 0 ≤ u ≤ 1, final)
+            @test sum(final)≈sum(initial) atol=1e-8
+
+            @test isnan(θ(-1, 0))
+            @test isnan(θ(2, 0))
+            @test isnan(θ(0, 1))
+            @test isfinite(flux(θ, 0, 0.01))
+            @test isfinite(flux(θ, 1, 0.01))
+        end
+
         # Wetting of a Whatman No. 1 paper strip, LETd model
         # Reference: Gerlero et al. (2022)
         # https://doi.org/10.1007/s11242-021-01724-w

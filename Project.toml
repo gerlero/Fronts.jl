@@ -1,6 +1,6 @@
 name = "Fronts"
 uuid = "45b28afb-7f9c-4d83-a9c8-739861dbc76b"
-version = "2.6.3"
+version = "2.6.4"
 authors = ["Gabriel S. Gerlero <ggerlero@cimec.unl.edu.ar>"]
 
 [deps]
@@ -9,6 +9,7 @@ BandedMatrices = "aae01518-5342-5314-be14-df237901396f"
 DifferentiationInterface = "a0c0ee7d-e4b9-4e03-894e-1c5f64a51d63"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+LinearSolve = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
 LsqFit = "2fda8390-95c7-5789-9bda-21331edee243"
 NaNMath = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 NumericalIntegration = "e7bfaba1-d571-5449-8927-abc22e82249b"
@@ -27,6 +28,7 @@ BandedMatrices = "1"
 DifferentiationInterface = "0.6.4, 0.7"
 ForwardDiff = "0.10, 1"
 LinearAlgebra = "1"
+LinearSolve = "1, 2, 3"
 LsqFit = "0.13, 0.14, 0.15, 0.16"
 NaNMath = "1"
 NumericalIntegration = "0.3.3"
