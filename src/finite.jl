@@ -76,12 +76,14 @@ end
 
 Shortcut for `FiniteDirichletProblem(DiffusionEquation(D), rstop, tstop, i=i, b=b)`.
 """
-FiniteDirichletProblem(D, rstop, tstop = Inf; i, b) = FiniteDirichletProblem(
-    DiffusionEquation(D),
-    rstop,
-    tstop,
-    i = i,
-    b = b)
+function FiniteDirichletProblem(D, rstop, tstop = Inf; i, b)
+    FiniteDirichletProblem(
+        DiffusionEquation(D),
+        rstop,
+        tstop,
+        i = i,
+        b = b)
+end
 
 """
     FiniteReservoirProblem(eq, rstop, tstop; i, b, capacity) <: AbstractFiniteProblem
@@ -142,13 +144,15 @@ end
 
 Shortcut for `FiniteReservoirProblem(DiffusionEquation(D), rstop, i=i, b=b, capacity=capacity)`.
 """
-FiniteReservoirProblem(D, rstop, tstop = Inf; i, b, capacity) = FiniteReservoirProblem(
-    DiffusionEquation(D),
-    rstop,
-    tstop,
-    i = i,
-    b = b,
-    capacity = capacity)
+function FiniteReservoirProblem(D, rstop, tstop = Inf; i, b, capacity)
+    FiniteReservoirProblem(
+        DiffusionEquation(D),
+        rstop,
+        tstop,
+        i = i,
+        b = b,
+        capacity = capacity)
+end
 
 function solve(prob::DirichletProblem{<:DiffusionEquation{1}},
         alg::FiniteDifference; abstol = 1e-3, verbose = true)

@@ -87,8 +87,10 @@ _solve(::AbstractCostFunction, sol::Solution) = sol
 
 Return the candidate solution for a given cost function and parameter values, problem, or solution.
 """
-candidate(cf::AbstractCostFunction, params::AbstractVector) = candidate(cf,
-    _solve(cf, params))
+function candidate(cf::AbstractCostFunction, params::AbstractVector)
+    candidate(cf,
+        _solve(cf, params))
+end
 function candidate(cf::AbstractCostFunction, prob::AbstractSemiinfiniteProblem)
     candidate(cf, _solve(cf, prob))
 end
