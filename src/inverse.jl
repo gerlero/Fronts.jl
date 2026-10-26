@@ -77,10 +77,16 @@ function diffusivity(prob::InverseProblem)
     o = o[indices]
     u = u[indices]
 
-    o = Interpolator(u, o)
+    umin, umax = first(u), last(u)
+    # Continue the endpoint polynomials for AD, whose dual perturbations can
+    # compare outside the interpolation interval even at a valid endpoint.
+    o = Interpolator(u, o, extrapolate = true)
 
-    let o = o, i = i
+    let o = o, i = i, umin = umin, umax = umax
         function D(u)
+            if !(umin ≤ _primal_value(u) ≤ umax && umin ≤ _primal_value(i) ≤ umax)
+                return oftype(float(u), NaN)
+            end
             do_du = derivative(o, u)
             ∫odu = integrate(o, i, u)
             return -(do_du * ∫odu) / 2

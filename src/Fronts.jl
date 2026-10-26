@@ -8,7 +8,8 @@ using ._Chebyshev: chebdif
 
 using LinearAlgebra: Diagonal, Tridiagonal
 
-using ForwardDiff: derivative
+using ForwardDiff: Dual, derivative, value
+using LinearSolve: LUFactorization
 using DifferentiationInterface: value_and_derivative,
                                 value_derivative_and_second_derivative, AutoForwardDiff
 using ArgCheck: @argcheck
@@ -28,6 +29,9 @@ using Reexport: @reexport
 @reexport import OrdinaryDiffEq: SciMLBase
 @reexport using OrdinaryDiffEq: ReturnCode
 @reexport import OrdinaryDiffEq: solve
+
+_primal_value(x) = x
+_primal_value(x::Dual) = _primal_value(value(x))
 
 include("equations.jl")
 include("boltzmann.jl")
