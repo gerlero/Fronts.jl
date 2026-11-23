@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.sciml }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     # Nightly may break upstream packages before Fronts can load.
     continue-on-error: ${{ matrix.version == 'nightly' }}
@@ -33,6 +33,13 @@ jobs:
           - ubuntu-latest
         arch:
           - x64
+        sciml:
+          - latest
+        include:
+          - version: '1.10'
+            os: ubuntu-latest
+            arch: x64
+            sciml: legacy
     steps:
       - uses: actions/checkout@v7
       - uses: julia-actions/setup-julia@v3
@@ -40,8 +47,17 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v3
+      - name: Select legacy SciML dependencies
+        if: matrix.sciml == 'legacy'
+        shell: julia --project --color=yes {0}
+        run: |
+          using Pkg
+          Pkg.add([PackageSpec(name="OrdinaryDiffEq", version="6.111"),
+                   PackageSpec(name="LinearSolve", version="3")])
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+        with:
+          force_latest_compatible_version: ${{ matrix.sciml == 'legacy' && 'false' || 'auto' }}
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v7
         with:

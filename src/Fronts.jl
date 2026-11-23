@@ -20,15 +20,26 @@ using PCHIPInterpolation: Interpolator, integrate
 import NumericalIntegration
 using RecipesBase
 
+import OrdinaryDiffEq
 using OrdinaryDiffEq: ODEFunction, ODEProblem, ODESolution
 using OrdinaryDiffEq: init, solve!, reinit!
-using OrdinaryDiffEq: CallbackSet, ContinuousCallback, DiscreteCallback, terminate!
-using OrdinaryDiffEq: ImplicitEuler, RadauIIA5
+using SciMLBase: CallbackSet, ContinuousCallback, DiscreteCallback, terminate!
+using OrdinaryDiffEqSDIRK: ImplicitEuler
+using OrdinaryDiffEqFIRK: RadauIIA5
 
 using Reexport: @reexport
 @reexport import OrdinaryDiffEq: SciMLBase
 @reexport using OrdinaryDiffEq: ReturnCode
 @reexport import OrdinaryDiffEq: solve
+
+@static if pkgversion(OrdinaryDiffEq) >= v"7"
+    function _ode_verbose(verbose::Bool)
+        verbose ? OrdinaryDiffEq.DEVerbosity() :
+        OrdinaryDiffEq.DEVerbosity(OrdinaryDiffEq.SciMLLogging.None())
+    end
+else
+    _ode_verbose(verbose::Bool) = verbose
+end
 
 _primal_value(x) = x
 _primal_value(x::Dual) = _primal_value(value(x))

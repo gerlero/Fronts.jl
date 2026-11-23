@@ -1,8 +1,8 @@
 @testset "CauchyProblem" begin
-    @testset "constant solution" begin
+    @testset "constant solution, verbose=$verbose" for verbose in (false, true)
         prob = CauchyProblem(identity, b = 1, d_dob = 0)
 
-        θ = solve(prob)
+        θ = solve(prob, verbose = verbose)
         @test θ.retcode == ReturnCode.Success
 
         o = range(0, 20, length = 100)
