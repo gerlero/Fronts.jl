@@ -200,7 +200,7 @@ function solve(prob::DirichletProblem{<:DiffusionEquation{1}},
     odeprob = ODEProblem(f!, u, (0.0, Inf), callback = reached_end)
 
     odesol = solve(odeprob, ImplicitEuler(linsolve = LUFactorization()),
-        abstol = abstol, verbose = verbose)
+        abstol = abstol, verbose = _ode_verbose(verbose))
 
     return Solution(Interpolator(boltzmann.(r, odesol.t[end]), odesol.u[end]),
         prob,
@@ -270,7 +270,7 @@ function solve(prob::FiniteDirichletProblem{<:DiffusionEquation{1}},
     odeprob = ODEProblem(f!, u, (t, prob._tstop), callback = steady_state)
 
     odesol = solve(odeprob, ImplicitEuler(linsolve = LUFactorization()),
-        abstol = abstol, verbose = false)
+        abstol = abstol, verbose = _ode_verbose(false))
 
     if odesol.retcode != ReturnCode.Success && !isnothing(presol) &&
        presol.retcode == ReturnCode.Success
@@ -282,7 +282,7 @@ function solve(prob::FiniteDirichletProblem{<:DiffusionEquation{1}},
         odeprob = ODEProblem(f!, u, (t, prob._tstop), callback = steady_state)
 
         odesol = solve(odeprob, ImplicitEuler(linsolve = LUFactorization()),
-            abstol = abstol, verbose = false)
+            abstol = abstol, verbose = _ode_verbose(false))
     end
 
     if verbose && odesol.retcode != ReturnCode.Success
@@ -377,7 +377,7 @@ function solve(prob::FiniteReservoirProblem{<:DiffusionEquation{1}},
         f!, u, (t, prob._tstop), callback = CallbackSet(steady_state, exhausted))
 
     odesol = solve(odeprob, ImplicitEuler(linsolve = LUFactorization()),
-        abstol = abstol, verbose = false)
+        abstol = abstol, verbose = _ode_verbose(false))
 
     if odesol.retcode != ReturnCode.Success && !isnothing(presol) &&
        presol.retcode == ReturnCode.Success
@@ -391,7 +391,7 @@ function solve(prob::FiniteReservoirProblem{<:DiffusionEquation{1}},
             f!, u, (t, prob._tstop), callback = CallbackSet(steady_state, exhausted))
 
         odesol = solve(odeprob, ImplicitEuler(linsolve = LUFactorization()),
-            abstol = abstol, verbose = false)
+            abstol = abstol, verbose = _ode_verbose(false))
     end
 
     if verbose && odesol.retcode != ReturnCode.Success

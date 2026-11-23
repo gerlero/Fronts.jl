@@ -72,14 +72,14 @@ function _init(prob::Union{CauchyProblem, SorptivityCauchyProblem},
             maxiters = _ODE_MAXITERS,
             reltol = 1e-6,
             callback = past_limit,
-            verbose = verbose)
+            verbose = _ode_verbose(verbose))
     end
 
     return init(odeprob,
         _ODE_ALG,
         maxiters = _ODE_MAXITERS,
         reltol = 1e-6,
-        verbose = verbose)
+        verbose = _ode_verbose(verbose))
 end
 
 function _reinit!(integrator, prob::CauchyProblem)
