@@ -358,9 +358,11 @@ function solve(prob::FiniteReservoirProblem{<:DiffusionEquation{1}},
         end
     end
 
-    jac_prototype = BandedMatrix{eltype(u)}(undef, (length(u), length(u)), (1, 2))
-    # The automatic differentiation backend also uses the values as a sparsity pattern.
-    fill!(parent(jac_prototype), one(eltype(u)))
+    # Keep the structural entries even when the reservoir is empty.
+    jac_prototype = spdiagm(-1 => ones(eltype(u), length(u) - 1),
+        0 => ones(eltype(u), length(u)),
+        1 => ones(eltype(u), length(u) - 1),
+        2 => ones(eltype(u), length(u) - 2))
     f! = ODEFunction(f!, jac_prototype = jac_prototype)
 
     steady_state = DiscreteCallback(

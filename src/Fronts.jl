@@ -14,7 +14,7 @@ using DifferentiationInterface: value_and_derivative,
                                 value_derivative_and_second_derivative, AutoForwardDiff
 using ArgCheck: @argcheck
 using StaticArrays: @SVector, @SMatrix
-using BandedMatrices: BandedMatrix
+using SparseArrays: spdiagm
 using RecursiveArrayTools: ArrayPartition
 using PCHIPInterpolation: Interpolator, integrate
 import NumericalIntegration
