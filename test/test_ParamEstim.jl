@@ -14,11 +14,12 @@
         @test cf([0]) == Inf
     end
 
-    @testset "fit_D0 true" begin
+    @testset "fit_D0 true, weighted=$weighted" for weighted in (false, true)
         θ = solve(DirichletProblem(θ -> 2 * θ, i = 0, b = 1))
         o = range(0, 20, length = 100)
 
-        cf = RSSCostFunction{true}(InverseProblem(o, θ.(o)), D0tol = 1e-4) do (k,)
+        weights = weighted ? collect(range(0.5, 1.5, length = length(o))) : nothing
+        cf = RSSCostFunction{true}(InverseProblem(o, θ.(o), weights), D0tol = 1e-4) do (k,)
             DirichletProblem(θ -> k * θ, i = 0, b = 1)
         end
 
